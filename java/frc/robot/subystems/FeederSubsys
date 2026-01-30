@@ -1,0 +1,41 @@
+// Copyright (c) FIRST and other WPILib contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the WPILib BSD license file in the root directory of this project.
+
+package frc.robot.subsystems;
+
+import com.ctre.phoenix6.hardware.TalonFX;
+
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
+
+public class FeederSubsys extends SubsystemBase {
+    // private static final DigitalInput intakeLimitSwitch = new DigitalInput(9);
+    public final TalonFX indexerMotor0 =  new TalonFX(0);
+
+    public final TalonFX indexerMotor1 =  new TalonFX(0);
+
+    public FeederSubsys() {
+        indexerMotor0.getConfigurator().apply(Constants.Configs.FEEDER_CONFIG);
+        indexerMotor1.getConfigurator().apply(Constants.Configs.FEEDER_CONFIG);
+    }
+
+    public void setSpeed(FeederSpeed speed) {
+        indexerMotor.set(speed.value);
+    }
+
+    // Called every ~20ms
+    @Override
+    public void periodic() {}
+
+    public enum FeederSpeed {
+        NONE(0), 
+        MOVEUP(0.5), 
+        MOVEBACK(-0.5);
+
+        public final double value;
+        FeederSpeed(double value) {
+        this.value = value;
+        }
+    }
+}
