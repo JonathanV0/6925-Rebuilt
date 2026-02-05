@@ -1,7 +1,8 @@
-package frc.robot.subsystems.Shooter;
+package frc.robot.subsystems;
+
 
 import com.ctre.phoenix6.hardware.TalonFX;
-
+import com.ctre.phoenix6.signals.InvertedValue;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 
@@ -21,7 +22,7 @@ public ShooterSubsys() {
   shooterMotorTop1.getConfigurator().apply(Robot.ctreConfigs.shooterFXConfig);
   shooterMotorTop2.getConfigurator().apply(Robot.ctreConfigs.shooterFXConfig);
   shooterMotorBottom.getConfigurator().apply(Robot.ctreConfigs.shooterFXConfig);
-  shooterMotorBottom.setInverted(true);
+  shooterMotorBottom.geInvertedValue(true);
 }
 
 public void setMotor(double top, double bottom) {
