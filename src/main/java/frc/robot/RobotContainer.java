@@ -15,9 +15,12 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.ClimberSubsys;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.FeederSubsys;
+import frc.robot.subsystems.IntakeSubsys;
+import frc.robot.subsystems.ShooterSubsys;
 
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -35,6 +38,12 @@ public class RobotContainer {
     private final CommandXboxController joystick = new CommandXboxController(0);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+
+    // Subsystems from Re-made branch
+    private final ShooterSubsys shooter = new ShooterSubsys();
+    private final IntakeSubsys intake = new IntakeSubsys();
+    private final FeederSubsys feeder = new FeederSubsys();
+    private final ClimberSubsys climber = new ClimberSubsys();
 
     public RobotContainer() {
         configureBindings();
