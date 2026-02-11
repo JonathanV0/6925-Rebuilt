@@ -15,18 +15,12 @@ public class CTREConfigs {
     public static final TalonFXConfiguration FEEDER_CONFIG = new TalonFXConfiguration();
     public static final TalonFXConfiguration CLIMBER_CONFIG  = new TalonFXConfiguration();
 
-    static {
-        //Shooter config
+    public CTREConfigs() {
+
+    //Shooter config
     SHOOTER_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     SHOOTER_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
     SHOOTER_CONFIG.CurrentLimits.StatorCurrentLimit = 60;
-
-    // Velocity PID for shooter flywheels
-    SHOOTER_CONFIG.Slot0.kP = 0.1;   // Proportional gain (tune this)
-    SHOOTER_CONFIG.Slot0.kI = 0.0;   // Integral gain
-    SHOOTER_CONFIG.Slot0.kD = 0.0;   // Derivative gain
-    SHOOTER_CONFIG.Slot0.kV = 0.12;  // Velocity feedforward (tune this)
-    SHOOTER_CONFIG.Slot0.kS = 0.25;  // Static friction feedforward
 
     //Intake config
     INTAKE_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;
