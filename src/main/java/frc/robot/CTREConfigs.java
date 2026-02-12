@@ -18,18 +18,32 @@ public class CTREConfigs {
     public CTREConfigs() {
 
     //Shooter config
-    SHOOTER_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    SHOOTER_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     SHOOTER_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
     SHOOTER_CONFIG.CurrentLimits.StatorCurrentLimit = 60;
+    SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
+    SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimit = 60;
 
     //Intake config
     INTAKE_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     INTAKE_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
     INTAKE_CONFIG.CurrentLimits.StatorCurrentLimit = 60;
+    INTAKE_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
+    INTAKE_CONFIG.CurrentLimits.SupplyCurrentLimit = 60;
 
     //Feeder config
     FEEDER_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     FEEDER_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
     FEEDER_CONFIG.CurrentLimits.StatorCurrentLimit = 60;
+    FEEDER_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
+    FEEDER_CONFIG.CurrentLimits.SupplyCurrentLimit = 60;
+
+    //Climber config
+    CLIMBER_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    CLIMBER_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
+    CLIMBER_CONFIG.CurrentLimits.StatorCurrentLimit = 60;
+    CLIMBER_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
+    CLIMBER_CONFIG.CurrentLimits.SupplyCurrentLimit = 60;
+
     }
 }
