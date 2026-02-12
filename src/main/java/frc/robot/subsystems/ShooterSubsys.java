@@ -62,6 +62,10 @@ public class ShooterSubsys extends SubsystemBase {
     fuelShoot0.set(0);
     fuelShoot1.set(0);
   }
+
+  public Command stopCommand() {
+    return Commands.runOnce(() -> stopShooter(), this);
+  }
   // ========== END AI GENERATED CODE ==========
 
   // Simple percent output control - Good for initial testing
@@ -77,7 +81,11 @@ public class ShooterSubsys extends SubsystemBase {
   }
 
   public Command setSpeedCommand(FuelShootSpeed speed) {
-    return Commands.runOnce(() -> fuelShoot.set(speed.value), this);
+    return Commands.runOnce(() -> setSpeed(speed), this);
+  }
+
+  public Command setFeedSpeedCommand(FuelFeedSpeed speed) {
+    return Commands.runOnce(() -> setSpeed(speed), this);
   }
 
   @Override

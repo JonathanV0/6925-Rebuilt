@@ -20,6 +20,7 @@ import frc.robot.subsystems.ClimberSubsys;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsys;
 import frc.robot.subsystems.IntakeSubsys;
+import frc.robot.subsystems.HoodSubsys;
 import frc.robot.subsystems.ShooterSubsys;
 
 public class RobotContainer {
@@ -44,8 +45,10 @@ public class RobotContainer {
     private final IntakeSubsys intake = new IntakeSubsys();
     private final FeederSubsys feeder = new FeederSubsys();
     private final ClimberSubsys climber = new ClimberSubsys();
+    private final HoodSubsys hood = new HoodSubsys();
 
     public RobotContainer() {
+        RobotCommands.init(shooter, feeder, hood);
         configureBindings();
     }
 
@@ -82,6 +85,8 @@ public class RobotContainer {
 
         // Reset the field-centric heading on left bumper press.
         joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+
+        joystick.button(0).onTrue(RobotCommands.shoot());
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
