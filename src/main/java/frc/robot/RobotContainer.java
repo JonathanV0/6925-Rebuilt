@@ -15,12 +15,14 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.lib.util.CommandX3DController;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.ClimberSubsys;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsys;
 import frc.robot.subsystems.IntakeSubsys;
 import frc.robot.subsystems.HoodSubsys;
+import frc.robot.subsystems.LimelightSubsys;
 import frc.robot.subsystems.ShooterSubsys;
 
 public class RobotContainer {
@@ -37,6 +39,8 @@ public class RobotContainer {
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
     private final CommandXboxController joystick = new CommandXboxController(0);
+    private final CommandX3DController operator = new CommandX3DController(1);
+
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
@@ -46,9 +50,10 @@ public class RobotContainer {
     private final FeederSubsys feeder = new FeederSubsys();
     private final ClimberSubsys climber = new ClimberSubsys();
     private final HoodSubsys hood = new HoodSubsys();
+    private final LimelightSubsys limelight = new LimelightSubsys("limelight");
 
     public RobotContainer() {
-        RobotCommands.init(shooter, feeder, hood);
+        RobotCommands.init(shooter, feeder, hood, limelight, drivetrain);
         configureBindings();
     }
 
@@ -86,9 +91,18 @@ public class RobotContainer {
         // Reset the field-centric heading on left bumper press.
         joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
-        joystick.button(0).onTrue(RobotCommands.shoot());
+        // Hold right bumper to auto-aim at target while still driving
+        joystick.rightBumper().whileTrue(
+            RobotCommands.aimAtTarget(
+                () -> -joystick.getLeftY() * MaxSpeed,
+                () -> -joystick.getLeftX() * MaxSpeed,
+                MaxSpeed
+            )
+        );
 
-        drivetrain.registerTelemetry(logger::telemeterize);
+        // Limelight vision updates run continuously as default command
+        limelight.setDefaultCommand(RobotCommands.updateVision());
+
     }
 
     public Command getAutonomousCommand() {

@@ -40,6 +40,7 @@ public class ShooterSubsys extends SubsystemBase {
 
   // Velocity PID control - Use this for precise RPM control in competition
   public void setVelocityRPM(double rpm) {
+    targetRPM = rpm;
     double rps = rpm / 60.0; // Convert RPM to rotations per second
     fuelShoot.setControl(m_velocityRequest.withVelocity(rps));
     fuelShoot0.setControl(m_velocityRequest.withVelocity(rps));
@@ -65,6 +66,17 @@ public class ShooterSubsys extends SubsystemBase {
 
   public Command stopCommand() {
     return Commands.runOnce(() -> stopShooter(), this);
+  }
+
+  private static final double kVelocityToleranceRPM = 100.0;
+  private double targetRPM = 0;
+
+  public double getVelocityRPM() {
+    return fuelShoot.getVelocity().getValueAsDouble() * 60.0;
+  }
+
+  public boolean isVelocityWithinTolerance() {
+    return Math.abs(getVelocityRPM() - targetRPM) < kVelocityToleranceRPM;
   }
   // ========== END AI GENERATED CODE ==========
 
