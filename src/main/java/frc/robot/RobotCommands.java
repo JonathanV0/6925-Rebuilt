@@ -158,7 +158,20 @@ public final class RobotCommands {
         }, shooterSubsys, hoodSubsys);
     }
 
-
+    public static Command adjustedShoot() {
+        return new SequentialCommandGroup(
+            // Wind up until RPM and hood are on target
+            adjustedWindUp()
+                .until(() -> shooterSubsys.isVelocityWithinTolerance() && hoodSubsys.isPositionWithinTolerance()),
+            // Brief settle delay
+            new WaitCommand(0.25),
+            // Feed the ball
+            Shoot(),
+            new WaitCommand(1.0),
+            stopFeed(),
+            shooterSubsys.stopCommand()
+        );
+    }
 
     // ========== Shot Data ==========
 

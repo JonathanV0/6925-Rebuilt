@@ -100,6 +100,13 @@ public class RobotContainer {
             )
         );
 
+        // ===== Operator X3D Joystick =====
+        // TODO: Remap these buttons once joystick layout is decided
+        operator.button(0).whileTrue(RobotCommands.Shoot());
+        operator.button(0).whileTrue(RobotCommands.windUp());
+        operator.button(0).onTrue(RobotCommands.stopFeed());
+        operator.button(0).whileTrue(RobotCommands.adjustedWindUp());
+
         // Limelight vision updates run continuously as default command
         limelight.setDefaultCommand(RobotCommands.updateVision());
 
