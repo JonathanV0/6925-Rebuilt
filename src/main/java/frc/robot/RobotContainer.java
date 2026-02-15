@@ -50,10 +50,10 @@ public class RobotContainer {
     private final FeederSubsys feeder = new FeederSubsys();
     private final ClimberSubsys climber = new ClimberSubsys();
     private final HoodSubsys hood = new HoodSubsys();
-    private final LimelightSubsys limelight = new LimelightSubsys("limelight");
+    // private final LimelightSubsys limelight = new LimelightSubsys("limelight");
 
     public RobotContainer() {
-        RobotCommands.init(shooter, feeder, hood, limelight, drivetrain);
+        RobotCommands.init(shooter, feeder, hood, /* limelight, */ drivetrain);
         configureBindings();
     }
 
@@ -107,8 +107,8 @@ public class RobotContainer {
         operator.button(0).onTrue(RobotCommands.stopFeed());
         operator.button(0).whileTrue(RobotCommands.adjustedWindUp());
 
-        // Limelight vision updates run continuously as default command
-        limelight.setDefaultCommand(RobotCommands.updateVision());
+        // // Limelight vision updates run continuously as default command
+        // limelight.setDefaultCommand(RobotCommands.updateVision());
 
     }
 

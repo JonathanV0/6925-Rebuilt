@@ -20,7 +20,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsys;
 import frc.robot.subsystems.FeederSubsys.FeederSpeed;
@@ -33,7 +32,7 @@ public final class RobotCommands {
     private static ShooterSubsys shooterSubsys;
     private static FeederSubsys feederSubsys;
     private static HoodSubsys hoodSubsys;
-    private static LimelightSubsys limelightSubsys;
+    // private static LimelightSubsys limelightSubsys;
     private static CommandSwerveDrivetrain drivetrain;
 
     // Distance-to-shot lookup table (team should calibrate these values)
@@ -59,13 +58,13 @@ public final class RobotCommands {
         ShooterSubsys shooter,
         FeederSubsys feeder,
         HoodSubsys hood,
-        LimelightSubsys limelight,
+        // LimelightSubsys limelight,
         CommandSwerveDrivetrain drive
     ) {
         RobotCommands.shooterSubsys = shooter;
         RobotCommands.feederSubsys = feeder;
         RobotCommands.hoodSubsys = hood;
-        RobotCommands.limelightSubsys = limelight;
+        // RobotCommands.limelightSubsys = limelight;
         RobotCommands.drivetrain = drive;
     }
 
@@ -98,20 +97,20 @@ public final class RobotCommands {
         return hoodSubsys.positionCommand(position);
     }
 
-    // ========== Vision Commands ==========
+    // // ========== Vision Commands ==========
 
-    public static Command updateVision() {
-        return Commands.run(() -> {
-            final Pose2d currentPose = drivetrain.getState().Pose;
-            limelightSubsys.getMeasurement(currentPose).ifPresent(measurement -> {
-                drivetrain.addVisionMeasurement(
-                    measurement.poseEstimate.pose,
-                    measurement.poseEstimate.timestampSeconds,
-                    measurement.standardDeviations
-                );
-            });
-        }, limelightSubsys);
-    }
+    // public static Command updateVision() {
+    //     return Commands.run(() -> {
+    //         final Pose2d currentPose = drivetrain.getState().Pose;
+    //         limelightSubsys.getMeasurement(currentPose).ifPresent(measurement -> {
+    //             drivetrain.addVisionMeasurement(
+    //                 measurement.poseEstimate.pose,
+    //                 measurement.poseEstimate.timestampSeconds,
+    //                 measurement.standardDeviations
+    //             );
+    //         });
+    //     }, limelightSubsys);
+    // }
 
     // ========== Aim at Target ==========
 
@@ -158,20 +157,6 @@ public final class RobotCommands {
         }, shooterSubsys, hoodSubsys);
     }
 
-    public static Command adjustedShoot() {
-        return new SequentialCommandGroup(
-            // Wind up until RPM and hood are on target
-            adjustedWindUp()
-                .until(() -> shooterSubsys.isVelocityWithinTolerance() && hoodSubsys.isPositionWithinTolerance()),
-            // Brief settle delay
-            new WaitCommand(0.25),
-            // Feed the ball
-            Shoot(),
-            new WaitCommand(1.0),
-            stopFeed(),
-            shooterSubsys.stopCommand()
-        );
-    }
 
     // ========== Shot Data ==========
 
