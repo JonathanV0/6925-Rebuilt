@@ -24,8 +24,8 @@ public class LimelightSubsys extends SubsystemBase {
     private static final int[] kRedTagIDs = {9, 10};
     // Camera mounting height above ground
     public static final double kCameraHeightInches = 25.622456;
-    // Camera mounting angle in degrees (TODO: measure on robot)
-    public static final double kCameraMountAngleDegrees = 0.0;
+    // Camera mounting angle: 110 deg from face down = 20 deg above horizontal
+    public static final double kCameraMountAngleDegrees = 20.0;
 
     // Reject measurements where the avg tag area is below this threshold (% of image)
     // Tags that are too small in the frame produce unreliable pose estimates on LL2
