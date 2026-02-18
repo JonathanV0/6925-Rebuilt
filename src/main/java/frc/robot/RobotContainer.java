@@ -53,7 +53,7 @@ public class RobotContainer {
     // private final LimelightSubsys limelight = new LimelightSubsys("limelight");
 
     public RobotContainer() {
-        RobotCommands.init(shooter, feeder, hood, /* limelight, */ drivetrain);
+        RobotCommands.init(shooter, feeder, hood, intake, /* limelight, */ drivetrain);
         configureBindings();
     }
 
@@ -63,11 +63,14 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed * drivetrain.getCurrentSpeedMulti()) // Drive forward with negative Y (forward)
+                    .withVelocityY(-joystick.getLeftX() * MaxSpeed * drivetrain.getCurrentSpeedMulti()) // Drive left with negative X (left)
                     .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
+
+        // Toggle half speed with left trigger
+        joystick.leftTrigger().onTrue(drivetrain.toggleSpeedMulti(0.5));
 
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
@@ -102,10 +105,12 @@ public class RobotContainer {
 
         // ===== Operator X3D Joystick =====
         // TODO: Remap these buttons once joystick layout is decided
-        operator.button(0).whileTrue(RobotCommands.Shoot());
-        operator.button(0).whileTrue(RobotCommands.windUp());
+        operator.button(1).whileTrue(RobotCommands.Shoot());
+        operator.button(2).whileTrue(RobotCommands.windUp());
         operator.button(0).onTrue(RobotCommands.stopFeed());
         operator.button(0).whileTrue(RobotCommands.adjustedWindUp());
+        operator.button(0).whileTrue(RobotCommands.intakeMid());
+        operator.button(0).onTrue(RobotCommands.stopIntake());
 
         // // Limelight vision updates run continuously as default command
         // limelight.setDefaultCommand(RobotCommands.updateVision());
