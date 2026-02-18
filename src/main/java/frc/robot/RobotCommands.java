@@ -25,6 +25,8 @@ import frc.robot.subsystems.FeederSubsys;
 import frc.robot.subsystems.FeederSubsys.FeederSpeed;
 import frc.robot.subsystems.HoodSubsys;
 import frc.robot.subsystems.LimelightSubsys;
+import frc.robot.subsystems.IntakeSubsys;
+import frc.robot.subsystems.IntakeSubsys.IntakeSpeed;
 import frc.robot.subsystems.ShooterSubsys;
 import frc.robot.subsystems.ShooterSubsys.FuelFeedSpeed;
 
@@ -32,6 +34,7 @@ public final class RobotCommands {
     private static ShooterSubsys shooterSubsys;
     private static FeederSubsys feederSubsys;
     private static HoodSubsys hoodSubsys;
+    private static IntakeSubsys intakeSubsys;
     // private static LimelightSubsys limelightSubsys;
     private static CommandSwerveDrivetrain drivetrain;
 
@@ -58,12 +61,14 @@ public final class RobotCommands {
         ShooterSubsys shooter,
         FeederSubsys feeder,
         HoodSubsys hood,
+        IntakeSubsys intake,
         // LimelightSubsys limelight,
         CommandSwerveDrivetrain drive
     ) {
         RobotCommands.shooterSubsys = shooter;
         RobotCommands.feederSubsys = feeder;
         RobotCommands.hoodSubsys = hood;
+        RobotCommands.intakeSubsys = intake;
         // RobotCommands.limelightSubsys = limelight;
         RobotCommands.drivetrain = drive;
     }
@@ -91,7 +96,19 @@ public final class RobotCommands {
         );
     }
 
-  
+    // ========== Intake Commands ==========
+
+    public static Command intakeSlow() {
+        return intakeSubsys.setSpeedCommand(IntakeSpeed.INTAKE_SLOW);
+    }
+
+    public static Command intakeMid() {
+        return intakeSubsys.setSpeedCommand(IntakeSpeed.INTAKE_MID);
+    }
+
+    public static Command stopIntake() {
+        return intakeSubsys.setSpeedCommand(IntakeSpeed.OFF);
+    }
 
     public static Command setHood(double position) {
         return hoodSubsys.positionCommand(position);
