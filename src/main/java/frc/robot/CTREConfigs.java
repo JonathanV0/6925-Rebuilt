@@ -20,9 +20,11 @@ public class CTREConfigs {
     //Shooter config
     SHOOTER_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     SHOOTER_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
-    SHOOTER_CONFIG.CurrentLimits.StatorCurrentLimit = 60;
+    SHOOTER_CONFIG.CurrentLimits.StatorCurrentLimit = 80;
     SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
-    SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimit = 60;
+    SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimit = 40;
+    SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLowerLimit = 60;
+    SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLowerTime = 0.1;
 
     //Intake config
     INTAKE_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;
