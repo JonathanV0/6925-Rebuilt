@@ -68,6 +68,10 @@ public class RobotContainer {
         // Distance-adjusted shot: interpolates RPM/hood from odometry distance
         // For the vision auto variant, pair this with accurate pose correction
         NamedCommands.registerCommand("AdjustedWindUp", RobotCommands.adjustedWindUp());
+        // Moving shot: adjusts RPM/hood continuously + feeds; use as deadline alongside a path
+        NamedCommands.registerCommand("AdjustedShootWhileMoving", RobotCommands.adjustedShootWhileMoving());
+        // Static shot wind-up: snaps to distance-based RPM/hood then waits for spinup
+        NamedCommands.registerCommand("AdjustedWindUpOnce", RobotCommands.adjustedWindUpOnce());
         // ── Intake ────────────────────────────────────────────────────────────
         NamedCommands.registerCommand("IntakeMid", RobotCommands.intakeMid());
         NamedCommands.registerCommand("StopIntake", RobotCommands.stopIntake());

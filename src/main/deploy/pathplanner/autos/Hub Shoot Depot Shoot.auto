@@ -1,0 +1,79 @@
+{
+  "version": "2.0",
+  "startingPose": {
+    "position": {
+      "x": 3.508573466476462,
+      "y": 4.041469329529244
+    },
+    "rotation": 0.0
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "deadline",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Hub Shoot Backup"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "AdjustedShootWhileMoving"
+                }
+              }
+            ],
+            "deadlineIndex": 0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopFeed"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Depot Intake Pass"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AdjustedWindUpOnce"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.5
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopFeed"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -175,6 +175,51 @@ public final class RobotCommands {
     }
 
 
+    // ========== Moving Shot Commands (for backing-up auto) ==========
+
+    /**
+     * Winds up the shooter using the distance interpolation table, waits until at speed,
+     * then continues adjusting RPM/hood AND runs both feeders simultaneously.
+     * Designed for use inside a PathPlanner deadline group alongside a drive path —
+     * the path ending cancels this command; call StopFeed after.
+     */
+    public static Command adjustedShootWhileMoving() {
+        return Commands.sequence(
+            // Phase 1: spin up to distance-based RPM, wait until at speed
+            Commands.run(() -> {
+                final Distance distance = getDistanceToTarget();
+                final Shot shot = distanceToShotMap.get(distance);
+                shooterSubsys.setVelocityRPM(shot.shooterRPM);
+                hoodSubsys.setPosition(shot.hoodPosition);
+            }, shooterSubsys, hoodSubsys)
+            .until(shooterSubsys::isVelocityWithinTolerance),
+            // Phase 2: maintain RPM/hood AND run both feeders to shoot while still moving
+            Commands.run(() -> {
+                final Distance distance = getDistanceToTarget();
+                final Shot shot = distanceToShotMap.get(distance);
+                shooterSubsys.setVelocityRPM(shot.shooterRPM);
+                hoodSubsys.setPosition(shot.hoodPosition);
+                feederSubsys.setSpeed(FeederSpeed.FEED_FAST);
+                shooterSubsys.setSpeed(FuelFeedSpeed.FEED_FAST);
+            }, shooterSubsys, hoodSubsys, feederSubsys)
+        );
+    }
+
+    /**
+     * Snaps RPM and hood to distance-table values once from current robot position,
+     * then blocks until the shooter reaches target RPM (±100 RPM).
+     * Use in sequential autos before calling shoot().
+     */
+    public static Command adjustedWindUpOnce() {
+        return Commands.runOnce(() -> {
+            final Distance distance = getDistanceToTarget();
+            final Shot shot = distanceToShotMap.get(distance);
+            shooterSubsys.setVelocityRPM(shot.shooterRPM);
+            hoodSubsys.setPosition(shot.hoodPosition);
+        }, shooterSubsys, hoodSubsys)
+        .andThen(Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance));
+    }
+
     // ========== Shot Data ==========
 
     public static class Shot {

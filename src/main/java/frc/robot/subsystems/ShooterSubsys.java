@@ -17,12 +17,11 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ShooterSubsys extends SubsystemBase {
   /** Creates a new ShooterSubsys. */
-  private final TalonFX fuelShoot = new TalonFX(0, "CANivore");
-  private final TalonFX fuelShoot0 = new TalonFX(0, "CANivore");
-  private final TalonFX fuelShoot1 = new TalonFX(0, "CANivore");
+  private final TalonFX fuelShoot = new TalonFX(20, "CANivore");
+  private final TalonFX fuelShoot0 = new TalonFX(21, "CANivore");
+  private final TalonFX fuelShoot1 = new TalonFX(22, "CANivore");
 
-  private final TalonFX fuelFeed0 = new TalonFX(0, "CANivore");
-  private final TalonFX fuelFeed1 = new TalonFX(0, "CANivore");
+  private final TalonFX fuelFeed = new TalonFX(23, "CANivore");
 
 
   public ShooterSubsys() {
@@ -90,8 +89,7 @@ public class ShooterSubsys extends SubsystemBase {
   }
 
   public void setSpeed(FuelFeedSpeed speed) {
-    fuelFeed0.set(speed.value);
-    fuelFeed1.set(speed.value);
+    fuelFeed.set(speed.value);
   }
 
   public Command setSpeedCommand(FuelShootSpeed speed) {
