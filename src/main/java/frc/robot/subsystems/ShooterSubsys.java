@@ -6,13 +6,13 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import frc.robot.CTREConfigs;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
 
 
 public class ShooterSubsys extends SubsystemBase {
@@ -30,7 +30,9 @@ public class ShooterSubsys extends SubsystemBase {
     fuelShoot.getConfigurator().apply(CTREConfigs.SHOOTER_CONFIG);
     fuelShoot0.getConfigurator().apply(CTREConfigs.SHOOTER_CONFIG);
     fuelShoot1.getConfigurator().apply(CTREConfigs.SHOOTER_CONFIG);
-    // TODO: Configure fuelShoot0 and fuelShoot1 as followers once Phoenix 6 libraries are properly loaded
+
+    fuelShoot0.setControl(new Follower(fuelShoot.getDeviceID(), MotorAlignmentValue.Aligned));
+    fuelShoot1.setControl(new Follower(fuelShoot.getDeviceID(), MotorAlignmentValue.Aligned));
   }
 
   // ========== AI GENERATED - PLEASE DOUBLE CHECK ==========

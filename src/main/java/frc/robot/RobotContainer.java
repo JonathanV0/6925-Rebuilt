@@ -10,8 +10,11 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -37,6 +40,7 @@ public class RobotContainer {
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
+    private final SendableChooser<Command> autoChooser;
 
     private final CommandXboxController joystick = new CommandXboxController(0);
     private final CommandX3DController operator = new CommandX3DController(1);
@@ -55,6 +59,23 @@ public class RobotContainer {
     public RobotContainer() {
         RobotCommands.init(shooter, feeder, hood, intake, /* limelight, */ drivetrain);
         configureBindings();
+        // Register named commands for PathPlanner event markers
+        // ── Shooting ──────────────────────────────────────────────────────────
+        NamedCommands.registerCommand("Shoot", RobotCommands.Shoot());
+        NamedCommands.registerCommand("StopFeed", RobotCommands.stopFeed());
+        // Fixed shot (no vision): set RPM/hood to hardcoded values
+        NamedCommands.registerCommand("WindUp", RobotCommands.windUp());
+        // Distance-adjusted shot: interpolates RPM/hood from odometry distance
+        // For the vision auto variant, pair this with accurate pose correction
+        NamedCommands.registerCommand("AdjustedWindUp", RobotCommands.adjustedWindUp());
+        // ── Intake ────────────────────────────────────────────────────────────
+        NamedCommands.registerCommand("IntakeMid", RobotCommands.intakeMid());
+        NamedCommands.registerCommand("StopIntake", RobotCommands.stopIntake());
+        // ── Vision (enable when limelight is re-enabled) ──────────────────────
+        // NamedCommands.registerCommand("VisionUpdate", RobotCommands.updateVision());
+
+        autoChooser = AutoBuilder.buildAutoChooser();
+        SmartDashboard.putData("Auto Chooser", autoChooser);
     }
 
     private void configureBindings() {
@@ -118,21 +139,6 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-        // Simple drive forward auton
-        final var idle = new SwerveRequest.Idle();
-        return Commands.sequence(
-            // Reset our field centric heading to match the robot
-            // facing away from our alliance station wall (0 deg).
-            drivetrain.runOnce(() -> drivetrain.seedFieldCentric(Rotation2d.kZero)),
-            // Then slowly drive forward (away from us) for 5 seconds.
-            drivetrain.applyRequest(() ->
-                drive.withVelocityX(0.5)
-                    .withVelocityY(0)
-                    .withRotationalRate(0)
-            )
-            .withTimeout(5.0),
-            // Finally idle for the rest of auton
-            drivetrain.applyRequest(() -> idle)
-        );
+        return autoChooser.getSelected();
     }
 }

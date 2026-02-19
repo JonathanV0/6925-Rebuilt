@@ -15,7 +15,7 @@ public class CTREConfigs {
     public static final TalonFXConfiguration FEEDER_CONFIG = new TalonFXConfiguration();
     public static final TalonFXConfiguration CLIMBER_CONFIG  = new TalonFXConfiguration();
 
-    public CTREConfigs() {
+    static {
 
     //Shooter config
     SHOOTER_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Brake;
@@ -25,6 +25,10 @@ public class CTREConfigs {
     SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimit = 40;
     SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLowerLimit = 60;
     SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLowerTime = 0.1;
+    // Velocity PID - TODO: Tune kP, kS, and kV on real robot
+    SHOOTER_CONFIG.Slot0.kP = 0.1;   // Proportional gain
+    SHOOTER_CONFIG.Slot0.kS = 0.15;  // Static friction feedforward (V)
+    SHOOTER_CONFIG.Slot0.kV = 0.12;  // Velocity feedforward (V per RPS, approx 12V / max RPS)
 
     //Intake config
     INTAKE_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;
