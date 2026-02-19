@@ -1,0 +1,43 @@
+{
+  "version": "2.0",
+  "startingPose": {
+    "position": {
+      "x": 0.5326818830242506,
+      "y": 0.535
+    },
+    "rotation": 0.0
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "deadline",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Basic Drive-and-Shoot from right corner (Vision)"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "VisionUpdate"
+                }
+              }
+            ],
+            "deadlineIndex": 0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopFeed"
+          }
+        }
+      ]
+    }
+  }
+}

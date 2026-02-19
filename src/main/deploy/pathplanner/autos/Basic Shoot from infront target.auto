@@ -1,0 +1,29 @@
+{
+  "version": "2.0",
+  "startingPose": {
+    "position": {
+      "x": 3.508573466476462,
+      "y": 4.041469329529244
+    },
+    "rotation": 0.0
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Basic Shoot from infront target"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopFeed"
+          }
+        }
+      ]
+    }
+  }
+}

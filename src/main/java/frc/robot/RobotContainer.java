@@ -61,10 +61,10 @@ public class RobotContainer {
         configureBindings();
         // Register named commands for PathPlanner event markers
         // ── Shooting ──────────────────────────────────────────────────────────
-        NamedCommands.registerCommand("Shoot", RobotCommands.Shoot());
+        NamedCommands.registerCommand("shoot", RobotCommands.Shoot());
         NamedCommands.registerCommand("StopFeed", RobotCommands.stopFeed());
         // Fixed shot (no vision): set RPM/hood to hardcoded values
-        NamedCommands.registerCommand("WindUp", RobotCommands.windUp());
+        NamedCommands.registerCommand("windUp", RobotCommands.windUp());
         // Distance-adjusted shot: interpolates RPM/hood from odometry distance
         // For the vision auto variant, pair this with accurate pose correction
         NamedCommands.registerCommand("AdjustedWindUp", RobotCommands.adjustedWindUp());

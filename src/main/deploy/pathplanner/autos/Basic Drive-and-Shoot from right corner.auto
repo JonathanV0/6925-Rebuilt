@@ -1,0 +1,29 @@
+{
+  "version": "2.0",
+  "startingPose": {
+    "position": {
+      "x": 0.5326818830242506,
+      "y": 0.535
+    },
+    "rotation": 0.0
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Basic Drive-and-Shoot from right corner"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopFeed"
+          }
+        }
+      ]
+    }
+  }
+}
