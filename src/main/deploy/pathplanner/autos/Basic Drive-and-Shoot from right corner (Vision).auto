@@ -1,12 +1,5 @@
 {
-  "version": "2.0",
-  "startingPose": {
-    "position": {
-      "x": 0.5326818830242506,
-      "y": 0.535
-    },
-    "rotation": 0.0
-  },
+  "version": "2025.0",
   "command": {
     "type": "sequential",
     "data": {
@@ -27,8 +20,7 @@
                   "name": "VisionUpdate"
                 }
               }
-            ],
-            "deadlineIndex": 0
+            ]
           }
         },
         {
@@ -39,5 +31,8 @@
         }
       ]
     }
-  }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
 }

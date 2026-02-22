@@ -1,12 +1,5 @@
 {
-  "version": "2.0",
-  "startingPose": {
-    "position": {
-      "x": 3.508573466476462,
-      "y": 4.041469329529244
-    },
-    "rotation": 0.0
-  },
+  "version": "2025.0",
   "command": {
     "type": "sequential",
     "data": {
@@ -27,8 +20,7 @@
                   "name": "AdjustedShootWhileMoving"
                 }
               }
-            ],
-            "deadlineIndex": 0
+            ]
           }
         },
         {
@@ -75,5 +67,8 @@
         }
       ]
     }
-  }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
 }
