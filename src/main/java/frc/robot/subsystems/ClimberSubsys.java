@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ClimberSubsys extends SubsystemBase {
   /** Creates a new ClimberSubsys. */
-  private final TalonFX climber = new TalonFX(0, "CANivore");
+  private final TalonFX climber = new TalonFX(52, "CANivore");
 
   public ClimberSubsys() {
     climber.getConfigurator().apply(CTREConfigs.CLIMBER_CONFIG);

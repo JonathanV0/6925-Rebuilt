@@ -11,8 +11,8 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import frc.robot.CTREConfigs;
 
 public class FeederSubsys extends SubsystemBase {
-  private final TalonFX feeder0 = new TalonFX(0, "CANivore");
-  private final TalonFX feeder1 = new TalonFX(0, "CANivore");
+  private final TalonFX feeder0 = new TalonFX(51, "CANivore");
+  private final TalonFX feeder1 = new TalonFX(50, "CANivore");
 
   public FeederSubsys() {
     feeder0.getConfigurator().apply(CTREConfigs.FEEDER_CONFIG);
