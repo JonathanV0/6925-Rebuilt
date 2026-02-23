@@ -77,8 +77,8 @@ public final class RobotCommands {
 
     public static Command windUp() {
         return new SequentialCommandGroup(
-            shooterSubsys.setVelocityRPMCommand(3000),
-            hoodSubsys.positionCommand(0.4)
+            shooterSubsys.setVelocityRPMCommand(3000)
+            // hoodSubsys.positionCommand(0.4)  // TODO: re-enable once linear actuators are set up
         );
     }
 

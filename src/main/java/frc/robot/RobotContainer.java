@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.lib.util.CommandX3DController;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.ClimberSubsys;
+import frc.robot.subsystems.ClimberSubsys.ClimberSpeed;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsys;
 import frc.robot.subsystems.IntakeSubsys;
@@ -77,6 +78,9 @@ public class RobotContainer {
         NamedCommands.registerCommand("StopIntake", RobotCommands.stopIntake());
         // ── Vision (enable when limelight is re-enabled) ──────────────────────
         // NamedCommands.registerCommand("VisionUpdate", RobotCommands.updateVision());
+        // ── Climber (for L1 auto climb) ───────────────────────────────────────
+        NamedCommands.registerCommand("ClimbUp", climber.setSpeedCommand(ClimberSpeed.CLIMB_UP));
+        NamedCommands.registerCommand("StopClimber", climber.setSpeedCommand(ClimberSpeed.OFF));
 
         autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Auto Chooser", autoChooser);
