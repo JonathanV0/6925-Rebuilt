@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 
 public class IntakeSubsys extends SubsystemBase {
   /** Creates a new Intake. */
-  private final TalonFX intake = new TalonFX(0, "CANivore");
+  private final TalonFX intake = new TalonFX(0);
 
   public IntakeSubsys() {
     intake.getConfigurator().apply(CTREConfigs.INTAKE_CONFIG);
