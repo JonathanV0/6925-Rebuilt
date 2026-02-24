@@ -43,8 +43,9 @@ public class RobotContainer {
     private final Telemetry logger = new Telemetry(MaxSpeed);
     private final SendableChooser<Command> autoChooser;
 
-    private final CommandXboxController joystick = new CommandXboxController(0);
-    private final CommandX3DController operator = new CommandX3DController(1);
+    // TODO: Revert ports back to joystick=0, operator=1 when done testing
+    private final CommandXboxController joystick = new CommandXboxController(1);
+    private final CommandX3DController operator = new CommandX3DController(0);
 
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
