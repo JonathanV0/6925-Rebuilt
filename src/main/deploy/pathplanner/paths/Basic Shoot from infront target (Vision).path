@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "adjustedWindUp",
+      "name": "AdjustedWindUpOnce",
       "waypointRelativePos": 0,
       "endWaypointRelativePos": 1.0,
       "command": null

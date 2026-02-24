@@ -44,8 +44,8 @@
   ],
   "eventMarkers": [
     {
-      "name": "adjustedWindUp",
-      "waypointRelativePos": 0.62,
+      "name": "AdjustedWindUpOnce",
+      "waypointRelativePos": 0,
       "endWaypointRelativePos": 1.0,
       "command": null
     },
