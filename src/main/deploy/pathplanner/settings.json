@@ -1,6 +1,6 @@
 {
   "holonomicMode": true,
-  "robotMass": 60.0,
+  "robotMass": 65.0,
   "robotMOI": 6.0,
   "driveWheelRadius": 0.0508,
   "driveGearing": 6.122448979591837,

@@ -19,9 +19,9 @@ import frc.robot.LimelightHelpers.PoseEstimate;
 public class LimelightSubsys extends SubsystemBase {
     // AprilTag target height above ground
     public static final double kTargetHeightInches = 44.25;
-    // Alliance-specific AprilTag IDs for our shooting side
-    private static final int[] kBlueTagIDs = {25, 26};
-    private static final int[] kRedTagIDs = {9, 10};
+    // All hub AprilTag IDs per alliance (from 2026-rebuilt-welded.json field layout)
+    private static final int[] kBlueTagIDs = {18, 19, 20, 21, 24, 25, 26, 27};
+    private static final int[] kRedTagIDs  = {2, 3, 4, 5, 8, 9, 10, 11};
     // Camera mounting height above ground
     public static final double kCameraHeightInches = 25.622456;
     // Camera mounting angle: 110 deg from face down = 20 deg above horizontal

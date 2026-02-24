@@ -24,7 +24,7 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsys;
 import frc.robot.subsystems.FeederSubsys.FeederSpeed;
 import frc.robot.subsystems.HoodSubsys;
-// import frc.robot.subsystems.LimelightSubsys;
+import frc.robot.subsystems.LimelightSubsys;
 import frc.robot.subsystems.IntakeSubsys;
 import frc.robot.subsystems.IntakeSubsys.IntakeSpeed;
 import frc.robot.subsystems.ShooterSubsys;
@@ -35,7 +35,7 @@ public final class RobotCommands {
     private static FeederSubsys feederSubsys;
     private static HoodSubsys hoodSubsys;
     private static IntakeSubsys intakeSubsys;
-    // private static LimelightSubsys limelightSubsys;
+    private static LimelightSubsys limelightSubsys;
     private static CommandSwerveDrivetrain drivetrain;
 
     // Distance-to-shot lookup table (team should calibrate these values)
@@ -62,14 +62,14 @@ public final class RobotCommands {
         FeederSubsys feeder,
         HoodSubsys hood,
         IntakeSubsys intake,
-        // LimelightSubsys limelight,
+        LimelightSubsys limelight,
         CommandSwerveDrivetrain drive
     ) {
         RobotCommands.shooterSubsys = shooter;
         RobotCommands.feederSubsys = feeder;
         RobotCommands.hoodSubsys = hood;
         RobotCommands.intakeSubsys = intake;
-        // RobotCommands.limelightSubsys = limelight;
+        RobotCommands.limelightSubsys = limelight;
         RobotCommands.drivetrain = drive;
     }
 
@@ -114,20 +114,20 @@ public final class RobotCommands {
         return hoodSubsys.positionCommand(position);
     }
 
-    // // ========== Vision Commands ==========
+    // ========== Vision Commands ==========
 
-    // public static Command updateVision() {
-    //     return Commands.run(() -> {
-    //         final Pose2d currentPose = drivetrain.getState().Pose;
-    //         limelightSubsys.getMeasurement(currentPose).ifPresent(measurement -> {
-    //             drivetrain.addVisionMeasurement(
-    //                 measurement.poseEstimate.pose,
-    //                 measurement.poseEstimate.timestampSeconds,
-    //                 measurement.standardDeviations
-    //             );
-    //         });
-    //     }, limelightSubsys);
-    // }
+    public static Command updateVision() {
+        return Commands.run(() -> {
+            final Pose2d currentPose = drivetrain.getState().Pose;
+            limelightSubsys.getMeasurement(currentPose).ifPresent(measurement -> {
+                drivetrain.addVisionMeasurement(
+                    measurement.poseEstimate.pose,
+                    measurement.poseEstimate.timestampSeconds,
+                    measurement.standardDeviations
+                );
+            });
+        }, limelightSubsys);
+    }
 
     // ========== Aim at Target ==========
 

@@ -55,10 +55,10 @@ public class RobotContainer {
     private final FeederSubsys feeder = new FeederSubsys();
     private final ClimberSubsys climber = new ClimberSubsys();
     private final HoodSubsys hood = new HoodSubsys();
-    // private final LimelightSubsys limelight = new LimelightSubsys("limelight");
+    private final LimelightSubsys limelight = new LimelightSubsys("limelight");
 
     public RobotContainer() {
-        RobotCommands.init(shooter, feeder, hood, intake, /* limelight, */ drivetrain);
+        RobotCommands.init(shooter, feeder, hood, intake, limelight, drivetrain);
         configureBindings();
         // Register named commands for PathPlanner event markers
         // ── Shooting ──────────────────────────────────────────────────────────
@@ -76,8 +76,8 @@ public class RobotContainer {
         // ── Intake ────────────────────────────────────────────────────────────
         NamedCommands.registerCommand("IntakeMid", RobotCommands.intakeMid());
         NamedCommands.registerCommand("StopIntake", RobotCommands.stopIntake());
-        // ── Vision (enable when limelight is re-enabled) ──────────────────────
-        // NamedCommands.registerCommand("VisionUpdate", RobotCommands.updateVision());
+        // ── Vision ────────────────────────────────────────────────────────────
+        NamedCommands.registerCommand("VisionUpdate", RobotCommands.updateVision());
         // ── Climber (for L1 auto climb) ───────────────────────────────────────
         NamedCommands.registerCommand("ClimbUp", climber.setSpeedCommand(ClimberSpeed.CLIMB_UP));
         NamedCommands.registerCommand("StopClimber", climber.setSpeedCommand(ClimberSpeed.OFF));
@@ -141,8 +141,8 @@ public class RobotContainer {
         operator.button(0).whileTrue(RobotCommands.intakeMid());
         operator.button(0).onTrue(RobotCommands.stopIntake());
 
-        // // Limelight vision updates run continuously as default command
-        // limelight.setDefaultCommand(RobotCommands.updateVision());
+        // Limelight vision updates run continuously as default command
+        limelight.setDefaultCommand(RobotCommands.updateVision());
 
     }
 
