@@ -8,52 +8,100 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.2,
-        "y": 0.6
+        "x": 0.9126730013252589,
+        "y": 0.3959876893447854
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.5,
-        "y": 1.5
+        "x": 2.9995826510189225,
+        "y": 2.359608465247452
       },
       "prevControl": {
-        "x": 2.2,
-        "y": 0.8
+        "x": 2.204000273712198,
+        "y": 2.2195313146343936
       },
       "nextControl": {
-        "x": 4.5,
-        "y": 1.5
+        "x": 3.858462000485954,
+        "y": 2.5108302311204223
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.2,
-        "y": 2.0
+        "x": 6.021500693686318,
+        "y": 1.7884454603347888
       },
       "prevControl": {
-        "x": 4.8,
-        "y": 1.6
+        "x": 5.121446168314242,
+        "y": 2.1187446113295025
       },
       "nextControl": {
-        "x": 4.8,
-        "y": 2.4
+        "x": 6.624453742902197,
+        "y": 1.5671756654150315
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 2.5,
-        "y": 2.0
+        "x": 7.994092464974527,
+        "y": 1.2405697893922853
       },
       "prevControl": {
-        "x": 3.8,
-        "y": 1.8
+        "x": 7.403881688869554,
+        "y": 0.6947383600020248
+      },
+      "nextControl": {
+        "x": 8.880369653414277,
+        "y": 2.060205696067107
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.813478495724162,
+        "y": 7.236634427310771
+      },
+      "prevControl": {
+        "x": 7.833602258822353,
+        "y": 7.507202365246939
+      },
+      "nextControl": {
+        "x": 7.7683388759896115,
+        "y": 6.629723395253443
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 5.071656716248181,
+        "y": 5.880783012645561
+      },
+      "prevControl": {
+        "x": 5.472313889163849,
+        "y": 6.133741379157035
+      },
+      "nextControl": {
+        "x": 3.591160891225913,
+        "y": 4.946059186788795
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 1.637,
+        "y": 4.876
+      },
+      "prevControl": {
+        "x": 1.388429571985071,
+        "y": 4.902697234247671
       },
       "nextControl": null,
       "isLocked": false,
@@ -63,13 +111,15 @@
   "rotationTargets": [
     {
       "waypointRelativePos": 0.0,
-      "rotationDegrees": 0.0,
-      "rotateFast": false
+      "rotationDegrees": 0.0
     },
     {
-      "waypointRelativePos": 2.0,
-      "rotationDegrees": 0.0,
-      "rotateFast": false
+      "waypointRelativePos": 3.0,
+      "rotationDegrees": 91.36197049586443
+    },
+    {
+      "waypointRelativePos": 3.6,
+      "rotationDegrees": 90.0
     }
   ],
   "constraintZones": [],
@@ -80,21 +130,31 @@
         "y": 4.05
       },
       "rotationOffset": 0.0,
-      "minWaypointRelativePos": 2.6,
-      "maxWaypointRelativePos": 3.0,
+      "minWaypointRelativePos": 5.0971070954907205,
+      "maxWaypointRelativePos": 5.520992208222811,
       "name": "Point towards Target"
+    },
+    {
+      "fieldPosition": {
+        "x": 7.75,
+        "y": 7.5
+      },
+      "rotationOffset": 0.0,
+      "minWaypointRelativePos": 2.65,
+      "maxWaypointRelativePos": 3.78638925729443,
+      "name": "Point Towards Zone"
     }
   ],
   "eventMarkers": [
     {
       "name": "IntakeMid",
-      "waypointRelativePos": 0.5,
-      "endWaypointRelativePos": 2.3,
+      "waypointRelativePos": 2.35,
+      "endWaypointRelativePos": 2.762972480106102,
       "command": null
     },
     {
       "name": "AdjustedWindUp",
-      "waypointRelativePos": 2.4,
+      "waypointRelativePos": 3.4,
       "endWaypointRelativePos": 3.0,
       "command": null
     }
@@ -109,7 +169,7 @@
   },
   "goalEndState": {
     "velocity": 0.0,
-    "rotation": 50.0
+    "rotation": -30.678971619589078
   },
   "reversed": false,
   "folder": null,

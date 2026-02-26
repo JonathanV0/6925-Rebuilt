@@ -9,6 +9,7 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
@@ -148,5 +149,17 @@ public class RobotContainer {
 
     public Command getAutonomousCommand() {
         return autoChooser.getSelected();
+    }
+
+    /**
+     * Hard-resets the drivetrain pose from Limelight vision.
+     * Call this from disabledPeriodic() so the pose is accurate before auto starts.
+     * If no tags are visible, pose is unchanged.
+     */
+    public void seedPoseFromVision() {
+        final Pose2d currentPose = drivetrain.getState().Pose;
+        limelight.getMeasurement(currentPose).ifPresent(measurement ->
+            drivetrain.resetPose(measurement.poseEstimate.pose)
+        );
     }
 }

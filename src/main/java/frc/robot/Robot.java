@@ -34,7 +34,10 @@ public class Robot extends TimedRobot {
     public void disabledInit() {}
 
     @Override
-    public void disabledPeriodic() {}
+    public void disabledPeriodic() {
+        // Continuously seed pose from vision while disabled so auto starts with accurate position
+        m_robotContainer.seedPoseFromVision();
+    }
 
     @Override
     public void disabledExit() {}

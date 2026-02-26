@@ -11,13 +11,13 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Basic drive and shoot from left (Vision)"
+                  "pathName": "Basic drive and shoot from left"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "VisionUpdate"
+                  "name": "AdjustedShootWhileMoving"
                 }
               }
             ]
