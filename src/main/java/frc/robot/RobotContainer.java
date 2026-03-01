@@ -82,6 +82,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("VisionUpdate", RobotCommands.updateVision());
         // ── Climber (for L1 auto climb) ───────────────────────────────────────
         NamedCommands.registerCommand("ClimbUp", climber.setSpeedCommand(ClimberSpeed.CLIMB_UP));
+        NamedCommands.registerCommand("ClimbDown", climber.setSpeedCommand(ClimberSpeed.CLIMB_DOWN));
         NamedCommands.registerCommand("StopClimber", climber.setSpeedCommand(ClimberSpeed.OFF));
 
         autoChooser = AutoBuilder.buildAutoChooser();
