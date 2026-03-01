@@ -32,6 +32,22 @@
     },
     {
       "anchor": {
+        "x": 4.487735951691786,
+        "y": 2.36301014114283
+      },
+      "prevControl": {
+        "x": 4.079176844452489,
+        "y": 2.4556688019520054
+      },
+      "nextControl": {
+        "x": 4.8962950589310825,
+        "y": 2.2703514803336544
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
         "x": 6.021500693686318,
         "y": 1.7884454603347888
       },
@@ -114,11 +130,11 @@
       "rotationDegrees": 0.0
     },
     {
-      "waypointRelativePos": 3.0,
+      "waypointRelativePos": 4.0,
       "rotationDegrees": 91.36197049586443
     },
     {
-      "waypointRelativePos": 3.6,
+      "waypointRelativePos": 4.6,
       "rotationDegrees": 90.0
     }
   ],
@@ -130,8 +146,8 @@
         "y": 4.05
       },
       "rotationOffset": 0.0,
-      "minWaypointRelativePos": 5.0971070954907205,
-      "maxWaypointRelativePos": 5.520992208222811,
+      "minWaypointRelativePos": 6.0971070954907205,
+      "maxWaypointRelativePos": 6.520992208222811,
       "name": "Point towards Target"
     },
     {
@@ -140,21 +156,27 @@
         "y": 7.5
       },
       "rotationOffset": 0.0,
-      "minWaypointRelativePos": 2.65,
-      "maxWaypointRelativePos": 3.78638925729443,
+      "minWaypointRelativePos": 3.65,
+      "maxWaypointRelativePos": 4.78638925729443,
       "name": "Point Towards Zone"
     }
   ],
   "eventMarkers": [
     {
+      "name": "",
+      "waypointRelativePos": 0,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
       "name": "IntakeMid",
-      "waypointRelativePos": 2.35,
+      "waypointRelativePos": 3.35,
       "endWaypointRelativePos": 2.762972480106102,
       "command": null
     },
     {
       "name": "AdjustedWindUp",
-      "waypointRelativePos": 3.4,
+      "waypointRelativePos": 4.4,
       "endWaypointRelativePos": 3.0,
       "command": null
     }

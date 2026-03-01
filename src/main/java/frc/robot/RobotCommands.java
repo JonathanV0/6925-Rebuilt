@@ -20,6 +20,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.subsystems.ClimberSubsys;
+import frc.robot.subsystems.ClimberSubsys.ClimberSpeed;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsys;
 import frc.robot.subsystems.FeederSubsys.FeederSpeed;
@@ -37,6 +39,7 @@ public final class RobotCommands {
     private static IntakeSubsys intakeSubsys;
     private static LimelightSubsys limelightSubsys;
     private static CommandSwerveDrivetrain drivetrain;
+    private static ClimberSubsys climberSubsys;
 
     // Distance-to-shot lookup table (team should calibrate these values)
     private static final InterpolatingTreeMap<Distance, Shot> distanceToShotMap = new InterpolatingTreeMap<>(
@@ -63,7 +66,8 @@ public final class RobotCommands {
         HoodSubsys hood,
         IntakeSubsys intake,
         LimelightSubsys limelight,
-        CommandSwerveDrivetrain drive
+        CommandSwerveDrivetrain drive,
+        ClimberSubsys climber
     ) {
         RobotCommands.shooterSubsys = shooter;
         RobotCommands.feederSubsys = feeder;
@@ -71,6 +75,7 @@ public final class RobotCommands {
         RobotCommands.intakeSubsys = intake;
         RobotCommands.limelightSubsys = limelight;
         RobotCommands.drivetrain = drive;
+        RobotCommands.climberSubsys = climber;
     }
 
     // ========== Fixed Shot Commands ==========
@@ -218,6 +223,29 @@ public final class RobotCommands {
             hoodSubsys.setPosition(shot.hoodPosition);
         }, shooterSubsys, hoodSubsys)
         .andThen(Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance));
+    }
+
+    // ========== Intake Jolt ==========
+
+    /**
+     * Raises the climbers, drives forward briefly, then brakes hard to jolt the intake open,
+     * then lowers the climbers back down. Use at the start of an auto to deploy the intake.
+     */
+    public static Command jolt() {
+        final SwerveRequest.RobotCentric joltDrive = new SwerveRequest.RobotCentric()
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+        final SwerveRequest.SwerveDriveBrake hardBrake = new SwerveRequest.SwerveDriveBrake();
+
+        return Commands.sequence(
+            climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_UP),
+            Commands.waitSeconds(0.5),
+            climberSubsys.setSpeedCommand(ClimberSpeed.OFF),
+            drivetrain.applyRequest(() -> joltDrive.withVelocityX(2.5)).withTimeout(0.35),
+            drivetrain.applyRequest(() -> hardBrake).withTimeout(0.15),
+            climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_DOWN),
+            Commands.waitSeconds(0.4),
+            climberSubsys.setSpeedCommand(ClimberSpeed.OFF)
+        );
     }
 
     // ========== Shot Data ==========

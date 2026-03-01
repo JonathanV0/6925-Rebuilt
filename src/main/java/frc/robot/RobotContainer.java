@@ -60,7 +60,7 @@ public class RobotContainer {
     private final LimelightSubsys limelight = new LimelightSubsys("limelight");
 
     public RobotContainer() {
-        RobotCommands.init(shooter, feeder, hood, intake, limelight, drivetrain);
+        RobotCommands.init(shooter, feeder, hood, intake, limelight, drivetrain, climber);
         configureBindings();
         // Register named commands for PathPlanner event markers
         // ── Shooting ──────────────────────────────────────────────────────────
@@ -81,6 +81,7 @@ public class RobotContainer {
         // ── Vision ────────────────────────────────────────────────────────────
         NamedCommands.registerCommand("VisionUpdate", RobotCommands.updateVision());
         // ── Climber (for L1 auto climb) ───────────────────────────────────────
+        NamedCommands.registerCommand("jolt", RobotCommands.jolt());
         NamedCommands.registerCommand("ClimbUp", climber.setSpeedCommand(ClimberSpeed.CLIMB_UP));
         NamedCommands.registerCommand("ClimbDown", climber.setSpeedCommand(ClimberSpeed.CLIMB_DOWN));
         NamedCommands.registerCommand("StopClimber", climber.setSpeedCommand(ClimberSpeed.OFF));
