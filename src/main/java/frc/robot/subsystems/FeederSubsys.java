@@ -12,16 +12,13 @@ import frc.robot.CTREConfigs;
 
 public class FeederSubsys extends SubsystemBase {
   private final TalonFX feeder0 = new TalonFX(51, "CANivore");
-  private final TalonFX feeder1 = new TalonFX(50, "CANivore");
 
   public FeederSubsys() {
     feeder0.getConfigurator().apply(CTREConfigs.FEEDER_CONFIG);
-    feeder1.getConfigurator().apply(CTREConfigs.FEEDER_CONFIG);
   }
 
   public void setSpeed(FeederSpeed speed) {
     feeder0.set(speed.value);
-    feeder1.set(speed.value);
   }
 
   public Command setSpeedCommand(FeederSpeed speed) {

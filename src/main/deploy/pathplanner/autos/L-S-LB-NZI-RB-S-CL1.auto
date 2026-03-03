@@ -1,0 +1,31 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Basic drive and shoot from left"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LB-NZI-RB-S"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RH-CL1"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

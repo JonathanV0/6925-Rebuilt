@@ -240,6 +240,7 @@ public final class RobotCommands {
             climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_UP),
             Commands.waitSeconds(0.5),
             climberSubsys.setSpeedCommand(ClimberSpeed.OFF),
+            intakeSubsys.rotateRotatorCommand(90), // 90° CCW
             drivetrain.applyRequest(() -> joltDrive.withVelocityX(2.5)).withTimeout(0.35),
             drivetrain.applyRequest(() -> hardBrake).withTimeout(0.15),
             climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_DOWN),

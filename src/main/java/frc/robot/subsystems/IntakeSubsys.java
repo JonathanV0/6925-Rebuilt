@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import frc.robot.CTREConfigs;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -12,10 +13,13 @@ import edu.wpi.first.wpilibj2.command.Commands;
 
 public class IntakeSubsys extends SubsystemBase {
   /** Creates a new Intake. */
-  private final TalonFX intake = new TalonFX(0, "CANivore");
+  private final TalonFX intake = new TalonFX(12, "CANivore");
+  private final TalonFX intakeRotator = new TalonFX(50, "CANivore");
+  private final PositionVoltage rotatorPositionRequest = new PositionVoltage(0);
 
   public IntakeSubsys() {
     intake.getConfigurator().apply(CTREConfigs.INTAKE_CONFIG);
+    intakeRotator.getConfigurator().apply(CTREConfigs.INTAKE_CONFIG);
   }
 
   public Command setSpeedCommand(IntakeSpeed speed) {
@@ -24,6 +28,19 @@ public class IntakeSubsys extends SubsystemBase {
 
   public void setSpeed(IntakeSpeed speed) {
     intake.set(speed.value);
+    intakeRotator.set(speed.value);
+  }
+
+  public Command setRotatorSpeedCommand(double speed) {
+    return Commands.runOnce(() -> intakeRotator.set(speed), this);
+  }
+
+  /** Rotates the intake rotator CCW by the given degrees from its current position. */
+  public Command rotateRotatorCommand(double degrees) {
+    return Commands.runOnce(() -> {
+      double target = intakeRotator.getPosition().getValueAsDouble() + (degrees / 360.0);
+      intakeRotator.setControl(rotatorPositionRequest.withPosition(target));
+    }, this);
   }
 
   @Override

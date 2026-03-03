@@ -36,6 +36,8 @@ public class CTREConfigs {
     INTAKE_CONFIG.CurrentLimits.StatorCurrentLimit = 60;
     INTAKE_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
     INTAKE_CONFIG.CurrentLimits.SupplyCurrentLimit = 60;
+    // Position PID for intakeRotator - TODO: tune kP on real robot
+    INTAKE_CONFIG.Slot0.kP = 1.0;
 
     //Feeder config
     FEEDER_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;

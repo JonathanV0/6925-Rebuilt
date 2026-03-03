@@ -23,7 +23,7 @@ public class LimelightSubsys extends SubsystemBase {
     private static final int[] kBlueTagIDs = {18, 19, 20, 21, 24, 25, 26, 27};
     private static final int[] kRedTagIDs  = {2, 3, 4, 5, 8, 9, 10, 11};
     // Camera mounting height above ground
-    public static final double kCameraHeightInches = 25.622456;
+    public static final double kCameraHeightInches = 25.39; // 0.548 + 0.046 + 0.0508 m = 0.6448 m
     // Camera mounting angle: 110 deg from face down = 20 deg above horizontal
     public static final double kCameraMountAngleDegrees = 20.0;
 
