@@ -213,10 +213,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                         .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())
                 ),
                 new PPHolonomicDriveController(
-                    // PID constants for translation
-                    new PIDConstants(10, 0, 0),
-                    // PID constants for rotation
-                    new PIDConstants(7, 0, 0)
+                    // PID constants for translation (kD dampens overshoot at path waypoints)
+                    new PIDConstants(10, 0, 0.05),
+                    // PID constants for rotation (kD dampens heading oscillation)
+                    new PIDConstants(7, 0, 0.1)
                 ),
                 config,
                 // Assume the path needs to be flipped for Red vs Blue, this is normally the case

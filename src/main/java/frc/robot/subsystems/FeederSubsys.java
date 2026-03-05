@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -27,13 +28,14 @@ public class FeederSubsys extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    SmartDashboard.putBoolean("Feeder Running", feeder0.get() != 0);
   }
 
   public enum FeederSpeed {
     OFF(0.0),
     FEED_SLOW(0.3),
-    FEED_FAST(0.7);
+    FEED_FAST(0.7),
+    REVERSE(-0.3);
 
     public final double value;
     FeederSpeed(double value) {

@@ -18,7 +18,7 @@ public class CTREConfigs {
     static {
 
     //Shooter config
-    SHOOTER_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    SHOOTER_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast; // Coast for flywheel — spins down naturally, less heat, faster recovery
     SHOOTER_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
     SHOOTER_CONFIG.CurrentLimits.StatorCurrentLimit = 80;
     SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;

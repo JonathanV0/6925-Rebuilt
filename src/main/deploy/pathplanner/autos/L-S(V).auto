@@ -17,6 +17,12 @@
               {
                 "type": "named",
                 "data": {
+                  "name": "AdjustedShootWhileMoving"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
                   "name": "VisionUpdate"
                 }
               }

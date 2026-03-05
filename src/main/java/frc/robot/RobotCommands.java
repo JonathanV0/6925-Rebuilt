@@ -82,8 +82,8 @@ public final class RobotCommands {
 
     public static Command windUp() {
         return new SequentialCommandGroup(
-            shooterSubsys.setVelocityRPMCommand(3000)
-            // hoodSubsys.positionCommand(0.4)  // TODO: re-enable once linear actuators are set up
+            shooterSubsys.setVelocityRPMCommand(3000),
+            hoodSubsys.positionCommand(0.4)
         );
     }
 
@@ -113,6 +113,14 @@ public final class RobotCommands {
 
     public static Command stopIntake() {
         return intakeSubsys.setSpeedCommand(IntakeSpeed.OFF);
+    }
+
+    public static Command reverseAll() {
+        return new ParallelCommandGroup(
+            intakeSubsys.setSpeedCommand(IntakeSpeed.REVERSE),
+            feederSubsys.setSpeedCommand(FeederSpeed.REVERSE),
+            shooterSubsys.setFeedSpeedCommand(FuelFeedSpeed.REVERSE)
+        );
     }
 
     public static Command setHood(double position) {
@@ -159,6 +167,43 @@ public final class RobotCommands {
         });
     }
 
+    // ========== Teleop Aim + Wind-Up Combo ==========
+
+    /**
+     * One-button teleop shot prep: auto-aims at the target while the driver drives,
+     * AND continuously adjusts shooter RPM/hood based on distance.
+     * Hold this, then pull the trigger (Shoot) when "Shooter At Speed" is green.
+     * The robot is already aimed and spun up — zero wait time on the shot.
+     */
+    public static Command aimAndWindUp(DoubleSupplier velocityX, DoubleSupplier velocityY, double maxSpeed) {
+        final SwerveRequest.FieldCentricFacingAngle aimDrive = new SwerveRequest.FieldCentricFacingAngle()
+            .withDeadband(maxSpeed * 0.1)
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+
+        aimDrive.HeadingController.setPID(8, 0, 0);
+        aimDrive.HeadingController.enableContinuousInput(-Math.PI, Math.PI);
+
+        return Commands.parallel(
+            // Aim at target while driving
+            drivetrain.applyRequest(() -> {
+                final Translation2d robotPos = drivetrain.getState().Pose.getTranslation();
+                final Translation2d targetPos = Landmarks.targetPosition();
+                final Rotation2d angleToTarget = targetPos.minus(robotPos).getAngle();
+                return aimDrive
+                    .withVelocityX(velocityX.getAsDouble())
+                    .withVelocityY(velocityY.getAsDouble())
+                    .withTargetDirection(angleToTarget);
+            }),
+            // Continuously adjust RPM and hood based on distance
+            Commands.run(() -> {
+                final Distance distance = getDistanceToTarget();
+                final Shot shot = distanceToShotMap.get(distance);
+                shooterSubsys.setVelocityRPM(shot.shooterRPM);
+                hoodSubsys.setPosition(shot.hoodPosition);
+            }, shooterSubsys, hoodSubsys)
+        );
+    }
+
     // ========== Range-Adjusted Shot Commands ==========
 
     private static Distance getDistanceToTarget() {
@@ -190,14 +235,15 @@ public final class RobotCommands {
      */
     public static Command adjustedShootWhileMoving() {
         return Commands.sequence(
-            // Phase 1: spin up to distance-based RPM, wait until at speed
+            // Phase 1: spin up to distance-based RPM, wait until at speed (max 2s to prevent deadlock)
             Commands.run(() -> {
                 final Distance distance = getDistanceToTarget();
                 final Shot shot = distanceToShotMap.get(distance);
                 shooterSubsys.setVelocityRPM(shot.shooterRPM);
                 hoodSubsys.setPosition(shot.hoodPosition);
             }, shooterSubsys, hoodSubsys)
-            .until(shooterSubsys::isVelocityWithinTolerance),
+            .until(shooterSubsys::isVelocityWithinTolerance)
+            .withTimeout(2.0),
             // Phase 2: maintain RPM/hood AND run both feeders to shoot while still moving
             Commands.run(() -> {
                 final Distance distance = getDistanceToTarget();
@@ -213,6 +259,7 @@ public final class RobotCommands {
     /**
      * Snaps RPM and hood to distance-table values once from current robot position,
      * then blocks until the shooter reaches target RPM (±100 RPM).
+     * Times out after 2 seconds to prevent auto deadlock on CAN dropout or brownout.
      * Use in sequential autos before calling shoot().
      */
     public static Command adjustedWindUpOnce() {
@@ -222,7 +269,7 @@ public final class RobotCommands {
             shooterSubsys.setVelocityRPM(shot.shooterRPM);
             hoodSubsys.setPosition(shot.hoodPosition);
         }, shooterSubsys, hoodSubsys)
-        .andThen(Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance));
+        .andThen(Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0));
     }
 
     // ========== Intake Jolt ==========

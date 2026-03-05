@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import frc.robot.CTREConfigs;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -45,13 +46,14 @@ public class IntakeSubsys extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    SmartDashboard.putBoolean("Intake Running", intake.get() != 0);
   }
 
   public enum IntakeSpeed {
     OFF(0),
     INTAKE_SLOW(.1),
-    INTAKE_MID(.25);
+    INTAKE_MID(.25),
+    REVERSE(-.25);
 
     public final double value;
     IntakeSpeed(double value) {

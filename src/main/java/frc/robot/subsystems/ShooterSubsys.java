@@ -10,6 +10,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import frc.robot.CTREConfigs;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -40,18 +41,15 @@ public class ShooterSubsys extends SubsystemBase {
   private final VelocityVoltage m_velocityRequest = new VelocityVoltage(0);
 
   // Velocity PID control - Use this for precise RPM control in competition
+  // Only command the leader (fuelShoot). Motors 9 and 10 are followers and will match automatically.
   public void setVelocityRPM(double rpm) {
     targetRPM = rpm;
     double rps = rpm / 60.0; // Convert RPM to rotations per second
     fuelShoot.setControl(m_velocityRequest.withVelocity(rps));
-    fuelShoot0.setControl(m_velocityRequest.withVelocity(rps));
-    fuelShoot1.setControl(m_velocityRequest.withVelocity(rps));
   }
 
   public void setVelocityRPS(double rps) {
     fuelShoot.setControl(m_velocityRequest.withVelocity(rps));
-    fuelShoot0.setControl(m_velocityRequest.withVelocity(rps));
-    fuelShoot1.setControl(m_velocityRequest.withVelocity(rps));
   }
 
   // Commands for button binding
@@ -61,8 +59,7 @@ public class ShooterSubsys extends SubsystemBase {
 
   public void stopShooter() {
     fuelShoot.set(0);
-    fuelShoot0.set(0);
-    fuelShoot1.set(0);
+    // Followers (fuelShoot0, fuelShoot1) will stop automatically
   }
 
   public Command stopCommand() {
@@ -77,15 +74,15 @@ public class ShooterSubsys extends SubsystemBase {
   }
 
   public boolean isVelocityWithinTolerance() {
-    return Math.abs(getVelocityRPM() - targetRPM) < kVelocityToleranceRPM;
+    // Require a positive target — prevents false-positive when shooter is idle (0 RPM = "at speed")
+    return targetRPM > 0 && Math.abs(getVelocityRPM() - targetRPM) < kVelocityToleranceRPM;
   }
   // ========== END AI GENERATED CODE ==========
 
   // Simple percent output control - Good for initial testing
+  // Only command the leader; followers match automatically.
   public void setSpeed(FuelShootSpeed speed) {
     fuelShoot.set(speed.value);
-    fuelShoot0.set(speed.value);
-    fuelShoot1.set(speed.value);
   }
 
   public void setSpeed(FuelFeedSpeed speed) {
@@ -101,7 +98,11 @@ public class ShooterSubsys extends SubsystemBase {
   }
 
   @Override
-  public void periodic() {}
+  public void periodic() {
+    SmartDashboard.putBoolean("Shooter At Speed", isVelocityWithinTolerance());
+    SmartDashboard.putNumber("Shooter RPM", getVelocityRPM());
+    SmartDashboard.putNumber("Shooter Target RPM", targetRPM);
+  }
   public enum FuelShootSpeed {
     OFF(0.0),
     SHOOT_MAX(1.0),
@@ -115,7 +116,8 @@ public class ShooterSubsys extends SubsystemBase {
   public enum FuelFeedSpeed {
     OFF(0),
     FEED_SLOW(.1),
-    FEED_FAST(.4);
+    FEED_FAST(.4),
+    REVERSE(-.1);
 
     public final double value;
     FuelFeedSpeed(double value) {

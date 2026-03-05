@@ -60,7 +60,12 @@ public class LimelightSubsys extends SubsystemBase {
             return Optional.empty();
         }
 
-        final Matrix<N3, N1> standardDeviations = VecBuilder.fill(0.1, 0.1, 10.0);
+        // Scale trust with distance: close tags are trusted more, far tags less.
+        // Quadratic falloff: at 1m → 0.05, at 3m → 0.45, at 5m → 1.25
+        final double distance = poseEstimate.avgTagDist;
+        final double xyStdDev = 0.05 * distance * distance;
+        // Never trust MegaTag1 heading (only accurate with multi-tag, which LL2 doesn't support well)
+        final Matrix<N3, N1> standardDeviations = VecBuilder.fill(xyStdDev, xyStdDev, 9999.0);
 
         posePublisher.set(poseEstimate.pose);
 

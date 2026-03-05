@@ -32,7 +32,7 @@ import frc.robot.subsystems.ShooterSubsys;
 
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+    private double MaxAngularRate = RotationsPerSecond.of(1.5).in(RadiansPerSecond); // 1.5 rotations per second max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -44,9 +44,8 @@ public class RobotContainer {
     private final Telemetry logger = new Telemetry(MaxSpeed);
     private final SendableChooser<Command> autoChooser;
 
-    // TODO: Revert ports back to joystick=0, operator=1 when done testing
-    private final CommandXboxController joystick = new CommandXboxController(1);
-    private final CommandX3DController operator = new CommandX3DController(0);
+    private final CommandXboxController joystick = new CommandXboxController(0);
+    private final CommandX3DController operator = new CommandX3DController(1);
 
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
@@ -127,9 +126,10 @@ public class RobotContainer {
         // Reset the field-centric heading on left bumper press.
         joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
-        // Hold right bumper to auto-aim at target while still driving
+        // Hold right bumper to auto-aim at target + spin up shooter (distance-based RPM)
+        // When "Shooter At Speed" turns green, operator pulls trigger to fire instantly
         joystick.rightBumper().whileTrue(
-            RobotCommands.aimAtTarget(
+            RobotCommands.aimAndWindUp(
                 () -> -joystick.getLeftY() * MaxSpeed,
                 () -> -joystick.getLeftX() * MaxSpeed,
                 MaxSpeed
@@ -143,6 +143,7 @@ public class RobotContainer {
         operator.button(10).whileTrue(RobotCommands.adjustedWindUp());
         operator.button(11).whileTrue(RobotCommands.intakeMid());
         operator.button(12).onTrue(RobotCommands.stopIntake());
+        operator.button(3).whileTrue(RobotCommands.reverseAll()); // Eject jammed ball
 
         // Limelight vision updates run continuously as default command
         limelight.setDefaultCommand(RobotCommands.updateVision());
@@ -153,15 +154,24 @@ public class RobotContainer {
         return autoChooser.getSelected();
     }
 
+    // Maximum distance (meters) a vision update can jump from current pose before we reject it.
+    // Prevents a single bad Limelight frame from corrupting the auto start position.
+    private static final double kMaxVisionJumpMeters = 1.0;
+
     /**
-     * Hard-resets the drivetrain pose from Limelight vision.
-     * Call this from disabledPeriodic() so the pose is accurate before auto starts.
-     * If no tags are visible, pose is unchanged.
+     * Seeds the drivetrain pose from Limelight vision while disabled.
+     * Rejects measurements that jump more than 1 meter from the current estimate
+     * to protect against bad frames corrupting the auto start position.
      */
     public void seedPoseFromVision() {
         final Pose2d currentPose = drivetrain.getState().Pose;
-        limelight.getMeasurement(currentPose).ifPresent(measurement ->
-            drivetrain.resetPose(measurement.poseEstimate.pose)
-        );
+        limelight.getMeasurement(currentPose).ifPresent(measurement -> {
+            final double jump = currentPose.getTranslation()
+                .getDistance(measurement.poseEstimate.pose.getTranslation());
+            if (jump < kMaxVisionJumpMeters || currentPose.getTranslation().getNorm() < 0.01) {
+                // Accept if jump is small, OR if current pose is near origin (uninitialized)
+                drivetrain.resetPose(measurement.poseEstimate.pose);
+            }
+        });
     }
 }

@@ -5,40 +5,9 @@
     "data": {
       "commands": [
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "IntakeMid"
-          }
-        },
-        {
-          "type": "deadline",
-          "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Bump Approach Right"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "AdjustedShootWhileMoving"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StopFeed"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "jolt"
+            "pathName": "LW-NZI-Hub"
           }
         },
         {
@@ -48,15 +17,58 @@
           }
         },
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "Depot Intake Pass"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "VisionUpdate"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "AdjustedWindUpOnce"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.5
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopFeed"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "post-depot to climb"
+            "pathName": "LH-CL1"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ClimbUp"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 2.5
           }
         },
         {
