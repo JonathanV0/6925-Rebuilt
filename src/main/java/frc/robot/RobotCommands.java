@@ -8,7 +8,6 @@ import java.util.function.DoubleSupplier;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
@@ -26,7 +25,6 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsys;
 import frc.robot.subsystems.FeederSubsys.FeederSpeed;
 import frc.robot.subsystems.HoodSubsys;
-import frc.robot.subsystems.LimelightSubsys;
 import frc.robot.subsystems.IntakeSubsys;
 import frc.robot.subsystems.IntakeSubsys.IntakeSpeed;
 import frc.robot.subsystems.ShooterSubsys;
@@ -37,7 +35,6 @@ public final class RobotCommands {
     private static FeederSubsys feederSubsys;
     private static HoodSubsys hoodSubsys;
     private static IntakeSubsys intakeSubsys;
-    private static LimelightSubsys limelightSubsys;
     private static CommandSwerveDrivetrain drivetrain;
     private static ClimberSubsys climberSubsys;
 
@@ -65,7 +62,6 @@ public final class RobotCommands {
         FeederSubsys feeder,
         HoodSubsys hood,
         IntakeSubsys intake,
-        LimelightSubsys limelight,
         CommandSwerveDrivetrain drive,
         ClimberSubsys climber
     ) {
@@ -73,7 +69,6 @@ public final class RobotCommands {
         RobotCommands.feederSubsys = feeder;
         RobotCommands.hoodSubsys = hood;
         RobotCommands.intakeSubsys = intake;
-        RobotCommands.limelightSubsys = limelight;
         RobotCommands.drivetrain = drive;
         RobotCommands.climberSubsys = climber;
     }
@@ -103,10 +98,6 @@ public final class RobotCommands {
 
     // ========== Intake Commands ==========
 
-    public static Command intakeSlow() {
-        return intakeSubsys.setSpeedCommand(IntakeSpeed.INTAKE_SLOW);
-    }
-
     public static Command intakeMid() {
         return intakeSubsys.setSpeedCommand(IntakeSpeed.INTAKE_MID);
     }
@@ -121,50 +112,6 @@ public final class RobotCommands {
             feederSubsys.setSpeedCommand(FeederSpeed.REVERSE),
             shooterSubsys.setFeedSpeedCommand(FuelFeedSpeed.REVERSE)
         );
-    }
-
-    public static Command setHood(double position) {
-        return hoodSubsys.positionCommand(position);
-    }
-
-    // ========== Vision Commands ==========
-
-    public static Command updateVision() {
-        return Commands.run(() -> {
-            final Pose2d currentPose = drivetrain.getState().Pose;
-            limelightSubsys.getMeasurement(currentPose).ifPresent(measurement -> {
-                drivetrain.addVisionMeasurement(
-                    measurement.poseEstimate.pose,
-                    measurement.poseEstimate.timestampSeconds,
-                    measurement.standardDeviations
-                );
-            });
-        }, limelightSubsys);
-    }
-
-    // ========== Aim at Target ==========
-
-    public static Command aimAtTarget(DoubleSupplier velocityX, DoubleSupplier velocityY, double maxSpeed) {
-        final SwerveRequest.FieldCentricFacingAngle aimDrive = new SwerveRequest.FieldCentricFacingAngle()
-            .withDeadband(maxSpeed * 0.1)
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
-
-        // PID controls how the robot rotates to face the target:
-        // P=8: rotational speed scales with heading error (tune on robot)
-        // I=0: no integral correction needed for heading
-        // D=0: start without dampening, increase if robot oscillates
-        aimDrive.HeadingController.setPID(8, 0, 0);
-        aimDrive.HeadingController.enableContinuousInput(-Math.PI, Math.PI);
-
-        return drivetrain.applyRequest(() -> {
-            final Translation2d robotPos = drivetrain.getState().Pose.getTranslation();
-            final Translation2d targetPos = Landmarks.targetPosition();
-            final Rotation2d angleToTarget = targetPos.minus(robotPos).getAngle();
-            return aimDrive
-                .withVelocityX(velocityX.getAsDouble())
-                .withVelocityY(velocityY.getAsDouble())
-                .withTargetDirection(angleToTarget);
-        });
     }
 
     // ========== Teleop Aim + Wind-Up Combo ==========

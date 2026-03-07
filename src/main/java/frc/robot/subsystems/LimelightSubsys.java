@@ -72,10 +72,6 @@ public class LimelightSubsys extends SubsystemBase {
         return Optional.of(new Measurement(poseEstimate, standardDeviations));
     }
 
-    public double getTYDegrees() {
-        return LimelightHelpers.getTY(name);
-    }
-
     public static class Measurement {
         public final PoseEstimate poseEstimate;
         public final Matrix<N3, N1> standardDeviations;

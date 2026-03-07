@@ -59,7 +59,7 @@ public class RobotContainer {
     private final LimelightSubsys limelight = new LimelightSubsys("limelight");
 
     public RobotContainer() {
-        RobotCommands.init(shooter, feeder, hood, intake, limelight, drivetrain, climber);
+        RobotCommands.init(shooter, feeder, hood, intake, drivetrain, climber);
         configureBindings();
         // Register named commands for PathPlanner event markers
         // ── Shooting ──────────────────────────────────────────────────────────
@@ -77,8 +77,7 @@ public class RobotContainer {
         // ── Intake ────────────────────────────────────────────────────────────
         NamedCommands.registerCommand("IntakeMid", RobotCommands.intakeMid());
         NamedCommands.registerCommand("StopIntake", RobotCommands.stopIntake());
-        // ── Vision ────────────────────────────────────────────────────────────
-        NamedCommands.registerCommand("VisionUpdate", RobotCommands.updateVision());
+        // Vision updates now run automatically in robotPeriodic() — no named command needed
         // ── Climber (for L1 auto climb) ───────────────────────────────────────
         NamedCommands.registerCommand("jolt", RobotCommands.jolt());
         NamedCommands.registerCommand("ClimbUp", climber.setSpeedCommand(ClimberSpeed.CLIMB_UP));
@@ -145,9 +144,6 @@ public class RobotContainer {
         operator.button(12).onTrue(RobotCommands.stopIntake());
         operator.button(3).whileTrue(RobotCommands.reverseAll()); // Eject jammed ball
 
-        // Limelight vision updates run continuously as default command
-        limelight.setDefaultCommand(RobotCommands.updateVision());
-
     }
 
     public Command getAutonomousCommand() {
@@ -157,6 +153,22 @@ public class RobotContainer {
     // Maximum distance (meters) a vision update can jump from current pose before we reject it.
     // Prevents a single bad Limelight frame from corrupting the auto start position.
     private static final double kMaxVisionJumpMeters = 1.0;
+
+    /**
+     * Runs a single vision update cycle — reads the Limelight, and if a valid
+     * measurement is available, feeds it into the drivetrain's Kalman filter.
+     * Called from robotPeriodic() so it runs every cycle in all modes.
+     */
+    public void updateVision() {
+        final Pose2d currentPose = drivetrain.getState().Pose;
+        limelight.getMeasurement(currentPose).ifPresent(measurement -> {
+            drivetrain.addVisionMeasurement(
+                measurement.poseEstimate.pose,
+                measurement.poseEstimate.timestampSeconds,
+                measurement.standardDeviations
+            );
+        });
+    }
 
     /**
      * Seeds the drivetrain pose from Limelight vision while disabled.

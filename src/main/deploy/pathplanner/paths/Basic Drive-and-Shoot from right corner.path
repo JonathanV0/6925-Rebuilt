@@ -16,12 +16,12 @@
     },
     {
       "anchor": {
-        "x": 2.926,
-        "y": 2.942
+        "x": 2.72400730613426,
+        "y": 2.6534390190972226
       },
       "prevControl": {
-        "x": 2.158725059000358,
-        "y": 2.4268790257821644
+        "x": 1.9567323651346178,
+        "y": 2.138318044879387
       },
       "nextControl": null,
       "isLocked": false,
@@ -42,7 +42,20 @@
       "name": "Point Towards Zone"
     }
   ],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "AdjustedWindUp",
+      "waypointRelativePos": 0.32936851211072665,
+      "endWaypointRelativePos": 1.0,
+      "command": null
+    },
+    {
+      "name": "shoot",
+      "waypointRelativePos": 0.78,
+      "endWaypointRelativePos": 1.0,
+      "command": null
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 4.0,
     "maxAcceleration": 5.0,

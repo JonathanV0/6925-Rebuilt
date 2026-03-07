@@ -47,7 +47,20 @@
       "name": "Point towards Target"
     }
   ],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "AdjustedWindUpOnce",
+      "waypointRelativePos": 0,
+      "endWaypointRelativePos": 1.0,
+      "command": null
+    },
+    {
+      "name": "shoot",
+      "waypointRelativePos": 0.784919028340081,
+      "endWaypointRelativePos": 1.0,
+      "command": null
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 4.0,
     "maxAcceleration": 5.0,

@@ -5,22 +5,9 @@
     "data": {
       "commands": [
         {
-          "type": "deadline",
+          "type": "path",
           "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Basic drive and shoot from left"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "AdjustedShootWhileMoving"
-                }
-              }
-            ]
+            "pathName": "Basic drive and shoot from left"
           }
         },
         {

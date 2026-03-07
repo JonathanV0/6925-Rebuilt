@@ -5,19 +5,19 @@
     "data": {
       "commands": [
         {
-          "type": "deadline",
+          "type": "parallel",
           "data": {
             "commands": [
               {
-                "type": "path",
+                "type": "named",
                 "data": {
-                  "pathName": "Basic drive and shoot from left"
+                  "name": "VisionUpdate"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "AdjustedShootWhileMoving"
+                  "name": "AdjustedWindUpOnce"
                 }
               }
             ]
@@ -26,7 +26,13 @@
         {
           "type": "named",
           "data": {
-            "name": "StopFeed"
+            "name": "shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Basic drive and shoot from left"
           }
         },
         {
@@ -50,7 +56,7 @@
         {
           "type": "named",
           "data": {
-            "name": "ClimbDown"
+            "name": "climbDown"
           }
         }
       ]

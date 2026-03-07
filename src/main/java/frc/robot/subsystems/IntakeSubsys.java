@@ -32,10 +32,6 @@ public class IntakeSubsys extends SubsystemBase {
     intakeRotator.set(speed.value);
   }
 
-  public Command setRotatorSpeedCommand(double speed) {
-    return Commands.runOnce(() -> intakeRotator.set(speed), this);
-  }
-
   /** Rotates the intake rotator CCW by the given degrees from its current position. */
   public Command rotateRotatorCommand(double degrees) {
     return Commands.runOnce(() -> {

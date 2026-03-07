@@ -48,22 +48,9 @@ public class ShooterSubsys extends SubsystemBase {
     fuelShoot.setControl(m_velocityRequest.withVelocity(rps));
   }
 
-  public void setVelocityRPS(double rps) {
-    fuelShoot.setControl(m_velocityRequest.withVelocity(rps));
-  }
-
   // Commands for button binding
   public Command setVelocityRPMCommand(double rpm) {
     return Commands.runOnce(() -> setVelocityRPM(rpm), this);
-  }
-
-  public void stopShooter() {
-    fuelShoot.set(0);
-    // Followers (fuelShoot0, fuelShoot1) will stop automatically
-  }
-
-  public Command stopCommand() {
-    return Commands.runOnce(() -> stopShooter(), this);
   }
 
   private static final double kVelocityToleranceRPM = 100.0;
@@ -79,18 +66,8 @@ public class ShooterSubsys extends SubsystemBase {
   }
   // ========== END AI GENERATED CODE ==========
 
-  // Simple percent output control - Good for initial testing
-  // Only command the leader; followers match automatically.
-  public void setSpeed(FuelShootSpeed speed) {
-    fuelShoot.set(speed.value);
-  }
-
   public void setSpeed(FuelFeedSpeed speed) {
     fuelFeed.set(speed.value);
-  }
-
-  public Command setSpeedCommand(FuelShootSpeed speed) {
-    return Commands.runOnce(() -> setSpeed(speed), this);
   }
 
   public Command setFeedSpeedCommand(FuelFeedSpeed speed) {
@@ -102,16 +79,6 @@ public class ShooterSubsys extends SubsystemBase {
     SmartDashboard.putBoolean("Shooter At Speed", isVelocityWithinTolerance());
     SmartDashboard.putNumber("Shooter RPM", getVelocityRPM());
     SmartDashboard.putNumber("Shooter Target RPM", targetRPM);
-  }
-  public enum FuelShootSpeed {
-    OFF(0.0),
-    SHOOT_MAX(1.0),
-    SHOOT_HALF(0.5);
-
-    public final double value;
-    FuelShootSpeed(double value) {
-      this.value = value;
-      }
   }
   public enum FuelFeedSpeed {
     OFF(0),

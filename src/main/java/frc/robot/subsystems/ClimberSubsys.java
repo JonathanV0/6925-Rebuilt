@@ -26,10 +26,6 @@ public class ClimberSubsys extends SubsystemBase {
     return Commands.runOnce(() -> setSpeed(speed), this);
   }
 
-  public void stop() {
-    climber.set(0);
-  }
-
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
