@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.5004719056126903,
-        "y": 5.056255799514471
+        "x": 3.72843894675926,
+        "y": 4.855656539351852
       },
       "isLocked": false,
       "linkedName": null
@@ -20,12 +20,12 @@
         "y": 7.422471788194445
       },
       "prevControl": {
-        "x": 7.108944882238412,
-        "y": 6.970501212226109
+        "x": 7.052071686921297,
+        "y": 6.631930483217593
       },
       "nextControl": {
-        "x": 7.682021321886436,
-        "y": 7.608451646343962
+        "x": 7.641274487999844,
+        "y": 7.638210362763365
       },
       "isLocked": false,
       "linkedName": null
@@ -57,7 +57,7 @@
       },
       "nextControl": {
         "x": 7.522853272308236,
-        "y": 0.4402386256579651
+        "y": 0.44023862565796523
       },
       "isLocked": false,
       "linkedName": null
@@ -108,7 +108,7 @@
       "command": null
     },
     {
-      "name": "IntakeMid",
+      "name": "IntakeFast",
       "waypointRelativePos": 1.3444798875432518,
       "endWaypointRelativePos": null,
       "command": null

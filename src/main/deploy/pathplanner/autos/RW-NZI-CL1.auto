@@ -5,6 +5,12 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "jolt"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "RW-NZI-Hub"
@@ -17,22 +23,9 @@
           }
         },
         {
-          "type": "parallel",
+          "type": "named",
           "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "VisionUpdate"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "AdjustedWindUpOnce"
-                }
-              }
-            ]
+            "name": "AdjustedWindUpOnce"
           }
         },
         {

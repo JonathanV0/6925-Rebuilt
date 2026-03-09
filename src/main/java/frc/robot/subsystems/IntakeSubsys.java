@@ -49,6 +49,7 @@ public class IntakeSubsys extends SubsystemBase {
     OFF(0),
     INTAKE_SLOW(.1),
     INTAKE_MID(.25),
+    INTAKE_FAST(.5),
     REVERSE(-.25);
 
     public final double value;

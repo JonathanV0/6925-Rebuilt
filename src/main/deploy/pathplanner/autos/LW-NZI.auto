@@ -5,6 +5,12 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "jolt"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "LW-NZI-Hub"

@@ -102,6 +102,10 @@ public final class RobotCommands {
         return intakeSubsys.setSpeedCommand(IntakeSpeed.INTAKE_MID);
     }
 
+    public static Command intakeFast() {
+        return intakeSubsys.setSpeedCommand(IntakeSpeed.INTAKE_FAST);
+    }
+
     public static Command stopIntake() {
         return intakeSubsys.setSpeedCommand(IntakeSpeed.OFF);
     }

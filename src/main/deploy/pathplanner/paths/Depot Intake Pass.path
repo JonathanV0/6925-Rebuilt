@@ -78,7 +78,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "IntakeMid",
+      "name": "IntakeFast",
       "waypointRelativePos": 0.8849647299757277,
       "endWaypointRelativePos": 2.2724988622572786,
       "command": null

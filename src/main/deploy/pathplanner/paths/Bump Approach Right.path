@@ -169,7 +169,7 @@
       "command": null
     },
     {
-      "name": "IntakeMid",
+      "name": "IntakeFast",
       "waypointRelativePos": 3.35,
       "endWaypointRelativePos": 2.762972480106102,
       "command": null
