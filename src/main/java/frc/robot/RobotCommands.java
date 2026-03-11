@@ -8,8 +8,10 @@ import java.util.function.DoubleSupplier;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.interpolation.Interpolator;
 import edu.wpi.first.math.interpolation.InverseInterpolator;
@@ -145,9 +147,9 @@ public final class RobotCommands {
                     .withVelocityY(velocityY.getAsDouble())
                     .withTargetDirection(angleToTarget);
             }),
-            // Continuously adjust RPM and hood based on distance
+            // Continuously adjust RPM and hood based on predicted distance
             Commands.run(() -> {
-                final Distance distance = getDistanceToTarget();
+                final Distance distance = getPredictedDistanceToTarget();
                 final Shot shot = distanceToShotMap.get(distance);
                 shooterSubsys.setVelocityRPM(shot.shooterRPM);
                 hoodSubsys.setPosition(shot.hoodPosition);
@@ -157,15 +159,39 @@ public final class RobotCommands {
 
     // ========== Range-Adjusted Shot Commands ==========
 
+    // How far ahead (seconds) to predict robot position for shot calculations.
+    // Accounts for shooter spinup + ball flight time.
+    private static final double kLookAheadSeconds = 0.25;
+
     private static Distance getDistanceToTarget() {
         final Translation2d robotPosition = drivetrain.getState().Pose.getTranslation();
         final Translation2d targetPosition = Landmarks.targetPosition();
         return Meters.of(robotPosition.getDistance(targetPosition));
     }
 
+    /**
+     * Predicts where the robot will be in kLookAheadSeconds based on current velocity,
+     * then returns the distance from that future position to the target.
+     * More accurate than current-position distance when shooting while moving.
+     */
+    private static Distance getPredictedDistanceToTarget() {
+        final Pose2d currentPose = drivetrain.getState().Pose;
+        final ChassisSpeeds fieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
+            drivetrain.getState().Speeds, currentPose.getRotation());
+        // Predict future position: current + velocity * time
+        final Translation2d futurePosition = currentPose.getTranslation().plus(
+            new Translation2d(
+                fieldSpeeds.vxMetersPerSecond * kLookAheadSeconds,
+                fieldSpeeds.vyMetersPerSecond * kLookAheadSeconds
+            )
+        );
+        final Translation2d targetPosition = Landmarks.targetPosition();
+        return Meters.of(futurePosition.getDistance(targetPosition));
+    }
+
     public static Command adjustedWindUp() {
         return Commands.run(() -> {
-            final Distance distance = getDistanceToTarget();
+            final Distance distance = getPredictedDistanceToTarget();
             final Shot shot = distanceToShotMap.get(distance);
             shooterSubsys.setVelocityRPM(shot.shooterRPM);
             hoodSubsys.setPosition(shot.hoodPosition);
@@ -186,9 +212,9 @@ public final class RobotCommands {
      */
     public static Command adjustedShootWhileMoving() {
         return Commands.sequence(
-            // Phase 1: spin up to distance-based RPM, wait until at speed (max 2s to prevent deadlock)
+            // Phase 1: spin up to predicted-distance RPM, wait until at speed (max 2s to prevent deadlock)
             Commands.run(() -> {
-                final Distance distance = getDistanceToTarget();
+                final Distance distance = getPredictedDistanceToTarget();
                 final Shot shot = distanceToShotMap.get(distance);
                 shooterSubsys.setVelocityRPM(shot.shooterRPM);
                 hoodSubsys.setPosition(shot.hoodPosition);
@@ -197,7 +223,7 @@ public final class RobotCommands {
             .withTimeout(2.0),
             // Phase 2: maintain RPM/hood AND run both feeders to shoot while still moving
             Commands.run(() -> {
-                final Distance distance = getDistanceToTarget();
+                final Distance distance = getPredictedDistanceToTarget();
                 final Shot shot = distanceToShotMap.get(distance);
                 shooterSubsys.setVelocityRPM(shot.shooterRPM);
                 hoodSubsys.setPosition(shot.hoodPosition);

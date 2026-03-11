@@ -5,15 +5,21 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "jolt"
+          }
+        },
+        {
           "type": "path",
           "data": {
-            "pathName": "Basic Drive-and-Shoot from right corner"
+            "pathName": "Depot to Hub"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "shoot"
+            "name": "StopFeed"
           }
         }
       ]
