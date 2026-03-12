@@ -6,6 +6,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.hardware.TalonFX;
 
@@ -30,6 +31,11 @@ public class ShooterSubsys extends SubsystemBase {
     fuelShoot.getConfigurator().apply(CTREConfigs.SHOOTER_CONFIG);
     fuelShoot0.getConfigurator().apply(CTREConfigs.SHOOTER_CONFIG);
     fuelShoot1.getConfigurator().apply(CTREConfigs.SHOOTER_CONFIG);
+
+    // Motor 8 spins opposite direction from 9 and 10
+    var invertConfig = new com.ctre.phoenix6.configs.MotorOutputConfigs();
+    invertConfig.Inverted = InvertedValue.Clockwise_Positive;
+    fuelShoot.getConfigurator().apply(invertConfig);
 
     fuelShoot0.setControl(new Follower(fuelShoot.getDeviceID(), MotorAlignmentValue.Aligned));
     fuelShoot1.setControl(new Follower(fuelShoot.getDeviceID(), MotorAlignmentValue.Aligned));

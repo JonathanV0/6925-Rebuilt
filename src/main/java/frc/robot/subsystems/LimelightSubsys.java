@@ -58,6 +58,7 @@ public class LimelightSubsys extends SubsystemBase {
         LimelightHelpers.SetRobotOrientation(name, currentRobotPose.getRotation().getDegrees(), 0, 0, 0, 0, 0);
 
         // MegaTag1 works on all Limelight versions (including Limelight 2)
+        // Always use wpiBlue — WPILib's standard blue-origin coordinate system for both alliances
         final PoseEstimate poseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue(name);
         if (poseEstimate == null || poseEstimate.tagCount == 0 || poseEstimate.avgTagArea < kMinTagAreaPercent) {
             return Optional.empty();
