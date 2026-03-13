@@ -56,7 +56,8 @@ public class RobotContainer {
     private final FeederSubsys feeder = new FeederSubsys();
     private final ClimberSubsys climber = new ClimberSubsys();
     private final HoodSubsys hood = new HoodSubsys();
-    private final LimelightSubsys limelight = new LimelightSubsys("limelight");
+    // TODO: Re-enable when Limelight is connected and radio is configured
+    private final LimelightSubsys limelight = null; // new LimelightSubsys("limelight");
 
     public RobotContainer() {
         RobotCommands.init(shooter, feeder, hood, intake, drivetrain, climber);
@@ -67,6 +68,8 @@ public class RobotContainer {
         NamedCommands.registerCommand("StopFeed", RobotCommands.stopFeed());
         // Fixed shot (no vision): set RPM/hood to hardcoded values
         NamedCommands.registerCommand("windUp", RobotCommands.windUp());
+        NamedCommands.registerCommand("windUpOnce", RobotCommands.windUpOnce());
+        NamedCommands.registerCommand("stopWindUp", RobotCommands.stopWindUp());
         // Distance-adjusted shot: interpolates RPM/hood from odometry distance
         // For the vision auto variant, pair this with accurate pose correction
         NamedCommands.registerCommand("AdjustedWindUp", RobotCommands.adjustedWindUp());
@@ -161,6 +164,7 @@ public class RobotContainer {
      * Called from robotPeriodic() so it runs every cycle in all modes.
      */
     public void updateVision() {
+        if (limelight == null) return;
         final Pose2d currentPose = drivetrain.getState().Pose;
         limelight.getMeasurement(currentPose).ifPresent(measurement -> {
             drivetrain.addVisionMeasurement(
@@ -177,6 +181,7 @@ public class RobotContainer {
      * to protect against bad frames corrupting the auto start position.
      */
     public void seedPoseFromVision() {
+        if (limelight == null) return;
         final Pose2d currentPose = drivetrain.getState().Pose;
         limelight.getMeasurement(currentPose).ifPresent(measurement -> {
             final double jump = currentPose.getTranslation()

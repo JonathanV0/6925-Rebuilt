@@ -5,15 +5,46 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "deadline",
           "data": {
-            "pathName": "Basic Shoot from infront target"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Basic Shoot from infront target"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "windUpOnce"
+                }
+              }
+            ]
           }
         },
         {
           "type": "named",
           "data": {
             "name": "shoot"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.5
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopFeed"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "stopWindUp"
           }
         }
       ]
