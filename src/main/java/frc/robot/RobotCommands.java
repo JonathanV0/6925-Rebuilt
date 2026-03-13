@@ -78,16 +78,46 @@ public final class RobotCommands {
     // ========== Fixed Shot Commands ==========
 
     public static Command windUp() {
-        return new SequentialCommandGroup(
-            shooterSubsys.setVelocityRPMCommand(3000),
-            hoodSubsys.positionCommand(0.4)
+        return Commands.runEnd(
+            () -> {
+                shooterSubsys.setVelocityRPM(3500);
+                hoodSubsys.setPosition(0.4);
+            },
+            () -> {
+                shooterSubsys.setVelocityRPM(0);
+                hoodSubsys.setPosition(0.5);
+            },
+            shooterSubsys, hoodSubsys
         );
     }
 
+    /** One-shot wind-up for auto sequences (does not block). */
+    public static Command windUpOnce() {
+        return Commands.runOnce(() -> {
+            shooterSubsys.setVelocityRPM(3500);
+            hoodSubsys.setPosition(0.4);
+        }, shooterSubsys, hoodSubsys);
+    }
+
+    /** Stops the shooter and resets hood — call at end of auto after shooting. */
+    public static Command stopWindUp() {
+        return Commands.runOnce(() -> {
+            shooterSubsys.setVelocityRPM(0);
+            hoodSubsys.setPosition(0.5);
+        }, shooterSubsys, hoodSubsys);
+    }
+
     public static Command Shoot() {
-        return new ParallelCommandGroup(
-            feederSubsys.setSpeedCommand(FeederSpeed.FEED_FAST),
-            shooterSubsys.setFeedSpeedCommand(FuelFeedSpeed.FEED_FAST)
+        return Commands.runEnd(
+            () -> {
+                feederSubsys.setSpeed(FeederSpeed.FEED_FAST);
+                shooterSubsys.setSpeed(FuelFeedSpeed.FEED_FAST);
+            },
+            () -> {
+                feederSubsys.setSpeed(FeederSpeed.OFF);
+                shooterSubsys.setSpeed(FuelFeedSpeed.OFF);
+            },
+            feederSubsys, shooterSubsys
         );
     }
 

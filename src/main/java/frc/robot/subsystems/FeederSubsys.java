@@ -12,7 +12,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import frc.robot.CTREConfigs;
 
 public class FeederSubsys extends SubsystemBase {
-  private final TalonFX feeder0 = new TalonFX(51, "CANivore");
+  private final TalonFX feeder0 = new TalonFX(51, "");
 
   public FeederSubsys() {
     feeder0.getConfigurator().apply(CTREConfigs.FEEDER_CONFIG);
@@ -33,9 +33,9 @@ public class FeederSubsys extends SubsystemBase {
 
   public enum FeederSpeed {
     OFF(0.0),
-    FEED_SLOW(0.3),
-    FEED_FAST(0.9),
-    REVERSE(-0.3);
+    FEED_SLOW(-0.3),
+    FEED_FAST(-0.9),
+    REVERSE(0.3);
 
     public final double value;
     FeederSpeed(double value) {

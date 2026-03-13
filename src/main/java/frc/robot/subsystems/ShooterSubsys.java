@@ -19,11 +19,11 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ShooterSubsys extends SubsystemBase {
   /** Creates a new ShooterSubsys. */
-  private final TalonFX fuelShoot = new TalonFX(8, "CANivore");
-  private final TalonFX fuelShoot0 = new TalonFX(9, "CANivore");
-  private final TalonFX fuelShoot1 = new TalonFX(10, "CANivore");
+  private final TalonFX fuelShoot = new TalonFX(8, "");
+  private final TalonFX fuelShoot0 = new TalonFX(9, "");
+  private final TalonFX fuelShoot1 = new TalonFX(10, "");
 
-  private final TalonFX fuelFeed = new TalonFX(11, "CANivore");
+  private final TalonFX fuelFeed = new TalonFX(11, "");
 
 
   public ShooterSubsys() {
