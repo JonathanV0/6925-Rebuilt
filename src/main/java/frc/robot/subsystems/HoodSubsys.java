@@ -18,8 +18,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class HoodSubsys extends SubsystemBase {
-    private static final int kLeftServoPWM = 3;
-    private static final int kRightServoPWM = 4;
+    private static final int kLeftServoPWM = 0;
+    private static final int kRightServoPWM = 1;
 
     private static final Distance kServoLength = Millimeters.of(100);
     private static final LinearVelocity kMaxServoSpeed = Millimeters.of(20).per(Second);

@@ -56,7 +56,8 @@ public class RobotContainer {
     private final FeederSubsys feeder = new FeederSubsys();
     private final ClimberSubsys climber = new ClimberSubsys();
     private final HoodSubsys hood = new HoodSubsys();
-    private final LimelightSubsys limelight = new LimelightSubsys("limelight");
+    // TODO: Re-enable when Limelight is connected and radio is configured
+    private final LimelightSubsys limelight = null; // new LimelightSubsys("limelight");
 
     public RobotContainer() {
         RobotCommands.init(shooter, feeder, hood, intake, drivetrain, climber);
@@ -161,6 +162,7 @@ public class RobotContainer {
      * Called from robotPeriodic() so it runs every cycle in all modes.
      */
     public void updateVision() {
+        if (limelight == null) return;
         final Pose2d currentPose = drivetrain.getState().Pose;
         limelight.getMeasurement(currentPose).ifPresent(measurement -> {
             drivetrain.addVisionMeasurement(
@@ -177,6 +179,7 @@ public class RobotContainer {
      * to protect against bad frames corrupting the auto start position.
      */
     public void seedPoseFromVision() {
+        if (limelight == null) return;
         final Pose2d currentPose = drivetrain.getState().Pose;
         limelight.getMeasurement(currentPose).ifPresent(measurement -> {
             final double jump = currentPose.getTranslation()

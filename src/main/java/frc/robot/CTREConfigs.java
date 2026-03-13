@@ -25,10 +25,10 @@ public class CTREConfigs {
     SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimit = 40;
     SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLowerLimit = 60;
     SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLowerTime = 0.1;
-    // Velocity PID - TODO: Tune kP, kS, and kV on real robot
-    SHOOTER_CONFIG.Slot0.kP = 0.1;   // Proportional gain
-    SHOOTER_CONFIG.Slot0.kS = 0.15;  // Static friction feedforward (V)
-    SHOOTER_CONFIG.Slot0.kV = 0.12;  // Velocity feedforward (V per RPS, approx 12V / max RPS)
+    // Velocity PID (from WCP 2026 Competitive Concept)
+    SHOOTER_CONFIG.Slot0.kP = 0.5;
+    SHOOTER_CONFIG.Slot0.kI = 2.0;
+    SHOOTER_CONFIG.Slot0.kV = 0.12;  // 12V / max RPS (~100 RPS for Kraken X60)
 
     //Intake config
     INTAKE_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -36,8 +36,10 @@ public class CTREConfigs {
     INTAKE_CONFIG.CurrentLimits.StatorCurrentLimit = 60;
     INTAKE_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
     INTAKE_CONFIG.CurrentLimits.SupplyCurrentLimit = 60;
-    // Position PID for intakeRotator - TODO: tune kP on real robot
-    INTAKE_CONFIG.Slot0.kP = 1.0;
+    // Position PID for intakeRotator (based on WCP 2026 Competitive Concept)
+    // WCP uses kP=300 with MotionMagic; we use PositionVoltage so kP must be lower to avoid slamming
+    INTAKE_CONFIG.Slot0.kP = 30;
+    INTAKE_CONFIG.Slot0.kV = 12.0 / (6000.0 / 60.0 / 50.0);  // 12V / max pivot RPS (6000 RPM / 50:1 reduction)
 
     //Feeder config
     FEEDER_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;

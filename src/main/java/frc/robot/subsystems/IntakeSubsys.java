@@ -14,8 +14,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 
 public class IntakeSubsys extends SubsystemBase {
   /** Creates a new Intake. */
-  private final TalonFX intake = new TalonFX(12, "CANivore");
-  private final TalonFX intakeRotator = new TalonFX(50, "CANivore");
+  private final TalonFX intake = new TalonFX(45, "");
+  private final TalonFX intakeRotator = new TalonFX(50, "");
   private final PositionVoltage rotatorPositionRequest = new PositionVoltage(0);
 
   public IntakeSubsys() {
