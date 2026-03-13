@@ -107,7 +107,7 @@ public final class RobotCommands {
                 feederSubsys.setSpeed(FeederSpeed.OFF);
                 shooterSubsys.setSpeed(FuelFeedSpeed.OFF);
             },
-            feederSubsys, shooterSubsys
+            feederSubsys
         );
     }
 

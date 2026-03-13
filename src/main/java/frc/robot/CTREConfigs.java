@@ -43,16 +43,16 @@ public class CTREConfigs {
     //Fuel feed config (shooter subsystem motor 11)
     FUEL_FEED_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     FUEL_FEED_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
-    FUEL_FEED_CONFIG.CurrentLimits.StatorCurrentLimit = 60;
+    FUEL_FEED_CONFIG.CurrentLimits.StatorCurrentLimit = 50;
     FUEL_FEED_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
-    FUEL_FEED_CONFIG.CurrentLimits.SupplyCurrentLimit = 60;
+    FUEL_FEED_CONFIG.CurrentLimits.SupplyCurrentLimit = 40;
 
     //Feeder config
     FEEDER_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     FEEDER_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
-    FEEDER_CONFIG.CurrentLimits.StatorCurrentLimit = 60;
+    FEEDER_CONFIG.CurrentLimits.StatorCurrentLimit = 50;
     FEEDER_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
-    FEEDER_CONFIG.CurrentLimits.SupplyCurrentLimit = 60;
+    FEEDER_CONFIG.CurrentLimits.SupplyCurrentLimit = 40;
 
     //Climber config
     CLIMBER_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Brake;
