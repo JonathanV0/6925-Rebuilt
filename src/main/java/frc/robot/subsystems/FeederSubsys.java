@@ -34,7 +34,7 @@ public class FeederSubsys extends SubsystemBase {
   public enum FeederSpeed {
     OFF(0.0),
     FEED_SLOW(-0.3),
-    FEED_FAST(-0.9),
+    FEED_FAST(-0.5),
     REVERSE(0.3);
 
     public final double value;

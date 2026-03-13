@@ -109,7 +109,7 @@ public class ShooterSubsys extends SubsystemBase {
   public enum FuelFeedSpeed {
     OFF(0),
     FEED_SLOW(.1),
-    FEED_FAST(.8),
+    FEED_FAST(.3),
     REVERSE(-.1);
 
     public final double value;
