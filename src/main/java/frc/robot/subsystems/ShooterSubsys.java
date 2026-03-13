@@ -37,6 +37,8 @@ public class ShooterSubsys extends SubsystemBase {
     invertConfig.Inverted = InvertedValue.Clockwise_Positive;
     fuelShoot.getConfigurator().apply(invertConfig);
 
+    fuelFeed.getConfigurator().apply(CTREConfigs.FUEL_FEED_CONFIG);
+
     fuelShoot0.setControl(new Follower(fuelShoot.getDeviceID(), MotorAlignmentValue.Opposed));
     fuelShoot1.setControl(new Follower(fuelShoot.getDeviceID(), MotorAlignmentValue.Opposed));
   }
