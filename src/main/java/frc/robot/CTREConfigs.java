@@ -20,11 +20,9 @@ public class CTREConfigs {
     //Shooter config
     SHOOTER_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast; // Coast for flywheel — spins down naturally, less heat, faster recovery
     SHOOTER_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
-    SHOOTER_CONFIG.CurrentLimits.StatorCurrentLimit = 80;
+    SHOOTER_CONFIG.CurrentLimits.StatorCurrentLimit = 120;
     SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
-    SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimit = 40;
-    SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLowerLimit = 60;
-    SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLowerTime = 0.1;
+    SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimit = 70;
     // Velocity PID (from WCP 2026 Competitive Concept)
     SHOOTER_CONFIG.Slot0.kP = 0.5;
     SHOOTER_CONFIG.Slot0.kI = 2.0;

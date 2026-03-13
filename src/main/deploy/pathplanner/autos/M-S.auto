@@ -5,6 +5,12 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "windUpOnce"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Basic Shoot from infront target"
@@ -14,6 +20,18 @@
           "type": "named",
           "data": {
             "name": "shoot"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.5
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopFeed"
           }
         }
       ]
