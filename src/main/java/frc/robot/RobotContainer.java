@@ -16,6 +16,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -146,6 +147,11 @@ public class RobotContainer {
         operator.button(11).whileTrue(RobotCommands.intakeMid());
         operator.button(12).onTrue(RobotCommands.stopIntake());
         operator.button(3).whileTrue(RobotCommands.reverseAll()); // Eject jammed ball
+        operator.button(7).whileTrue(Commands.runEnd(
+            () -> shooter.setRightMotorOnly(4500),
+            () -> { shooter.stopShooter(); shooter.reEnableFollowers(); },
+            shooter
+        )); // Test right motor only
 
     }
 

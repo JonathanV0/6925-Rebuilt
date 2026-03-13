@@ -54,6 +54,26 @@ public class ShooterSubsys extends SubsystemBase {
     fuelShoot.setControl(m_velocityRequest.withVelocity(rps));
   }
 
+  /** Spins only the right (leader) motor at the given RPM. Followers are stopped. */
+  public void setRightMotorOnly(double rpm) {
+    fuelShoot0.stopMotor();
+    fuelShoot1.stopMotor();
+    double rps = rpm / 60.0;
+    fuelShoot.setControl(m_velocityRequest.withVelocity(rps));
+  }
+
+  /** Re-enables followers after single-motor testing. */
+  public void reEnableFollowers() {
+    fuelShoot0.setControl(new Follower(fuelShoot.getDeviceID(), MotorAlignmentValue.Opposed));
+    fuelShoot1.setControl(new Follower(fuelShoot.getDeviceID(), MotorAlignmentValue.Opposed));
+  }
+
+  /** Neutralizes the shooter motors — they will coast to a stop. */
+  public void stopShooter() {
+    targetRPM = 0;
+    fuelShoot.stopMotor();
+  }
+
   // Commands for button binding
   public Command setVelocityRPMCommand(double rpm) {
     return Commands.runOnce(() -> setVelocityRPM(rpm), this);

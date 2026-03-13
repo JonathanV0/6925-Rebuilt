@@ -85,13 +85,14 @@ public final class RobotCommands {
         }, shooterSubsys, hoodSubsys);
     }
 
-    /** Holds RPM/hood while button is held, idles on release — for teleop */
+    /** Holds RPM/hood while button is held, coasts on release — for teleop */
     public static Command windUp() {
-        return Commands.run(
+        return Commands.runEnd(
             () -> {
                 shooterSubsys.setVelocityRPM(4500);
                 hoodSubsys.setPosition(0.4);
             },
+            () -> shooterSubsys.stopShooter(),
             shooterSubsys, hoodSubsys
         );
     }
