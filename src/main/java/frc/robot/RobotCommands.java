@@ -80,21 +80,17 @@ public final class RobotCommands {
     /** Sets RPM/hood once and finishes — for use in auto sequences */
     public static Command windUpOnce() {
         return Commands.runOnce(() -> {
-            shooterSubsys.setVelocityRPM(3500);
+            shooterSubsys.setVelocityRPM(4500);
             hoodSubsys.setPosition(0.4);
         }, shooterSubsys, hoodSubsys);
     }
 
-    /** Holds RPM/hood while button is held, stops on release — for teleop */
+    /** Holds RPM/hood while button is held, idles on release — for teleop */
     public static Command windUp() {
-        return Commands.runEnd(
+        return Commands.run(
             () -> {
-                shooterSubsys.setVelocityRPM(3500);
+                shooterSubsys.setVelocityRPM(4500);
                 hoodSubsys.setPosition(0.4);
-            },
-            () -> {
-                shooterSubsys.setVelocityRPM(0);
-                hoodSubsys.setPosition(0.5);
             },
             shooterSubsys, hoodSubsys
         );

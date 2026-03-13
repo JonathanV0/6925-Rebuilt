@@ -23,10 +23,10 @@ public class CTREConfigs {
     SHOOTER_CONFIG.CurrentLimits.StatorCurrentLimit = 120;
     SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
     SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimit = 70;
-    // Velocity PID (from WCP 2026 Competitive Concept)
-    SHOOTER_CONFIG.Slot0.kP = 0.5;
-    SHOOTER_CONFIG.Slot0.kI = 2.0;
-    SHOOTER_CONFIG.Slot0.kV = 0.12;  // 12V / max RPS (~100 RPS for Kraken X60)
+    // Velocity PID — soft values (last known working)
+    SHOOTER_CONFIG.Slot0.kP = 0.1;
+    SHOOTER_CONFIG.Slot0.kS = 0.15;
+    SHOOTER_CONFIG.Slot0.kV = 0.12;
 
     //Intake config
     INTAKE_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;
