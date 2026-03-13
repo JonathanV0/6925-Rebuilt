@@ -97,6 +97,24 @@ public final class RobotCommands {
         );
     }
 
+    /** Wind up + feed: spins flywheels AND runs both feeders while held, stops everything on release */
+    public static Command windUpAndShoot() {
+        return Commands.runEnd(
+            () -> {
+                shooterSubsys.setVelocityRPM(4500);
+                hoodSubsys.setPosition(0.4);
+                feederSubsys.setSpeed(FeederSpeed.FEED_FAST);
+                shooterSubsys.setSpeed(FuelFeedSpeed.FEED_FAST);
+            },
+            () -> {
+                shooterSubsys.stopShooter();
+                feederSubsys.setSpeed(FeederSpeed.OFF);
+                shooterSubsys.setSpeed(FuelFeedSpeed.OFF);
+            },
+            shooterSubsys, hoodSubsys, feederSubsys
+        );
+    }
+
     public static Command Shoot() {
         return Commands.runEnd(
             () -> {
