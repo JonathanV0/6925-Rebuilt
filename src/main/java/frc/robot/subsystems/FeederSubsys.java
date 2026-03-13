@@ -13,13 +13,16 @@ import frc.robot.CTREConfigs;
 
 public class FeederSubsys extends SubsystemBase {
   private final TalonFX feeder0 = new TalonFX(51, "");
+  private final TalonFX fuelFeed = new TalonFX(11, "");
 
   public FeederSubsys() {
     feeder0.getConfigurator().apply(CTREConfigs.FEEDER_CONFIG);
+    fuelFeed.getConfigurator().apply(CTREConfigs.FUEL_FEED_CONFIG);
   }
 
   public void setSpeed(FeederSpeed speed) {
     feeder0.set(speed.value);
+    fuelFeed.set(speed.fuelFeedValue);
   }
 
   public Command setSpeedCommand(FeederSpeed speed) {
@@ -32,14 +35,16 @@ public class FeederSubsys extends SubsystemBase {
   }
 
   public enum FeederSpeed {
-    OFF(0.0),
-    FEED_SLOW(-0.3),
-    FEED_FAST(-0.5),
-    REVERSE(0.3);
+    OFF(0.0, 0.0),
+    FEED_SLOW(-0.3, 0.1),
+    FEED_FAST(-0.5, 0.3),
+    REVERSE(0.3, -0.1);
 
     public final double value;
-    FeederSpeed(double value) {
+    public final double fuelFeedValue;
+    FeederSpeed(double value, double fuelFeedValue) {
       this.value = value;
+      this.fuelFeedValue = fuelFeedValue;
     }
   }
 }

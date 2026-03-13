@@ -23,7 +23,6 @@ public class ShooterSubsys extends SubsystemBase {
   private final TalonFX fuelShoot0 = new TalonFX(9, "");
   private final TalonFX fuelShoot1 = new TalonFX(10, "");
 
-  private final TalonFX fuelFeed = new TalonFX(11, "");
 
 
   public ShooterSubsys() {
@@ -36,8 +35,6 @@ public class ShooterSubsys extends SubsystemBase {
     var invertConfig = new com.ctre.phoenix6.configs.MotorOutputConfigs();
     invertConfig.Inverted = InvertedValue.Clockwise_Positive;
     fuelShoot.getConfigurator().apply(invertConfig);
-
-    fuelFeed.getConfigurator().apply(CTREConfigs.FUEL_FEED_CONFIG);
 
     fuelShoot0.setControl(new Follower(fuelShoot.getDeviceID(), MotorAlignmentValue.Opposed));
     fuelShoot1.setControl(new Follower(fuelShoot.getDeviceID(), MotorAlignmentValue.Opposed));
@@ -94,29 +91,10 @@ public class ShooterSubsys extends SubsystemBase {
   }
   // ========== END AI GENERATED CODE ==========
 
-  public void setSpeed(FuelFeedSpeed speed) {
-    fuelFeed.set(speed.value);
-  }
-
-  public Command setFeedSpeedCommand(FuelFeedSpeed speed) {
-    return Commands.runOnce(() -> setSpeed(speed), this);
-  }
-
   @Override
   public void periodic() {
     SmartDashboard.putBoolean("Shooter At Speed", isVelocityWithinTolerance());
     SmartDashboard.putNumber("Shooter RPM", getVelocityRPM());
     SmartDashboard.putNumber("Shooter Target RPM", targetRPM);
-  }
-  public enum FuelFeedSpeed {
-    OFF(0),
-    FEED_SLOW(.1),
-    FEED_FAST(.3),
-    REVERSE(-.1);
-
-    public final double value;
-    FuelFeedSpeed(double value) {
-      this.value = value;
-    }
   }
 }

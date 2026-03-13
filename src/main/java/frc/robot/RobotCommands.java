@@ -30,7 +30,6 @@ import frc.robot.subsystems.HoodSubsys;
 import frc.robot.subsystems.IntakeSubsys;
 import frc.robot.subsystems.IntakeSubsys.IntakeSpeed;
 import frc.robot.subsystems.ShooterSubsys;
-import frc.robot.subsystems.ShooterSubsys.FuelFeedSpeed;
 
 public final class RobotCommands {
     private static ShooterSubsys shooterSubsys;
@@ -104,12 +103,10 @@ public final class RobotCommands {
                 shooterSubsys.setVelocityRPM(4500);
                 hoodSubsys.setPosition(0.4);
                 feederSubsys.setSpeed(FeederSpeed.FEED_FAST);
-                shooterSubsys.setSpeed(FuelFeedSpeed.FEED_FAST);
             },
             () -> {
                 shooterSubsys.stopShooter();
                 feederSubsys.setSpeed(FeederSpeed.OFF);
-                shooterSubsys.setSpeed(FuelFeedSpeed.OFF);
             },
             shooterSubsys, hoodSubsys, feederSubsys
         );
@@ -117,23 +114,14 @@ public final class RobotCommands {
 
     public static Command Shoot() {
         return Commands.runEnd(
-            () -> {
-                feederSubsys.setSpeed(FeederSpeed.FEED_FAST);
-                shooterSubsys.setSpeed(FuelFeedSpeed.FEED_FAST);
-            },
-            () -> {
-                feederSubsys.setSpeed(FeederSpeed.OFF);
-                shooterSubsys.setSpeed(FuelFeedSpeed.OFF);
-            },
+            () -> feederSubsys.setSpeed(FeederSpeed.FEED_FAST),
+            () -> feederSubsys.setSpeed(FeederSpeed.OFF),
             feederSubsys
         );
     }
 
     public static Command stopFeed() {
-        return new ParallelCommandGroup(
-            feederSubsys.setSpeedCommand(FeederSpeed.OFF),
-            shooterSubsys.setFeedSpeedCommand(FuelFeedSpeed.OFF)
-        );
+        return feederSubsys.setSpeedCommand(FeederSpeed.OFF);
     }
 
     // ========== Intake Commands ==========
@@ -153,8 +141,7 @@ public final class RobotCommands {
     public static Command reverseAll() {
         return new ParallelCommandGroup(
             intakeSubsys.setSpeedCommand(IntakeSpeed.REVERSE),
-            feederSubsys.setSpeedCommand(FeederSpeed.REVERSE),
-            shooterSubsys.setFeedSpeedCommand(FuelFeedSpeed.REVERSE)
+            feederSubsys.setSpeedCommand(FeederSpeed.REVERSE)
         );
     }
 
@@ -266,7 +253,6 @@ public final class RobotCommands {
                 shooterSubsys.setVelocityRPM(shot.shooterRPM);
                 hoodSubsys.setPosition(shot.hoodPosition);
                 feederSubsys.setSpeed(FeederSpeed.FEED_FAST);
-                shooterSubsys.setSpeed(FuelFeedSpeed.FEED_FAST);
             }, shooterSubsys, hoodSubsys, feederSubsys)
         );
     }
