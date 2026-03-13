@@ -114,6 +114,14 @@ public final class RobotCommands {
         );
     }
 
+    /** Stops shooter flywheel and resets hood — for use in auto sequences */
+    public static Command stopWindUp() {
+        return Commands.runOnce(() -> {
+            shooterSubsys.setVelocityRPM(0);
+            hoodSubsys.setPosition(0.5);
+        }, shooterSubsys, hoodSubsys);
+    }
+
     public static Command stopFeed() {
         return new ParallelCommandGroup(
             feederSubsys.setSpeedCommand(FeederSpeed.OFF),

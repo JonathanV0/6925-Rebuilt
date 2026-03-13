@@ -33,6 +33,12 @@
           "data": {
             "name": "StopFeed"
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "stopWindUp"
+          }
         }
       ]
     }
