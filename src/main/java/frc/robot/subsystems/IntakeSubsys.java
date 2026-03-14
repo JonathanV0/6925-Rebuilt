@@ -20,7 +20,7 @@ public class IntakeSubsys extends SubsystemBase {
 
   public IntakeSubsys() {
     intake.getConfigurator().apply(CTREConfigs.INTAKE_CONFIG);
-    intakeRotator.getConfigurator().apply(CTREConfigs.INTAKE_CONFIG);
+    intakeRotator.getConfigurator().apply(CTREConfigs.INTAKE_ROTATOR_CONFIG);
   }
 
   public Command setSpeedCommand(IntakeSpeed speed) {
@@ -29,7 +29,6 @@ public class IntakeSubsys extends SubsystemBase {
 
   public void setSpeed(IntakeSpeed speed) {
     intake.set(speed.value);
-    intakeRotator.set(speed.value);
   }
 
   /** Rotates the intake rotator CCW by the given degrees from its current position. */
@@ -47,10 +46,10 @@ public class IntakeSubsys extends SubsystemBase {
 
   public enum IntakeSpeed {
     OFF(0),
-    INTAKE_SLOW(.1),
-    INTAKE_MID(.25),
-    INTAKE_FAST(.5),
-    REVERSE(-.25);
+    INTAKE_SLOW(-.1),
+    INTAKE_MID(-.25),
+    INTAKE_FAST(-.5),
+    REVERSE(.25);
 
     public final double value;
     IntakeSpeed(double value) {

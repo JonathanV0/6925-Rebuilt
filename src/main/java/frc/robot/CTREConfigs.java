@@ -12,6 +12,7 @@ public class CTREConfigs {
 
     public static final TalonFXConfiguration SHOOTER_CONFIG = new TalonFXConfiguration();
     public static final TalonFXConfiguration INTAKE_CONFIG = new TalonFXConfiguration();
+    public static final TalonFXConfiguration INTAKE_ROTATOR_CONFIG = new TalonFXConfiguration();
     public static final TalonFXConfiguration FUEL_FEED_CONFIG = new TalonFXConfiguration();
     public static final TalonFXConfiguration FEEDER_CONFIG = new TalonFXConfiguration();
     public static final TalonFXConfiguration CLIMBER_CONFIG  = new TalonFXConfiguration();
@@ -24,9 +25,9 @@ public class CTREConfigs {
     SHOOTER_CONFIG.CurrentLimits.StatorCurrentLimit = 120;
     SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
     SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimit = 70;
-    // Velocity PID — soft values (last known working)
-    SHOOTER_CONFIG.Slot0.kP = 0.1;
-    SHOOTER_CONFIG.Slot0.kS = 0.15;
+    // Velocity PID — aggressive WCP CC values
+    SHOOTER_CONFIG.Slot0.kP = 0.5;
+    SHOOTER_CONFIG.Slot0.kI = 2.0;
     SHOOTER_CONFIG.Slot0.kV = 0.12;
 
     //Intake config
@@ -35,10 +36,15 @@ public class CTREConfigs {
     INTAKE_CONFIG.CurrentLimits.StatorCurrentLimit = 60;
     INTAKE_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
     INTAKE_CONFIG.CurrentLimits.SupplyCurrentLimit = 60;
-    // Position PID for intakeRotator (based on WCP 2026 Competitive Concept)
-    // WCP uses kP=300 with MotionMagic; we use PositionVoltage so kP must be lower to avoid slamming
-    INTAKE_CONFIG.Slot0.kP = 30;
-    INTAKE_CONFIG.Slot0.kV = 12.0 / (6000.0 / 60.0 / 50.0);  // 12V / max pivot RPS (6000 RPM / 50:1 reduction)
+    //Intake rotator config
+    INTAKE_ROTATOR_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    INTAKE_ROTATOR_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
+    INTAKE_ROTATOR_CONFIG.CurrentLimits.StatorCurrentLimit = 60;
+    INTAKE_ROTATOR_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
+    INTAKE_ROTATOR_CONFIG.CurrentLimits.SupplyCurrentLimit = 60;
+    // Position PID — soft values to avoid slamming
+    INTAKE_ROTATOR_CONFIG.Slot0.kP = 10;
+    INTAKE_ROTATOR_CONFIG.Slot0.kV = 12.0 / (6000.0 / 60.0 / 50.0);  // 12V / max pivot RPS (6000 RPM / 50:1 reduction)
 
     //Fuel feed config (shooter subsystem motor 11)
     FUEL_FEED_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;
