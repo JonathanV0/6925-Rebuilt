@@ -30,9 +30,8 @@ public class LimelightSubsys extends SubsystemBase {
     // Camera mounting angle: 110 deg from face down = 20 deg above horizontal
     public static final double kCameraMountAngleDegrees = 20.0;
 
-    // Reject measurements where the avg tag area is below this threshold (% of image)
-    // Tags that are too small in the frame produce unreliable pose estimates on LL2
-    private static final double kMinTagAreaPercent = 0.5;
+    // LL3 has better resolution — can reliably see tags from further away
+    private static final double kMinTagAreaPercent = 0.1;
 
     private final String name;
     private final NetworkTable telemetryTable;
@@ -42,8 +41,6 @@ public class LimelightSubsys extends SubsystemBase {
         this.name = name;
         this.telemetryTable = NetworkTableInstance.getDefault().getTable("SmartDashboard/" + name);
         this.posePublisher = telemetryTable.getStructTopic("Estimated Robot Pose", Pose2d.struct).publish();
-
-        // Tag filter is set each cycle in getMeasurement() based on alliance
     }
 
     public Optional<Measurement> getMeasurement(Pose2d currentRobotPose) {
@@ -55,21 +52,27 @@ public class LimelightSubsys extends SubsystemBase {
             LimelightHelpers.SetFiducialIDFiltersOverride(name, kRedTagIDs);
         }
 
+        // Feed gyro heading to LL3 — MegaTag2 uses this for accurate 3D multi-tag solving
         LimelightHelpers.SetRobotOrientation(name, currentRobotPose.getRotation().getDegrees(), 0, 0, 0, 0, 0);
 
-        // MegaTag1 works on all Limelight versions (including Limelight 2)
-        // Always use wpiBlue — WPILib's standard blue-origin coordinate system for both alliances
-        final PoseEstimate poseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue(name);
+        // MegaTag2: LL3 fuses multiple tags in 3D using the gyro heading for much better accuracy
+        final PoseEstimate poseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name);
         if (poseEstimate == null || poseEstimate.tagCount == 0 || poseEstimate.avgTagArea < kMinTagAreaPercent) {
             return Optional.empty();
         }
 
-        // Scale trust with distance: close tags are trusted more, far tags less.
-        // Quadratic falloff: at 1m → 0.05, at 3m → 0.45, at 5m → 1.25
         final double distance = poseEstimate.avgTagDist;
-        final double xyStdDev = 0.05 * distance * distance;
-        // Never trust MegaTag1 heading (only accurate with multi-tag, which LL2 doesn't support well)
-        final Matrix<N3, N1> standardDeviations = VecBuilder.fill(xyStdDev, xyStdDev, 9999.0);
+        final Matrix<N3, N1> standardDeviations;
+
+        if (poseEstimate.tagCount >= 2) {
+            // Multi-tag MegaTag2: very high confidence — tight XY, trust heading
+            final double xyStdDev = 0.02 * distance;
+            standardDeviations = VecBuilder.fill(xyStdDev, xyStdDev, 0.1);
+        } else {
+            // Single tag: trust XY with quadratic distance falloff, ignore heading
+            final double xyStdDev = 0.05 * distance * distance;
+            standardDeviations = VecBuilder.fill(xyStdDev, xyStdDev, 9999.0);
+        }
 
         posePublisher.set(poseEstimate.pose);
 

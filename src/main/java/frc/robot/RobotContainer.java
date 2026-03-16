@@ -160,8 +160,7 @@ public class RobotContainer {
     private final FeederSubsys feeder = new FeederSubsys();
     private final ClimberSubsys climber = new ClimberSubsys();
     private final HoodSubsys hood = new HoodSubsys();
-    // TODO: Re-enable when Limelight is connected and radio is configured
-    private final LimelightSubsys limelight = null; // new LimelightSubsys("limelight");
+    private final LimelightSubsys limelight = new LimelightSubsys("limelight");
 
     public RobotContainer() {
         RobotCommands.init(shooter, feeder, hood, intake, drivetrain, climber);
