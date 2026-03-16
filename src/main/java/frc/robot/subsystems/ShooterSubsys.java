@@ -5,7 +5,6 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.controls.VelocityVoltage;
-import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import frc.robot.CTREConfigs;
@@ -28,17 +27,6 @@ public class ShooterSubsys extends SubsystemBase {
     fuelShoot.getConfigurator().apply(CTREConfigs.SHOOTER_CONFIG);
     fuelShoot0.getConfigurator().apply(CTREConfigs.SHOOTER_CONFIG_9);
     fuelShoot1.getConfigurator().apply(CTREConfigs.SHOOTER_CONFIG_10);
-
-    // Motor 8 spins opposite direction from 9 and 10
-    var invertConfig = new com.ctre.phoenix6.configs.MotorOutputConfigs();
-    invertConfig.Inverted = InvertedValue.Clockwise_Positive;
-    fuelShoot.getConfigurator().apply(invertConfig);
-
-    // Motors 9 and 10 spin opposite direction from motor 8
-    var invertConfig0 = new com.ctre.phoenix6.configs.MotorOutputConfigs();
-    invertConfig0.Inverted = InvertedValue.CounterClockwise_Positive;
-    fuelShoot0.getConfigurator().apply(invertConfig0);
-    fuelShoot1.getConfigurator().apply(invertConfig0);
   }
 
   // Each motor gets its own velocity PID so they independently hold RPM

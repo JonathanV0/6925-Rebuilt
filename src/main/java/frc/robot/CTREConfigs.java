@@ -5,6 +5,7 @@
 package frc.robot;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 /** Add your docs here. */
@@ -22,7 +23,8 @@ public class CTREConfigs {
     static {
 
     //Shooter config
-    SHOOTER_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast; // Coast for flywheel — spins down naturally, less heat, faster recovery
+    SHOOTER_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    SHOOTER_CONFIG.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; // Motor 8 spins opposite from 9/10
     SHOOTER_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
     SHOOTER_CONFIG.CurrentLimits.StatorCurrentLimit = 120;
     SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -34,6 +36,7 @@ public class CTREConfigs {
 
     // Velocity PID — Motor 9 (middle)
     SHOOTER_CONFIG_9.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    SHOOTER_CONFIG_9.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // Motors 9/10 opposite from 8
     SHOOTER_CONFIG_9.CurrentLimits.StatorCurrentLimitEnable = true;
     SHOOTER_CONFIG_9.CurrentLimits.StatorCurrentLimit = 120;
     SHOOTER_CONFIG_9.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -44,6 +47,7 @@ public class CTREConfigs {
 
     // Velocity PID — Motor 10 (left)
     SHOOTER_CONFIG_10.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    SHOOTER_CONFIG_10.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // Motors 9/10 opposite from 8
     SHOOTER_CONFIG_10.CurrentLimits.StatorCurrentLimitEnable = true;
     SHOOTER_CONFIG_10.CurrentLimits.StatorCurrentLimit = 120;
     SHOOTER_CONFIG_10.CurrentLimits.SupplyCurrentLimitEnable = true;

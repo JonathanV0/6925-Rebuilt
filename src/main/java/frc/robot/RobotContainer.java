@@ -252,7 +252,7 @@ public class RobotContainer {
         operator.button(3).whileTrue(climber.holdSpeedCommand(ClimberSpeed.CLIMB_DOWN)); // Climber down
         operator.button(4).whileTrue(RobotCommands.windUpCloser());
         operator.button(6).onTrue(RobotCommands.hopperRelease()); // Climber up/down to release hopper
-        operator.button(7).onTrue(intake.rotateRotatorCommand(-570)); // Deploy intake
+        operator.button(7).onTrue(intake.rotateRotatorCommand(-580)); // Deploy intake
         operator.button(8).onTrue(intake.rotateRotatorCommand(570)); // Retract intake
 
     }

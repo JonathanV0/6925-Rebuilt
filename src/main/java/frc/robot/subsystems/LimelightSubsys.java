@@ -41,6 +41,16 @@ public class LimelightSubsys extends SubsystemBase {
         this.name = name;
         this.telemetryTable = NetworkTableInstance.getDefault().getTable("SmartDashboard/" + name);
         this.posePublisher = telemetryTable.getStructTopic("Estimated Robot Pose", Pose2d.struct).publish();
+
+        // Set camera mounting position relative to robot center (meters and degrees)
+        LimelightHelpers.setCameraPose_RobotSpace(name,
+            kCameraForwardInches * 0.0254,  // forward (meters)
+            kCameraSideInches * 0.0254,      // side (meters)
+            kCameraHeightInches * 0.0254,    // up (meters)
+            0.0,                             // roll (degrees)
+            kCameraMountAngleDegrees,        // pitch (degrees)
+            0.0                              // yaw (degrees)
+        );
     }
 
     public Optional<Measurement> getMeasurement(Pose2d currentRobotPose) {

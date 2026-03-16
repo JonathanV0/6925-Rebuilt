@@ -9,7 +9,6 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
@@ -29,6 +28,7 @@ import frc.robot.subsystems.FeederSubsys.FeederSpeed;
 import frc.robot.subsystems.HoodSubsys;
 import frc.robot.subsystems.IntakeSubsys;
 import frc.robot.subsystems.IntakeSubsys.IntakeSpeed;
+import frc.robot.subsystems.LimelightSubsys;
 import frc.robot.subsystems.ShooterSubsys;
 
 public final class RobotCommands {
@@ -186,31 +186,41 @@ public final class RobotCommands {
      * Hold this, then pull the trigger (Shoot) when "Shooter At Speed" is green.
      * The robot is already aimed and spun up — zero wait time on the shot.
      */
+    // Proportional gain for Limelight tx aim correction (radians/sec per degree of error)
+    private static final double kAimP = 0.1;
+
     public static Command aimAndWindUp(DoubleSupplier velocityX, DoubleSupplier velocityY, double maxSpeed) {
-        final SwerveRequest.FieldCentricFacingAngle aimDrive = new SwerveRequest.FieldCentricFacingAngle()
+        final SwerveRequest.FieldCentric aimDrive = new SwerveRequest.FieldCentric()
             .withDeadband(maxSpeed * 0.1)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
-        aimDrive.HeadingController.setPID(8, 0, 0);
-        aimDrive.HeadingController.enableContinuousInput(-Math.PI, Math.PI);
-
         return Commands.parallel(
-            // Aim at target while driving
+            // Aim at target using Limelight tx — proportional rotation control
             drivetrain.applyRequest(() -> {
-                final Translation2d robotPos = drivetrain.getState().Pose.getTranslation();
-                final Translation2d targetPos = Landmarks.targetPosition();
-                final Rotation2d angleToTarget = targetPos.minus(robotPos).getAngle();
+                final double tx = LimelightHelpers.getTV("limelight")
+                    ? LimelightHelpers.getTX("limelight") : 0.0;
                 return aimDrive
                     .withVelocityX(velocityX.getAsDouble())
                     .withVelocityY(velocityY.getAsDouble())
-                    .withTargetDirection(angleToTarget);
+                    .withRotationalRate(-tx * kAimP);
             }),
-            // Continuously adjust RPM and hood based on predicted distance
+            // Continuously adjust RPM and hood using Limelight distance (ty), fallback to odometry
             Commands.run(() -> {
-                final Distance distance = getPredictedDistanceToTarget();
+                final Distance distance;
+                if (LimelightHelpers.getTV("limelight")) {
+                    final double ty = LimelightHelpers.getTY("limelight");
+                    final double heightDiff = LimelightSubsys.kTargetHeightInches - LimelightSubsys.kCameraHeightInches;
+                    final double angleRad = Math.toRadians(LimelightSubsys.kCameraMountAngleDegrees + ty);
+                    // Horizontal distance from camera to tag, plus half hub width to get center-to-center
+                    final double distInches = heightDiff / Math.tan(angleRad) + 23.5;
+                    distance = Inches.of(distInches);
+                } else {
+                    distance = getPredictedDistanceToTarget();
+                }
                 final Shot shot = distanceToShotMap.get(distance);
                 shooterSubsys.setVelocityRPM(shot.shooterRPM);
                 hoodSubsys.setPosition(shot.hoodPosition);
+                SmartDashboard.putNumber("Auto Distance (inches)", distance.in(Inches));
             }, shooterSubsys, hoodSubsys)
         );
     }
@@ -334,7 +344,7 @@ public final class RobotCommands {
             climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_UP),
             Commands.waitSeconds(0.5),
             climberSubsys.setSpeedCommand(ClimberSpeed.OFF),
-            intakeSubsys.rotateRotatorCommand(-570), // Deploy intake (short of hard stop)
+            intakeSubsys.rotateRotatorCommand(-573), // Deploy intake (short of hard stop)
             drivetrain.applyRequest(() -> joltDrive.withVelocityX(2.5)).withTimeout(0.35),
             drivetrain.applyRequest(() -> hardBrake).withTimeout(0.15),
             climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_DOWN),
