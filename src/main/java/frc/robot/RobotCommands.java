@@ -52,10 +52,9 @@ public final class RobotCommands {
     );
 
     static {
-        // TODO: Calibrate these values on the real robot
-        distanceToShotMap.put(Inches.of(52.0), new Shot(2800, 0.19));
-        distanceToShotMap.put(Inches.of(114.4), new Shot(3275, 0.40));
-        distanceToShotMap.put(Inches.of(165.5), new Shot(3650, 0.48));
+        distanceToShotMap.put(Inches.of(47.0), new Shot(3350, 0.0));
+        distanceToShotMap.put(Inches.of(84.0), new Shot(3350, 0.27));
+        distanceToShotMap.put(Inches.of(120.0), new Shot(3350, 0.45));
     }
 
     public static void init(
