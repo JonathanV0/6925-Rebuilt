@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git push:*)",
+      "Bash(git reset:*)",
+      "Bash(git stash:*)",
+      "Bash(git pull:*)",
+      "Bash(./gradlew build:*)",
+      "WebFetch(domain:youtu.be)"
+    ]
+  }
+}

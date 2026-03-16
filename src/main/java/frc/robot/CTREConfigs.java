@@ -10,7 +10,9 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 /** Add your docs here. */
 public class CTREConfigs {
 
-    public static final TalonFXConfiguration SHOOTER_CONFIG = new TalonFXConfiguration();
+    public static final TalonFXConfiguration SHOOTER_CONFIG = new TalonFXConfiguration();       // Motor 8 (right)
+    public static final TalonFXConfiguration SHOOTER_CONFIG_9 = new TalonFXConfiguration();    // Motor 9 (middle)
+    public static final TalonFXConfiguration SHOOTER_CONFIG_10 = new TalonFXConfiguration();   // Motor 10 (left)
     public static final TalonFXConfiguration INTAKE_CONFIG = new TalonFXConfiguration();
     public static final TalonFXConfiguration INTAKE_ROTATOR_CONFIG = new TalonFXConfiguration();
     public static final TalonFXConfiguration FUEL_FEED_CONFIG = new TalonFXConfiguration();
@@ -25,10 +27,30 @@ public class CTREConfigs {
     SHOOTER_CONFIG.CurrentLimits.StatorCurrentLimit = 120;
     SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
     SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimit = 70;
-    // Velocity PID — aggressive WCP CC values
-    SHOOTER_CONFIG.Slot0.kP = 0.5;
-    SHOOTER_CONFIG.Slot0.kI = 2.0;
-    SHOOTER_CONFIG.Slot0.kV = 0.12;
+    // Velocity PID — Motor 8 (right)
+    SHOOTER_CONFIG.Slot0.kP = 0.8;
+    SHOOTER_CONFIG.Slot0.kI = 1.0;
+    SHOOTER_CONFIG.Slot0.kV = 0.2;
+
+    // Velocity PID — Motor 9 (middle)
+    SHOOTER_CONFIG_9.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    SHOOTER_CONFIG_9.CurrentLimits.StatorCurrentLimitEnable = true;
+    SHOOTER_CONFIG_9.CurrentLimits.StatorCurrentLimit = 120;
+    SHOOTER_CONFIG_9.CurrentLimits.SupplyCurrentLimitEnable = true;
+    SHOOTER_CONFIG_9.CurrentLimits.SupplyCurrentLimit = 70;
+    SHOOTER_CONFIG_9.Slot0.kP = 0.77;
+    SHOOTER_CONFIG_9.Slot0.kI = 1.0;
+    SHOOTER_CONFIG_9.Slot0.kV = 0.12;
+
+    // Velocity PID — Motor 10 (left)
+    SHOOTER_CONFIG_10.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    SHOOTER_CONFIG_10.CurrentLimits.StatorCurrentLimitEnable = true;
+    SHOOTER_CONFIG_10.CurrentLimits.StatorCurrentLimit = 120;
+    SHOOTER_CONFIG_10.CurrentLimits.SupplyCurrentLimitEnable = true;
+    SHOOTER_CONFIG_10.CurrentLimits.SupplyCurrentLimit = 70;
+    SHOOTER_CONFIG_10.Slot0.kP = 0.75;
+    SHOOTER_CONFIG_10.Slot0.kI = 1.0;
+    SHOOTER_CONFIG_10.Slot0.kV = 0.1;
 
     //Intake config
     INTAKE_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -42,9 +64,11 @@ public class CTREConfigs {
     INTAKE_ROTATOR_CONFIG.CurrentLimits.StatorCurrentLimit = 60;
     INTAKE_ROTATOR_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
     INTAKE_ROTATOR_CONFIG.CurrentLimits.SupplyCurrentLimit = 60;
-    // Position PID — soft values to avoid slamming
-    INTAKE_ROTATOR_CONFIG.Slot0.kP = 10;
-    INTAKE_ROTATOR_CONFIG.Slot0.kV = 12.0 / (6000.0 / 60.0 / 50.0);  // 12V / max pivot RPS (6000 RPM / 50:1 reduction)
+    // Slot0: deploy/retract — gentle
+    INTAKE_ROTATOR_CONFIG.Slot0.kP = 0.25;
+    INTAKE_ROTATOR_CONFIG.Slot0.kV = 12.0 / (6000.0 / 60.0 / 8.0);  // 12V / max pivot RPS (6000 RPM / 8:1 reduction)
+    // Slot1: oscillation — snappy
+    INTAKE_ROTATOR_CONFIG.Slot1.kP = 10;
 
     //Fuel feed config (shooter subsystem motor 11)
     FUEL_FEED_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;

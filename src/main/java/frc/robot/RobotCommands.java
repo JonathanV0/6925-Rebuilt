@@ -79,8 +79,8 @@ public final class RobotCommands {
     /** Sets RPM/hood once and finishes — for use in auto sequences */
     public static Command windUpOnce() {
         return Commands.runOnce(() -> {
-            shooterSubsys.setVelocityRPM(4500);
-            hoodSubsys.setPosition(0.4);
+            shooterSubsys.setVelocityRPM(3350);
+            hoodSubsys.setPosition(0.5);
         }, shooterSubsys, hoodSubsys);
     }
 
@@ -88,8 +88,42 @@ public final class RobotCommands {
     public static Command windUp() {
         return Commands.runEnd(
             () -> {
-                shooterSubsys.setVelocityRPM(4500);
-                hoodSubsys.setPosition(0.4);
+                shooterSubsys.setVelocityRPM(3350);
+                hoodSubsys.setPosition(0.5);
+            },
+            () -> shooterSubsys.stopShooter(),
+            shooterSubsys, hoodSubsys
+        );
+    }
+
+    /** Close-range wind up: same RPM, lower hood — for teleop */
+    public static Command windUpClose() {
+        return Commands.runEnd(
+            () -> {
+                shooterSubsys.setVelocityRPM(3350);
+                hoodSubsys.setPosition(0.3);
+            },
+            () -> shooterSubsys.stopShooter(),
+            shooterSubsys, hoodSubsys
+        );
+    }
+
+     public static Command windUpCloser() {
+        return Commands.runEnd(
+            () -> {
+                shooterSubsys.setVelocityRPM(3350);
+                hoodSubsys.setPosition(0);
+            },
+            () -> shooterSubsys.stopShooter(),
+            shooterSubsys, hoodSubsys
+        );
+    }
+
+    public static Command windUpTest() {
+        return Commands.runEnd(
+            () -> {
+                shooterSubsys.setVelocityRPM(3350);
+                hoodSubsys.setPosition(0.45);
             },
             () -> shooterSubsys.stopShooter(),
             shooterSubsys, hoodSubsys
@@ -100,8 +134,8 @@ public final class RobotCommands {
     public static Command windUpAndShoot() {
         return Commands.runEnd(
             () -> {
-                shooterSubsys.setVelocityRPM(4500);
-                hoodSubsys.setPosition(0.4);
+                shooterSubsys.setVelocityRPM(3350);
+                hoodSubsys.setPosition(0.5);
                 feederSubsys.setSpeed(FeederSpeed.FEED_FAST);
             },
             () -> {
@@ -273,6 +307,19 @@ public final class RobotCommands {
         .andThen(Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0));
     }
 
+    // ========== Hopper Release ==========
+
+    /** Raises the climber briefly then lowers it back down to release the hopper. */
+    public static Command hopperRelease() {
+        return Commands.sequence(
+            climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_UP),
+            Commands.waitSeconds(0.5),
+            climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_DOWN),
+            Commands.waitSeconds(0.4),
+            climberSubsys.setSpeedCommand(ClimberSpeed.OFF)
+        );
+    }
+
     // ========== Intake Jolt ==========
 
     /**
@@ -288,7 +335,7 @@ public final class RobotCommands {
             climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_UP),
             Commands.waitSeconds(0.5),
             climberSubsys.setSpeedCommand(ClimberSpeed.OFF),
-            intakeSubsys.rotateRotatorCommand(90), // 90° CCW
+            intakeSubsys.rotateRotatorCommand(-570), // Deploy intake (short of hard stop)
             drivetrain.applyRequest(() -> joltDrive.withVelocityX(2.5)).withTimeout(0.35),
             drivetrain.applyRequest(() -> hardBrake).withTimeout(0.15),
             climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_DOWN),

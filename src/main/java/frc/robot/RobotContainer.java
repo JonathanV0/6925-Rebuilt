@@ -245,16 +245,16 @@ public class RobotContainer {
         // ===== Operator X3D Joystick =====
         operator.button(1).whileTrue(RobotCommands.Shoot());
         operator.button(2).whileTrue(RobotCommands.windUp());
-        operator.button(9).onTrue(RobotCommands.stopFeed());
-        operator.button(10).whileTrue(RobotCommands.adjustedWindUp());
-        operator.button(11).whileTrue(RobotCommands.intakeMid());
-        operator.button(12).onTrue(RobotCommands.stopIntake());
-        operator.button(3).whileTrue(RobotCommands.reverseAll()); // Eject jammed ball
-        operator.button(7).whileTrue(Commands.runEnd(
-            () -> shooter.setRightMotorOnly(4500),
-            () -> { shooter.stopShooter(); shooter.reEnableFollowers(); },
-            shooter
-        )); // Test right motor only
+        operator.button(9).whileTrue(RobotCommands.windUpTest());
+        operator.button(10).whileTrue(RobotCommands.windUpClose()); // Close-range shot
+        operator.button(11).whileTrue(intake.intakeWithOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_FAST));
+        operator.button(12).whileTrue(intake.retractWithOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_FAST));
+        operator.button(5).whileTrue(climber.holdSpeedCommand(ClimberSpeed.CLIMB_UP)); // Climber up
+        operator.button(3).whileTrue(climber.holdSpeedCommand(ClimberSpeed.CLIMB_DOWN)); // Climber down
+        operator.button(4).whileTrue(RobotCommands.windUpCloser());
+        operator.button(6).onTrue(RobotCommands.hopperRelease()); // Climber up/down to release hopper
+        operator.button(7).onTrue(intake.rotateRotatorCommand(-570)); // Deploy intake
+        operator.button(8).onTrue(intake.rotateRotatorCommand(570)); // Retract intake
 
     }
 

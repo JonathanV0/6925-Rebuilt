@@ -6,6 +6,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import frc.robot.CTREConfigs;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -26,9 +27,18 @@ public class ClimberSubsys extends SubsystemBase {
     return Commands.runOnce(() -> setSpeed(speed), this);
   }
 
+  /** Runs the climber at the given speed while held, stops on release. */
+  public Command holdSpeedCommand(ClimberSpeed speed) {
+    return Commands.runEnd(
+      () -> climber.set(speed.value),
+      () -> climber.set(0),
+      this
+    );
+  }
+
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    SmartDashboard.putNumber("Climber Position", climber.getPosition().getValueAsDouble());
   }
 
   public enum ClimberSpeed {

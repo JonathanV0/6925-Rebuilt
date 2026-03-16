@@ -4,10 +4,8 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import frc.robot.CTREConfigs;
@@ -28,32 +26,35 @@ public class ShooterSubsys extends SubsystemBase {
   public ShooterSubsys() {
 
     fuelShoot.getConfigurator().apply(CTREConfigs.SHOOTER_CONFIG);
-    fuelShoot0.getConfigurator().apply(CTREConfigs.SHOOTER_CONFIG);
-    fuelShoot1.getConfigurator().apply(CTREConfigs.SHOOTER_CONFIG);
+    fuelShoot0.getConfigurator().apply(CTREConfigs.SHOOTER_CONFIG_9);
+    fuelShoot1.getConfigurator().apply(CTREConfigs.SHOOTER_CONFIG_10);
 
     // Motor 8 spins opposite direction from 9 and 10
     var invertConfig = new com.ctre.phoenix6.configs.MotorOutputConfigs();
     invertConfig.Inverted = InvertedValue.Clockwise_Positive;
     fuelShoot.getConfigurator().apply(invertConfig);
 
-    fuelShoot0.setControl(new Follower(fuelShoot.getDeviceID(), MotorAlignmentValue.Opposed));
-    fuelShoot1.setControl(new Follower(fuelShoot.getDeviceID(), MotorAlignmentValue.Opposed));
+    // Motors 9 and 10 spin opposite direction from motor 8
+    var invertConfig0 = new com.ctre.phoenix6.configs.MotorOutputConfigs();
+    invertConfig0.Inverted = InvertedValue.CounterClockwise_Positive;
+    fuelShoot0.getConfigurator().apply(invertConfig0);
+    fuelShoot1.getConfigurator().apply(invertConfig0);
   }
 
-  // ========== AI GENERATED - PLEASE DOUBLE CHECK ==========
-
-  // Velocity control request for PID
+  // Each motor gets its own velocity PID so they independently hold RPM
   private final VelocityVoltage m_velocityRequest = new VelocityVoltage(0);
+  private final VelocityVoltage m_velocityRequest0 = new VelocityVoltage(0);
+  private final VelocityVoltage m_velocityRequest1 = new VelocityVoltage(0);
 
-  // Velocity PID control - Use this for precise RPM control in competition
-  // Only command the leader (fuelShoot). Motors 9 and 10 are followers and will match automatically.
   public void setVelocityRPM(double rpm) {
     targetRPM = rpm;
-    double rps = rpm / 60.0; // Convert RPM to rotations per second
+    double rps = rpm / 60.0;
     fuelShoot.setControl(m_velocityRequest.withVelocity(rps));
+    fuelShoot0.setControl(m_velocityRequest0.withVelocity(rps));
+    fuelShoot1.setControl(m_velocityRequest1.withVelocity(rps));
   }
 
-  /** Spins only the right (leader) motor at the given RPM. Followers are stopped. */
+  /** Spins only the right (leader) motor at the given RPM. Others are stopped. */
   public void setRightMotorOnly(double rpm) {
     fuelShoot0.stopMotor();
     fuelShoot1.stopMotor();
@@ -61,16 +62,12 @@ public class ShooterSubsys extends SubsystemBase {
     fuelShoot.setControl(m_velocityRequest.withVelocity(rps));
   }
 
-  /** Re-enables followers after single-motor testing. */
-  public void reEnableFollowers() {
-    fuelShoot0.setControl(new Follower(fuelShoot.getDeviceID(), MotorAlignmentValue.Opposed));
-    fuelShoot1.setControl(new Follower(fuelShoot.getDeviceID(), MotorAlignmentValue.Opposed));
-  }
-
   /** Neutralizes the shooter motors — they will coast to a stop. */
   public void stopShooter() {
     targetRPM = 0;
     fuelShoot.stopMotor();
+    fuelShoot0.stopMotor();
+    fuelShoot1.stopMotor();
   }
 
   // Commands for button binding
@@ -95,6 +92,8 @@ public class ShooterSubsys extends SubsystemBase {
   public void periodic() {
     SmartDashboard.putBoolean("Shooter At Speed", isVelocityWithinTolerance());
     SmartDashboard.putNumber("Shooter RPM", getVelocityRPM());
+    SmartDashboard.putNumber("Shooter RPM Motor 9", fuelShoot0.getVelocity().getValueAsDouble() * 60.0);
+    SmartDashboard.putNumber("Shooter RPM Motor 10", fuelShoot1.getVelocity().getValueAsDouble() * 60.0);
     SmartDashboard.putNumber("Shooter Target RPM", targetRPM);
   }
 }
