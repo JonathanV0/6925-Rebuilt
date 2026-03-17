@@ -16,4 +16,29 @@ public final class Constants {
   public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;
   }
+
+  public static class ShooterConstants {
+    // Fixed-shot flywheel RPM (used by all windUp variants and the shot table)
+    public static final double kFixedShotRPM = 3350;
+
+    // Hood positions for fixed-shot commands
+    public static final double kDefaultHoodPosition = 0.5;
+    public static final double kCloseHoodPosition = 0.3;
+    public static final double kTestHoodPosition = 0.45;
+    public static final double kCloserHoodPosition = 0.0;
+
+    // Distance-to-shot interpolation table entries (hood positions)
+    public static final double kHoodAt47in = 0.0;
+    public static final double kHoodAt84in = 0.27;
+    public static final double kHoodAt120in = 0.45;
+
+    // Limelight aim proportional gain (radians/sec per degree of tx error)
+    public static final double kAimP = 0.02;
+
+    // How far ahead (seconds) to predict robot position for shot calculations
+    public static final double kLookAheadSeconds = 0.25;
+
+    // Horizontal offset from tag face to hub center (inches)
+    public static final double kHubCenterOffsetInches = 23.5;
+  }
 }

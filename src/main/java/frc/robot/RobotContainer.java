@@ -23,11 +23,11 @@ package frc.robot;
  *   - Uses VelocityVoltage PID control (kP=0.5, kI=2.0, kV=0.12)
  *   - Current limits: 120A stator / 70A supply
  *   - Neutral mode: Coast (flywheel spins down naturally)
- *   - Default RPM: 4500 for fixed shots
+ *   - Default RPM: 3350 for fixed shots
  *   - Distance-adjusted RPM uses interpolation table in RobotCommands:
- *       52"  → 2800 RPM,  hood 0.19
- *       114" → 3275 RPM,  hood 0.40
- *       165" → 3650 RPM,  hood 0.48
+ *       47"  → 3350 RPM,  hood 0.0
+ *       84"  → 3350 RPM,  hood 0.27
+ *       120" → 3350 RPM,  hood 0.45
  *   - "Shooter At Speed" = within 100 RPM of target
  *
  * HOOD (HoodSubsys) — 2 servos
@@ -52,8 +52,8 @@ package frc.robot;
  *   - CAN 45 = intake roller (picks up balls from ground)
  *   - CAN 50 = intake rotator (pivots intake arm up/down)
  *   - Roller and rotator are controlled INDEPENDENTLY:
- *       Button 11 = run roller at mid speed (-0.25)
- *       Button 12 = stop roller
+ *       Button 11 = intake with oscillate (fast)
+ *       Button 12 = retract with oscillate (fast)
  *       Rotator uses PositionVoltage PID (kP=10) for angle control
  *   - Roller: 60A/60A, Coast mode
  *   - Rotator: 60A/60A, Brake mode (holds position when idle)
@@ -65,22 +65,26 @@ package frc.robot;
  *   - Current limits: 60A/60A, Brake mode
  *   - Used in auto L1 climb sequences and the "jolt" intake deploy
  *
- * LIMELIGHT (LimelightSubsys) — currently DISABLED (set to null)
- *   - Limelight 2 camera for AprilTag vision
- *   - Uses MegaTag1 pose estimation with alliance-based tag filtering
+ * LIMELIGHT (LimelightSubsys) — ENABLED
+ *   - Limelight 3 camera for AprilTag vision
+ *   - Uses MegaTag2 pose estimation with alliance-based tag filtering
  *   - Feeds pose estimates into drivetrain's Kalman filter
  *   - Camera: 1.46" behind center, 25.39" high, 20° above horizontal
- *   - Needs radio fixed before re-enabling
  *
  * OPERATOR CONTROLS (X3D Joystick, port 1)
  *   Button 1  = Shoot (runs feeder motors — hold to feed balls)
- *   Button 2  = Wind Up (spins flywheels to 4500 RPM + sets hood — hold)
- *   Button 3  = Reverse All (eject jammed ball — intake + feeder backward)
- *   Button 7  = Test right motor only at 4500 RPM (diagnostic)
- *   Button 9  = Stop Feed
- *   Button 10 = Adjusted Wind Up (distance-based RPM/hood — hold)
- *   Button 11 = Intake Mid speed
- *   Button 12 = Stop Intake
+ *   Button 2  = Wind Up (spins flywheels to 3350 RPM, hood 0.5 — hold)
+ *   Button 3  = Climber Down (hold)
+ *   Button 4  = Wind Up Closer (3350 RPM, hood 0.0 — hold)
+ *   Button 5  = Climber Up (hold)
+ *   Button 6  = Hopper Release (climber up/down sequence — press once)
+ *   Button 7  = Deploy Intake (rotate to -580°)
+ *   Button 8  = Retract Intake (rotate to 570°)
+ *   Button 9  = Wind Up Test (3350 RPM, hood 0.45 — hold)
+ *   Button 10 = Wind Up Close (3350 RPM, hood 0.3 — hold)
+ *   Button 11 = Intake with Oscillate (fast — hold)
+ *   Button 12 = Retract with Oscillate (fast — hold)
+ *   Hat Down  = Reverse All (eject jammed ball — intake + feeder backward)
  *
  * AUTONOMOUS
  *   - Uses PathPlanner with NamedCommands for event markers
@@ -188,9 +192,10 @@ public class RobotContainer {
         NamedCommands.registerCommand("jolt", RobotCommands.jolt());
         NamedCommands.registerCommand("ClimbUp", climber.setSpeedCommand(ClimberSpeed.CLIMB_UP));
         NamedCommands.registerCommand("ClimbDown", climber.setSpeedCommand(ClimberSpeed.CLIMB_DOWN));
+        NamedCommands.registerCommand("climbDown", climber.setSpeedCommand(ClimberSpeed.CLIMB_DOWN)); // some autos use lowercase
         NamedCommands.registerCommand("StopClimber", climber.setSpeedCommand(ClimberSpeed.OFF));
 
-        autoChooser = AutoBuilder.buildAutoChooser();
+        autoChooser = AutoBuilder.buildAutoChooser("M-S");
         SmartDashboard.putData("Auto Chooser", autoChooser);
     }
 
@@ -254,6 +259,7 @@ public class RobotContainer {
         operator.button(6).onTrue(RobotCommands.hopperRelease()); // Climber up/down to release hopper
         operator.button(7).onTrue(intake.rotateRotatorCommand(-585)); // Deploy intake
         operator.button(8).onTrue(intake.rotateRotatorCommand(570)); // Retract intake
+        operator.pov(180).whileTrue(RobotCommands.reverseAll()); // Hat down = eject jammed ball
 
     }
 

@@ -2,6 +2,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
+import static frc.robot.Constants.ShooterConstants.*;
 
 import java.util.function.DoubleSupplier;
 
@@ -18,8 +19,6 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.ClimberSubsys;
 import frc.robot.subsystems.ClimberSubsys.ClimberSpeed;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -52,9 +51,9 @@ public final class RobotCommands {
     );
 
     static {
-        distanceToShotMap.put(Inches.of(47.0), new Shot(3350, 0.0));
-        distanceToShotMap.put(Inches.of(84.0), new Shot(3350, 0.27));
-        distanceToShotMap.put(Inches.of(120.0), new Shot(3350, 0.45));
+        distanceToShotMap.put(Inches.of(47.0), new Shot(kFixedShotRPM, kHoodAt47in));
+        distanceToShotMap.put(Inches.of(84.0), new Shot(kFixedShotRPM, kHoodAt84in));
+        distanceToShotMap.put(Inches.of(120.0), new Shot(kFixedShotRPM, kHoodAt120in));
     }
 
     public static void init(
@@ -78,8 +77,8 @@ public final class RobotCommands {
     /** Sets RPM/hood once and finishes — for use in auto sequences */
     public static Command windUpOnce() {
         return Commands.runOnce(() -> {
-            shooterSubsys.setVelocityRPM(3350);
-            hoodSubsys.setPosition(0.5);
+            shooterSubsys.setVelocityRPM(kFixedShotRPM);
+            hoodSubsys.setPosition(kDefaultHoodPosition);
         }, shooterSubsys, hoodSubsys);
     }
 
@@ -87,8 +86,8 @@ public final class RobotCommands {
     public static Command windUp() {
         return Commands.runEnd(
             () -> {
-                shooterSubsys.setVelocityRPM(3350);
-                hoodSubsys.setPosition(0.5);
+                shooterSubsys.setVelocityRPM(kFixedShotRPM);
+                hoodSubsys.setPosition(kDefaultHoodPosition);
             },
             () -> shooterSubsys.stopShooter(),
             shooterSubsys, hoodSubsys
@@ -99,8 +98,8 @@ public final class RobotCommands {
     public static Command windUpClose() {
         return Commands.runEnd(
             () -> {
-                shooterSubsys.setVelocityRPM(3350);
-                hoodSubsys.setPosition(0.3);
+                shooterSubsys.setVelocityRPM(kFixedShotRPM);
+                hoodSubsys.setPosition(kCloseHoodPosition);
             },
             () -> shooterSubsys.stopShooter(),
             shooterSubsys, hoodSubsys
@@ -110,8 +109,8 @@ public final class RobotCommands {
      public static Command windUpCloser() {
         return Commands.runEnd(
             () -> {
-                shooterSubsys.setVelocityRPM(3350);
-                hoodSubsys.setPosition(0);
+                shooterSubsys.setVelocityRPM(kFixedShotRPM);
+                hoodSubsys.setPosition(kCloserHoodPosition);
             },
             () -> shooterSubsys.stopShooter(),
             shooterSubsys, hoodSubsys
@@ -121,8 +120,8 @@ public final class RobotCommands {
     public static Command windUpTest() {
         return Commands.runEnd(
             () -> {
-                shooterSubsys.setVelocityRPM(3350);
-                hoodSubsys.setPosition(0.45);
+                shooterSubsys.setVelocityRPM(kFixedShotRPM);
+                hoodSubsys.setPosition(kTestHoodPosition);
             },
             () -> shooterSubsys.stopShooter(),
             shooterSubsys, hoodSubsys
@@ -133,8 +132,8 @@ public final class RobotCommands {
     public static Command windUpAndShoot() {
         return Commands.runEnd(
             () -> {
-                shooterSubsys.setVelocityRPM(3350);
-                hoodSubsys.setPosition(0.5);
+                shooterSubsys.setVelocityRPM(kFixedShotRPM);
+                hoodSubsys.setPosition(kDefaultHoodPosition);
                 feederSubsys.setSpeed(FeederSpeed.FEED_FAST);
             },
             () -> {
@@ -172,9 +171,16 @@ public final class RobotCommands {
     }
 
     public static Command reverseAll() {
-        return new ParallelCommandGroup(
-            intakeSubsys.setSpeedCommand(IntakeSpeed.REVERSE),
-            feederSubsys.setSpeedCommand(FeederSpeed.REVERSE)
+        return Commands.runEnd(
+            () -> {
+                intakeSubsys.setSpeed(IntakeSpeed.REVERSE);
+                feederSubsys.setSpeed(FeederSpeed.REVERSE);
+            },
+            () -> {
+                intakeSubsys.setSpeed(IntakeSpeed.OFF);
+                feederSubsys.setSpeed(FeederSpeed.OFF);
+            },
+            intakeSubsys, feederSubsys
         );
     }
 
@@ -186,9 +192,6 @@ public final class RobotCommands {
      * Hold this, then pull the trigger (Shoot) when "Shooter At Speed" is green.
      * The robot is already aimed and spun up — zero wait time on the shot.
      */
-    // Proportional gain for Limelight tx aim correction (radians/sec per degree of error)
-    private static final double kAimP = 0.1;
-
     public static Command aimAndWindUp(DoubleSupplier velocityX, DoubleSupplier velocityY, double maxSpeed) {
         final SwerveRequest.FieldCentric aimDrive = new SwerveRequest.FieldCentric()
             .withDeadband(maxSpeed * 0.1)
@@ -212,7 +215,7 @@ public final class RobotCommands {
                     final double heightDiff = LimelightSubsys.kTargetHeightInches - LimelightSubsys.kCameraHeightInches;
                     final double angleRad = Math.toRadians(LimelightSubsys.kCameraMountAngleDegrees + ty);
                     // Horizontal distance from camera to tag, plus half hub width to get center-to-center
-                    final double distInches = heightDiff / Math.tan(angleRad) + 23.5;
+                    final double distInches = heightDiff / Math.tan(angleRad) + kHubCenterOffsetInches;
                     distance = Inches.of(distInches);
                 } else {
                     distance = getPredictedDistanceToTarget();
@@ -229,7 +232,6 @@ public final class RobotCommands {
 
     // How far ahead (seconds) to predict robot position for shot calculations.
     // Accounts for shooter spinup + ball flight time.
-    private static final double kLookAheadSeconds = 0.25;
 
     private static Distance getDistanceToTarget() {
         final Translation2d robotPosition = drivetrain.getState().Pose.getTranslation();
