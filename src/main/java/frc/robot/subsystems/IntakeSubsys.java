@@ -20,9 +20,20 @@ public class IntakeSubsys extends SubsystemBase {
   private final PositionVoltage rotatorPositionRequest = new PositionVoltage(0); // Slot0 = gentle
   private final PositionVoltage rotatorOscillateRequest = new PositionVoltage(0).withSlot(1); // Slot1 = snappy
 
+  private double rotatorTargetPosition;
+
   public IntakeSubsys() {
     intake.getConfigurator().apply(CTREConfigs.INTAKE_CONFIG);
     intakeRotator.getConfigurator().apply(CTREConfigs.INTAKE_ROTATOR_CONFIG);
+    rotatorTargetPosition = intakeRotator.getPosition().getValueAsDouble();
+    setDefaultCommand(holdPositionCommand());
+  }
+
+  /** Default command: continuously drives the rotator to the stored target position. */
+  private Command holdPositionCommand() {
+    return this.run(() -> {
+      intakeRotator.setControl(rotatorPositionRequest.withPosition(rotatorTargetPosition));
+    });
   }
 
   public Command setSpeedCommand(IntakeSpeed speed) {
@@ -100,8 +111,7 @@ public class IntakeSubsys extends SubsystemBase {
   /** Rotates the intake rotator CCW by the given degrees from its current position. */
   public Command rotateRotatorCommand(double degrees) {
     return Commands.runOnce(() -> {
-      double target = intakeRotator.getPosition().getValueAsDouble() + (degrees / 360.0) * 8.0;
-      intakeRotator.setControl(rotatorPositionRequest.withPosition(target));
+      rotatorTargetPosition = intakeRotator.getPosition().getValueAsDouble() + (degrees / 360.0) * 8.0;
     }, this);
   }
 

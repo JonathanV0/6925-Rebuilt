@@ -207,7 +207,7 @@ public class RobotContainer {
         );
 
         // Toggle half speed with left trigger
-        joystick.leftTrigger().onTrue(drivetrain.toggleSpeedMulti(0.5));
+        joystick.leftTrigger().onTrue(drivetrain.toggleSpeedMulti(1.0 / 3.0));
 
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
@@ -252,7 +252,7 @@ public class RobotContainer {
         operator.button(3).whileTrue(climber.holdSpeedCommand(ClimberSpeed.CLIMB_DOWN)); // Climber down
         operator.button(4).whileTrue(RobotCommands.windUpCloser());
         operator.button(6).onTrue(RobotCommands.hopperRelease()); // Climber up/down to release hopper
-        operator.button(7).onTrue(intake.rotateRotatorCommand(-580)); // Deploy intake
+        operator.button(7).onTrue(intake.rotateRotatorCommand(-585)); // Deploy intake
         operator.button(8).onTrue(intake.rotateRotatorCommand(570)); // Retract intake
 
     }
