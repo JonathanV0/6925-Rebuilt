@@ -177,6 +177,10 @@ public class RobotContainer {
         // Fixed shot (no vision): set RPM/hood to hardcoded values
         NamedCommands.registerCommand("windUp", RobotCommands.windUp());
         NamedCommands.registerCommand("windUpOnce", RobotCommands.windUpOnce());
+        // Auto wind-up commands: set RPM/hood, wait until at speed (max 2s), then finish
+        NamedCommands.registerCommand("autoWindUp", RobotCommands.autoWindUp());
+        NamedCommands.registerCommand("autoWindUpClose", RobotCommands.autoWindUpClose());
+        NamedCommands.registerCommand("autoWindUpCloser", RobotCommands.autoWindUpCloser());
         // Distance-adjusted shot: interpolates RPM/hood from odometry distance
         // For the vision auto variant, pair this with accurate pose correction
         NamedCommands.registerCommand("AdjustedWindUp", RobotCommands.adjustedWindUp());

@@ -82,6 +82,33 @@ public final class RobotCommands {
         }, shooterSubsys, hoodSubsys);
     }
 
+    /** Auto wind up (default): sets RPM/hood, waits until at speed (max 2s), then finishes. */
+    public static Command autoWindUp() {
+        return Commands.runOnce(() -> {
+            shooterSubsys.setVelocityRPM(kFixedShotRPM);
+            hoodSubsys.setPosition(kDefaultHoodPosition);
+        }, shooterSubsys, hoodSubsys)
+        .andThen(Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0));
+    }
+
+    /** Auto wind up (close): sets RPM/hood close, waits until at speed (max 2s), then finishes. */
+    public static Command autoWindUpClose() {
+        return Commands.runOnce(() -> {
+            shooterSubsys.setVelocityRPM(kFixedShotRPM);
+            hoodSubsys.setPosition(kCloseHoodPosition);
+        }, shooterSubsys, hoodSubsys)
+        .andThen(Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0));
+    }
+
+    /** Auto wind up (closer/hub): sets RPM/hood closer, waits until at speed (max 2s), then finishes. */
+    public static Command autoWindUpCloser() {
+        return Commands.runOnce(() -> {
+            shooterSubsys.setVelocityRPM(kFixedShotRPM);
+            hoodSubsys.setPosition(kCloserHoodPosition);
+        }, shooterSubsys, hoodSubsys)
+        .andThen(Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0));
+    }
+
     /** Holds RPM/hood while button is held, coasts on release — for teleop */
     public static Command windUp() {
         return Commands.runEnd(
