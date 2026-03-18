@@ -260,6 +260,8 @@ public class RobotContainer {
         operator.button(8).onTrue(RobotCommands.hopperRelease()); // Climber up/down to release hopper
         operator.button(6).onTrue(intake.rotateRotatorCommand(-585)); // Deploy intake
         operator.button(4).onTrue(intake.rotateRotatorCommand(580)); // Retract intake
+        operator.button(10).whileTrue(drivetrain.applyRequest(() ->
+            point.withModuleDirection(new Rotation2d(0)))); // Snap wheels to 0°
         operator.pov(180).whileTrue(RobotCommands.reverseAll()); // Hat down = eject jammed ball
 
     }
