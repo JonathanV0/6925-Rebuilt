@@ -172,6 +172,7 @@ public class RobotContainer {
         // Register named commands for PathPlanner event markers
         // ── Shooting ──────────────────────────────────────────────────────────
         NamedCommands.registerCommand("shoot", RobotCommands.Shoot());
+        NamedCommands.registerCommand("autoShoot", RobotCommands.autoShoot(1.5));
         NamedCommands.registerCommand("StopFeed", RobotCommands.stopFeed());
         // Fixed shot (no vision): set RPM/hood to hardcoded values
         NamedCommands.registerCommand("windUp", RobotCommands.windUp());

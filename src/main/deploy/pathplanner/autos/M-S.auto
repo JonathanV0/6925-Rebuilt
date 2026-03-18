@@ -7,7 +7,7 @@
         {
           "type": "named",
           "data": {
-            "name": "windUpOnce"
+            "name": "windUpClose"
           }
         },
         {
@@ -31,7 +31,7 @@
         {
           "type": "named",
           "data": {
-            "name": "StopFeed"
+            "name": "hopperDeploy"
           }
         }
       ]

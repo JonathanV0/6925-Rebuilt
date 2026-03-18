@@ -152,6 +152,15 @@ public final class RobotCommands {
         );
     }
 
+    /** Timed auto shoot: runs feeders for the given duration then stops. Use in sequential autos. */
+    public static Command autoShoot(double seconds) {
+        return Commands.sequence(
+            Commands.run(() -> feederSubsys.setSpeed(FeederSpeed.FEED_FAST), feederSubsys)
+                .withTimeout(seconds),
+            Commands.runOnce(() -> feederSubsys.setSpeed(FeederSpeed.OFF), feederSubsys)
+        );
+    }
+
     public static Command stopFeed() {
         return feederSubsys.setSpeedCommand(FeederSpeed.OFF);
     }
