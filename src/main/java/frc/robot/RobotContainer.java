@@ -73,16 +73,16 @@ package frc.robot;
  *
  * OPERATOR CONTROLS (X3D Joystick, port 1)
  *   Button 1  = Shoot (runs feeder motors — hold to feed balls)
- *   Button 2  = Wind Up (spins flywheels to 3350 RPM, hood 0.5 — hold)
+ *   Button 2  = Intake with Oscillate (fast — hold)
  *   Button 3  = Climber Down (hold)
- *   Button 4  = Wind Up Closer (3350 RPM, hood 0.0 — hold)
+ *   Button 4  = Retract Intake (rotate to 580°)
  *   Button 5  = Climber Up (hold)
- *   Button 6  = Hopper Release (climber up/down sequence — press once)
- *   Button 7  = Deploy Intake (rotate to -580°)
- *   Button 8  = Retract Intake (rotate to 570°)
- *   Button 9  = Wind Up Test (3350 RPM, hood 0.45 — hold)
- *   Button 10 = Wind Up Close (3350 RPM, hood 0.3 — hold)
- *   Button 11 = Intake with Oscillate (fast — hold)
+ *   Button 6  = Deploy Intake (rotate to -585°)
+ *   Button 7  = Wind Up Closer (3350 RPM, hood 0.0 — hold)
+ *   Button 8  = Hopper Release (climber up/down sequence — press once)
+ *   Button 9  = Wind Up Close (3350 RPM, hood 0.3 — hold)
+ *   Button 10 = Snap Wheels to 0° (hold)
+ *   Button 11 = Wind Up Test (3350 RPM, hood 0.45 — hold)
  *   Button 12 = Retract with Oscillate (fast — hold)
  *   Hat Down  = Reverse All (eject jammed ball — intake + feeder backward)
  *
@@ -199,6 +199,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("ClimbDown", climber.setSpeedCommand(ClimberSpeed.CLIMB_DOWN));
         NamedCommands.registerCommand("climbDown", climber.setSpeedCommand(ClimberSpeed.CLIMB_DOWN)); // some autos use lowercase
         NamedCommands.registerCommand("StopClimber", climber.setSpeedCommand(ClimberSpeed.OFF));
+        NamedCommands.registerCommand("hopperDeploy", RobotCommands.hopperRelease());
 
         autoChooser = AutoBuilder.buildAutoChooser("M-S");
         SmartDashboard.putData("Auto Chooser", autoChooser);

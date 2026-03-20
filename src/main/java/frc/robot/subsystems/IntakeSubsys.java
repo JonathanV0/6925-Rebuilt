@@ -99,11 +99,15 @@ public class IntakeSubsys extends SubsystemBase {
     );
   }
 
-  /** Runs the intake rotator at a slow duty cycle while held, stops on release. */
+  /** Runs the intake rotator at a slow duty cycle while held, stops on release.
+   *  Updates rotatorTargetPosition so the hold command doesn't snap back. */
   public Command slowRotateCommand(double speed) {
     return Commands.runEnd(
       () -> intakeRotator.set(speed),
-      () -> intakeRotator.set(0),
+      () -> {
+        intakeRotator.set(0);
+        rotatorTargetPosition = intakeRotator.getPosition().getValueAsDouble();
+      },
       this
     );
   }

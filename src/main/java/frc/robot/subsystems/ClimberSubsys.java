@@ -11,8 +11,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+
 public class ClimberSubsys extends SubsystemBase {
   /** Creates a new ClimberSubsys. */
+  private static final double kMaxUpPosition = 5.0;
   private final TalonFX climber = new TalonFX(12, "");
 
   public ClimberSubsys() {
@@ -20,7 +22,12 @@ public class ClimberSubsys extends SubsystemBase {
   }
 
   public void setSpeed(ClimberSpeed speed) {
-    climber.set(speed.value);
+    if (speed == ClimberSpeed.CLIMB_UP && climber.getPosition().getValueAsDouble() >=kMaxUpPosition) {
+      climber.set(0);
+    }
+    else {
+      climber.set(speed.value);
+    }
   }
 
   public Command setSpeedCommand(ClimberSpeed speed) {
@@ -30,7 +37,7 @@ public class ClimberSubsys extends SubsystemBase {
   /** Runs the climber at the given speed while held, stops on release. */
   public Command holdSpeedCommand(ClimberSpeed speed) {
     return Commands.runEnd(
-      () -> climber.set(speed.value),
+      () -> setSpeed(speed),
       () -> climber.set(0),
       this
     );
