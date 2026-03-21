@@ -45,7 +45,7 @@ public class ClimberSubsys extends SubsystemBase {
 
   @Override
   public void periodic() {
-    SmartDashboard.putNumber("Climber Position", climber.getPosition().getValueAsDouble());
+    //SmartDashboard.putNumber("Climber Position", climber.getPosition().getValueAsDouble());
   }
 
   public enum ClimberSpeed {

@@ -31,9 +31,7 @@ public class FeederSubsys extends SubsystemBase {
 
   @Override
   public void periodic() {
-    SmartDashboard.putBoolean("Feeder Running", feeder0.get() != 0);
-    SmartDashboard.putNumber("FuelFeed Output", fuelFeed.get());
-    SmartDashboard.putBoolean("FuelFeed Alive", fuelFeed.isAlive());
+    
   }
 
   public enum FeederSpeed {

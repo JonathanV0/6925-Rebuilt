@@ -40,7 +40,7 @@ public class HoodSubsys extends SubsystemBase {
         leftServo.setBoundsMicroseconds(2000, 1800, 1500, 1200, 1000);
         rightServo.setBoundsMicroseconds(2000, 1800, 1500, 1200, 1000);
         setPosition(currentPosition);
-        SmartDashboard.putData(this);
+        //SmartDashboard.putData(this);
     }
 
     /** Expects a position between 0.0 and 1.0 */

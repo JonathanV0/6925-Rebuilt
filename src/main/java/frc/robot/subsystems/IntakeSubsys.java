@@ -122,7 +122,7 @@ public class IntakeSubsys extends SubsystemBase {
   @Override
   public void periodic() {
     SmartDashboard.putBoolean("Intake Running", intake.get() != 0);
-    SmartDashboard.putNumber("Rotator Position", intakeRotator.getPosition().getValueAsDouble());
+    
   }
 
   public enum IntakeSpeed {
