@@ -45,6 +45,10 @@ public class ClimberSubsys extends SubsystemBase {
 
   @Override
   public void periodic() {
+    // Hard safety: if the climber is above the limit and still moving up, kill it immediately
+    if (climber.getPosition().getValueAsDouble() >= kMaxUpPosition && climber.get() > 0) {
+      climber.set(0);
+    }
     SmartDashboard.putNumber("Climber Position", climber.getPosition().getValueAsDouble());
   }
 

@@ -233,35 +233,32 @@ public final class RobotCommands {
             .withDeadband(maxSpeed * 0.1)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
-        return Commands.parallel(
-            // Aim at target using Limelight tx — proportional rotation control
-            drivetrain.applyRequest(() -> {
-                final double tx = LimelightHelpers.getTV("limelight")
-                    ? LimelightHelpers.getTX("limelight") : 0.0;
-                return aimDrive
-                    .withVelocityX(velocityX.getAsDouble())
-                    .withVelocityY(velocityY.getAsDouble())
-                    .withRotationalRate(-tx * kAimP);
-            }),
-            // Continuously adjust RPM and hood using Limelight distance (ty), fallback to odometry
-            Commands.run(() -> {
-                final Distance distance;
-                if (LimelightHelpers.getTV("limelight")) {
-                    final double ty = LimelightHelpers.getTY("limelight");
-                    final double heightDiff = LimelightSubsys.kTargetHeightInches - LimelightSubsys.kCameraHeightInches;
-                    final double angleRad = Math.toRadians(LimelightSubsys.kCameraMountAngleDegrees + ty);
-                    // Horizontal distance from camera to tag, plus half hub width to get center-to-center
-                    final double distInches = heightDiff / Math.tan(angleRad) + kHubCenterOffsetInches;
-                    distance = Inches.of(distInches);
-                } else {
-                    distance = getPredictedDistanceToTarget();
-                }
-                final Shot shot = distanceToShotMap.get(distance);
-                shooterSubsys.setVelocityRPM(shot.shooterRPM);
-                hoodSubsys.setPosition(shot.hoodPosition);
-                SmartDashboard.putNumber("Auto Distance (inches)", distance.in(Inches));
-            }, shooterSubsys, hoodSubsys)
-        );
+        // Single run loop: aim, adjust RPM/hood, and drive all update together each cycle
+        return Commands.run(() -> {
+            // 1. Aim at target using Limelight tx
+            final double tx = LimelightHelpers.getTV("limelight")
+                ? LimelightHelpers.getTX("limelight") + kAimOffsetDegrees : 0.0;
+            drivetrain.setControl(aimDrive
+                .withVelocityX(velocityX.getAsDouble())
+                .withVelocityY(velocityY.getAsDouble())
+                .withRotationalRate(-tx * kAimP));
+
+            // 2. Adjust RPM and hood using Limelight distance (ty), fallback to odometry
+            final Distance distance;
+            if (LimelightHelpers.getTV("limelight")) {
+                final double ty = LimelightHelpers.getTY("limelight");
+                final double heightDiff = LimelightSubsys.kTargetHeightInches - LimelightSubsys.kCameraHeightInches;
+                final double angleRad = Math.toRadians(LimelightSubsys.kCameraMountAngleDegrees + ty);
+                final double distInches = heightDiff / Math.tan(angleRad) + kHubCenterOffsetInches;
+                distance = Inches.of(distInches);
+            } else {
+                distance = getPredictedDistanceToTarget();
+            }
+            final Shot shot = distanceToShotMap.get(distance);
+            shooterSubsys.setVelocityRPM(shot.shooterRPM);
+            hoodSubsys.setPosition(shot.hoodPosition);
+            SmartDashboard.putNumber("Auto Distance (inches)", distance.in(Inches));
+        }, drivetrain, shooterSubsys, hoodSubsys);
     }
 
     // ========== Range-Adjusted Shot Commands ==========
