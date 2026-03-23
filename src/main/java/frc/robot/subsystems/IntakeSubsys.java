@@ -48,7 +48,7 @@ public class IntakeSubsys extends SubsystemBase {
    *  The rotator bounces between the deployed position and slightly above it. */
   public Command intakeWithOscillateCommand(IntakeSpeed speed) {
     // Oscillation range: 5° of output above deployed position
-    final double oscillationMotorRotations = (5.0 / 360.0) * 8.0;
+    final double oscillationMotorRotations = (7.0 / 360.0) * 8.0;
     final double[] state = {0, 0}; // [startTime, deployedPosition]
     return this.runEnd(
       () -> {

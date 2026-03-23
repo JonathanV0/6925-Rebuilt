@@ -16,7 +16,6 @@ import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 
@@ -32,10 +31,7 @@ public class Telemetry {
         MaxSpeed = maxSpeed;
         SignalLogger.start();
 
-        /* Set up the module state Mechanism2d telemetry */
-        //for (int i = 0; i < 4; ++i) {
-            //SmartDashboard.putData("Module " + i, m_moduleMechanisms[i]);
-        //}
+        /* Module Mechanism2d telemetry removed to reduce Shuffleboard clutter */
     }
 
     /* What to publish over networktables for telemetry */

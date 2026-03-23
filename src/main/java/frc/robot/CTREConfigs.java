@@ -59,9 +59,9 @@ public class CTREConfigs {
     //Intake config
     INTAKE_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     INTAKE_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
-    INTAKE_CONFIG.CurrentLimits.StatorCurrentLimit = 60;
+    INTAKE_CONFIG.CurrentLimits.StatorCurrentLimit = 80;
     INTAKE_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
-    INTAKE_CONFIG.CurrentLimits.SupplyCurrentLimit = 60;
+    INTAKE_CONFIG.CurrentLimits.SupplyCurrentLimit = 80;
     //Intake rotator config
     INTAKE_ROTATOR_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     INTAKE_ROTATOR_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
