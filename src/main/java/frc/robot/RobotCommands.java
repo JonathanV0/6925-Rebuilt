@@ -261,8 +261,8 @@ public final class RobotCommands {
             hoodSubsys.setPosition(shot.hoodPosition);
             SmartDashboard.putNumber("Auto Distance (inches)", distance.in(Inches));
         }, () -> {
-            // On release: stop shooter and reset hood
-            shooterSubsys.setVelocityRPM(0);
+            // On release: coast shooter and reset hood
+            shooterSubsys.stopShooter();
             hoodSubsys.setPosition(0);
         }, drivetrain, shooterSubsys, hoodSubsys);
     }
