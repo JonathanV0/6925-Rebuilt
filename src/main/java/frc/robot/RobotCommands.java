@@ -211,12 +211,14 @@ public final class RobotCommands {
             () -> {
                 intakeSubsys.setSpeed(IntakeSpeed.REVERSE);
                 feederSubsys.setSpeed(FeederSpeed.REVERSE);
+                shooterSubsys.setVelocityRPM(-500);
             },
             () -> {
                 intakeSubsys.setSpeed(IntakeSpeed.OFF);
                 feederSubsys.setSpeed(FeederSpeed.OFF);
+                shooterSubsys.setVelocityRPM(0);
             },
-            intakeSubsys, feederSubsys
+            intakeSubsys, feederSubsys, shooterSubsys
         );
     }
 
