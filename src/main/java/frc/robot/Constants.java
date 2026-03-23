@@ -34,7 +34,7 @@ public final class Constants {
     public static final double kHoodAt120in = 0.55;
 
     // Limelight aim PD gains (radians/sec per degree of tx error / change)
-    public static final double kAimP = 0.06;
+    public static final double kAimP = 0.08;
     public static final double kAimD = 0.004;
 
     // Aim offset in degrees - positive shifts aim to the right, negative shifts left
