@@ -80,8 +80,6 @@ public class ShooterSubsys extends SubsystemBase {
   public void periodic() {
     SmartDashboard.putBoolean("Shooter At Speed", isVelocityWithinTolerance());
     SmartDashboard.putNumber("Shooter RPM", getVelocityRPM());
-    SmartDashboard.putNumber("Shooter RPM Motor 9", fuelShoot0.getVelocity().getValueAsDouble() * 60.0);
-    SmartDashboard.putNumber("Shooter RPM Motor 10", fuelShoot1.getVelocity().getValueAsDouble() * 60.0);
-    SmartDashboard.putNumber("Shooter Target RPM", targetRPM);
+     SmartDashboard.putNumber("Shooter Target RPM", targetRPM);
   }
 }

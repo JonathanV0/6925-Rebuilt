@@ -49,7 +49,6 @@ public class ClimberSubsys extends SubsystemBase {
     if (climber.getPosition().getValueAsDouble() >= kMaxUpPosition && climber.get() > 0) {
       climber.set(0);
     }
-    SmartDashboard.putNumber("Climber Position", climber.getPosition().getValueAsDouble());
   }
 
   public enum ClimberSpeed {

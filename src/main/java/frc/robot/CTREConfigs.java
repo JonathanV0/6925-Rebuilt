@@ -52,16 +52,16 @@ public class CTREConfigs {
     SHOOTER_CONFIG_10.CurrentLimits.StatorCurrentLimit = 120;
     SHOOTER_CONFIG_10.CurrentLimits.SupplyCurrentLimitEnable = true;
     SHOOTER_CONFIG_10.CurrentLimits.SupplyCurrentLimit = 70;
-    SHOOTER_CONFIG_10.Slot0.kP = 0.75;
+    SHOOTER_CONFIG_10.Slot0.kP = 0.8;
     SHOOTER_CONFIG_10.Slot0.kI = 1.0;
     SHOOTER_CONFIG_10.Slot0.kV = 0.1;
 
     //Intake config
     INTAKE_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     INTAKE_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
-    INTAKE_CONFIG.CurrentLimits.StatorCurrentLimit = 60;
+    INTAKE_CONFIG.CurrentLimits.StatorCurrentLimit = 80;
     INTAKE_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
-    INTAKE_CONFIG.CurrentLimits.SupplyCurrentLimit = 60;
+    INTAKE_CONFIG.CurrentLimits.SupplyCurrentLimit = 80;
     //Intake rotator config
     INTAKE_ROTATOR_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     INTAKE_ROTATOR_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
