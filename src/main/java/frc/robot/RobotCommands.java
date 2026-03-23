@@ -235,15 +235,21 @@ public final class RobotCommands {
             .withDeadband(maxSpeed * 0.1)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
+        // D-term state for smooth aiming (persists across scheduler cycles)
+        final double[] lastTx = {0.0};
+
         // Single run loop: aim, adjust RPM/hood, and drive all update together each cycle
         return Commands.runEnd(() -> {
-            // 1. Aim at target using Limelight tx
+            // 1. Aim at target using Limelight tx with PD control
             final double tx = LimelightHelpers.getTV("limelight")
                 ? LimelightHelpers.getTX("limelight") + kAimOffsetDegrees : 0.0;
+            final double dTx = tx - lastTx[0];
+            lastTx[0] = tx;
+            final double rotRate = -tx * kAimP - dTx * kAimD;
             drivetrain.setControl(aimDrive
                 .withVelocityX(velocityX.getAsDouble())
                 .withVelocityY(velocityY.getAsDouble())
-                .withRotationalRate(-tx * kAimP));
+                .withRotationalRate(rotRate));
 
             // 2. Adjust RPM and hood using Limelight distance (ty), fallback to odometry
             final Distance distance;
