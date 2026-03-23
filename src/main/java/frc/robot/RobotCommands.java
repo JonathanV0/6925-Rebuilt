@@ -236,7 +236,7 @@ public final class RobotCommands {
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
         // Single run loop: aim, adjust RPM/hood, and drive all update together each cycle
-        return Commands.run(() -> {
+        return Commands.runEnd(() -> {
             // 1. Aim at target using Limelight tx
             final double tx = LimelightHelpers.getTV("limelight")
                 ? LimelightHelpers.getTX("limelight") + kAimOffsetDegrees : 0.0;
@@ -260,6 +260,10 @@ public final class RobotCommands {
             shooterSubsys.setVelocityRPM(shot.shooterRPM);
             hoodSubsys.setPosition(shot.hoodPosition);
             SmartDashboard.putNumber("Auto Distance (inches)", distance.in(Inches));
+        }, () -> {
+            // On release: stop shooter and reset hood
+            shooterSubsys.setVelocityRPM(0);
+            hoodSubsys.setPosition(0);
         }, drivetrain, shooterSubsys, hoodSubsys);
     }
 
