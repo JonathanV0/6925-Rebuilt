@@ -34,11 +34,11 @@ public final class Constants {
     public static final double kHoodAt120in = 0.55;
 
     // Limelight aim proportional gain (radians/sec per degree of tx error)
-    public static final double kAimP = 0.02;
+    public static final double kAimP = 0.1;
 
     // Aim offset in degrees - positive shifts aim to the right, negative shifts left
     // Tune this if the robot consistently aims too far left or right
-    public static final double kAimOffsetDegrees = 3.0;
+    public static final double kAimOffsetDegrees = 0.0;
 
     // How far ahead (seconds) to predict robot position for shot calculations
     public static final double kLookAheadSeconds = 0.25;
