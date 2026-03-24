@@ -27,8 +27,8 @@ public class LimelightSubsys extends SubsystemBase {
     public static final double kCameraForwardInches = -1.46;  // 1.46" behind center
     public static final double kCameraSideInches = 0.0;       // centered left-right
     public static final double kCameraHeightInches = 25.39;   // 0.548 + 0.046 + 0.0508 m = 0.6448 m
-    // Camera mounting angle: 110 deg from face down = 20 deg above horizontal
-    public static final double kCameraMountAngleDegrees = 20.0;
+    // Camera mounting angle above horizontal (calibrated from known 94" measurement)
+    public static final double kCameraMountAngleDegrees = 18.0;
 
     // LL3 has better resolution — can reliably see tags from further away
     private static final double kMinTagAreaPercent = 0.1;
@@ -36,7 +36,6 @@ public class LimelightSubsys extends SubsystemBase {
     private final String name;
     private final NetworkTable telemetryTable;
     private final StructPublisher<Pose2d> posePublisher;
-
     public LimelightSubsys(String name) {
         this.name = name;
         this.telemetryTable = NetworkTableInstance.getDefault().getTable("SmartDashboard/" + name);
