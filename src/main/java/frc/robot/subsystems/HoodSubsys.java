@@ -30,8 +30,8 @@ public class HoodSubsys extends SubsystemBase {
     private final Servo leftServo;
     private final Servo rightServo;
 
-    private double currentPosition = 0.5;
-    private double targetPosition = 0.5;
+    private double currentPosition = 0.0;
+    private double targetPosition = 0.0;
     private Time lastUpdateTime = Seconds.of(0);
 
     public HoodSubsys() {

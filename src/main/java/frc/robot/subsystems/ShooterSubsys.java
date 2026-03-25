@@ -8,6 +8,7 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import frc.robot.CTREConfigs;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -64,7 +65,16 @@ public class ShooterSubsys extends SubsystemBase {
   }
 
   private static final double kVelocityToleranceRPM = 100.0;
+  private static final double kJamRPMDropThreshold = 500.0; // RPM drop that indicates a jam
+  private static final double kJamReverseRPM = -500.0;      // RPM to reverse at when clearing jam
+  private static final double kJamReverseDuration = 0.3;     // seconds to reverse
+  private static final double kJamCooldown = 1.0;            // seconds before checking for jams again
+
   private double targetRPM = 0;
+  private boolean isClearing = false;
+  private double clearStartTime = 0;
+  private double lastClearTime = 0;
+  private double savedTargetRPM = 0;
 
   public double getVelocityRPM() {
     return fuelShoot.getVelocity().getValueAsDouble() * 60.0;
@@ -78,8 +88,33 @@ public class ShooterSubsys extends SubsystemBase {
 
   @Override
   public void periodic() {
+    double now = Timer.getFPGATimestamp();
+    double currentRPM = getVelocityRPM();
+
+    if (isClearing) {
+      // Currently reversing to clear jam — check if done
+      if (now - clearStartTime >= kJamReverseDuration) {
+        isClearing = false;
+        lastClearTime = now;
+        setVelocityRPM(savedTargetRPM); // resume original RPM
+      }
+    } else if (targetRPM > 500 && (now - lastClearTime) > kJamCooldown) {
+      // Check for jam: shooter should be spinning but RPM dropped significantly
+      if (currentRPM < targetRPM - kJamRPMDropThreshold) {
+        isClearing = true;
+        clearStartTime = now;
+        savedTargetRPM = targetRPM;
+        setVelocityRPM(kJamReverseRPM);
+        SmartDashboard.putBoolean("Shooter Jammed", true);
+      }
+    }
+
+    if (!isClearing) {
+      SmartDashboard.putBoolean("Shooter Jammed", false);
+    }
+
     SmartDashboard.putBoolean("Shooter At Speed", isVelocityWithinTolerance());
-    SmartDashboard.putNumber("Shooter RPM", getVelocityRPM());
-     SmartDashboard.putNumber("Shooter Target RPM", targetRPM);
+    SmartDashboard.putNumber("Shooter RPM", currentRPM);
+    SmartDashboard.putNumber("Shooter Target RPM", targetRPM);
   }
 }

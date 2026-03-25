@@ -202,6 +202,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("climbDown", climber.setSpeedCommand(ClimberSpeed.CLIMB_DOWN)); // some autos use lowercase
         NamedCommands.registerCommand("StopClimber", climber.setSpeedCommand(ClimberSpeed.OFF));
         NamedCommands.registerCommand("hopperDeploy", RobotCommands.hopperRelease());
+        NamedCommands.registerCommand("hoodReset", Commands.runOnce(() -> hood.setPosition(0)));
 
         autoChooser = AutoBuilder.buildAutoChooser("M-S");
         SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -221,6 +222,8 @@ public class RobotContainer {
 
         // Toggle half speed with left trigger
         joystick.leftTrigger().onTrue(drivetrain.toggleSpeedMulti(1.0 / 3.0));
+        // Toggle 1/5th speed with right trigger
+        joystick.rightTrigger().onTrue(drivetrain.toggleSpeedMulti(1.0 / 5.0));
 
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
