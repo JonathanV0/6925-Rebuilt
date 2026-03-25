@@ -247,6 +247,10 @@ public class RobotContainer {
         // Reset the field-centric heading on left bumper press.
         joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
+        // D-pad up/down = manual intake up/down
+        joystick.povUp().whileTrue(intake.slowRotateCommand(0.15));
+        joystick.povDown().whileTrue(intake.slowRotateCommand(-0.15));
+
         // Hold right bumper to auto-aim at target + spin up shooter (distance-based RPM)
         // When "Shooter At Speed" turns green, operator pulls trigger to fire instantly
         joystick.rightBumper().whileTrue(
