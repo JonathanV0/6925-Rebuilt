@@ -162,12 +162,35 @@ public class IntakeSubsys extends SubsystemBase {
     }, this);
   }
 
-  /** Moves the intake rotator to an absolute motor position (in rotations). */
+  /** Moves the intake rotator to an absolute motor position (in rotations) instantly. */
   public Command goToPositionCommand(double motorRotations) {
     return Commands.runOnce(() -> {
       rotatorTargetPosition = motorRotations;
       intakeRotator.setControl(rotatorPositionRequest.withPosition(rotatorTargetPosition));
     }, this);
+  }
+
+  /** Drives the rotator toward an absolute position at a fixed duty cycle, then holds with PID.
+   *  Speed is automatically negative/positive based on direction needed. */
+  public Command goToPositionSlowCommand(double motorRotations, double speed) {
+    return this.runEnd(
+      () -> {
+        double current = intakeRotator.getPosition().getValueAsDouble();
+        if (Math.abs(current - motorRotations) < 0.1) {
+          // Close enough — switch to PID hold
+          rotatorTargetPosition = motorRotations;
+          intakeRotator.setControl(rotatorPositionRequest.withPosition(rotatorTargetPosition));
+        } else {
+          // Drive toward target at fixed speed
+          double direction = (motorRotations > current) ? 1.0 : -1.0;
+          intakeRotator.set(speed * direction);
+        }
+      },
+      () -> {
+        rotatorTargetPosition = intakeRotator.getPosition().getValueAsDouble();
+        intakeRotator.setControl(rotatorPositionRequest.withPosition(rotatorTargetPosition));
+      }
+    );
   }
 
   /** Sets target and actively drives the rotator for the given duration. For use in auto. */
