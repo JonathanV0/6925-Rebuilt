@@ -138,6 +138,23 @@ public class IntakeSubsys extends SubsystemBase {
     );
   }
 
+  /** Creeps the rotator at ~1 RPM motor using position steps. Hold to run, holds position on release. */
+  public Command creepRotateCommand(double direction) {
+    // 30 RPM motor. At 50Hz loop, each cycle moves 30/(60*50) = 1/100 rotations
+    final double stepPerCycle = (1.0 / 100.0) * Math.signum(direction);
+    return Commands.runEnd(
+      () -> {
+        rotatorTargetPosition += stepPerCycle;
+        intakeRotator.setControl(rotatorPositionRequest.withPosition(rotatorTargetPosition));
+      },
+      () -> {
+        rotatorTargetPosition = intakeRotator.getPosition().getValueAsDouble();
+        intakeRotator.setControl(rotatorPositionRequest.withPosition(rotatorTargetPosition));
+      },
+      this
+    );
+  }
+
   /** Rotates the intake rotator CCW by the given degrees from its current position. */
   public Command rotateRotatorCommand(double degrees) {
     return Commands.runOnce(() -> {
@@ -158,7 +175,7 @@ public class IntakeSubsys extends SubsystemBase {
   @Override
   public void periodic() {
     SmartDashboard.putBoolean("Intake Running", intake.get() != 0);
-    
+    SmartDashboard.putNumber("Intake Rotator Position", intakeRotator.getPosition().getValueAsDouble());
   }
 
   public enum IntakeSpeed {
