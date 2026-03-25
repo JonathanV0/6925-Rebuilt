@@ -99,6 +99,32 @@ public class IntakeSubsys extends SubsystemBase {
     );
   }
 
+  /** Auto-only: bounces the intake a set number of times at 0.5s intervals, then stops.
+   *  Like spamming button 12 repeatedly. */
+  public Command autoBounceCommand(int bounces) {
+    final double oscillationMotorRotations = (60.0 / 360.0) * 8.0;
+    final double period = 0.5; // seconds per bounce cycle
+    final double totalTime = bounces * period;
+    final double[] state = {0, 0}; // [startTime, deployedPosition]
+    return this.run(() -> {
+        intake.set(IntakeSpeed.INTAKE_FAST.value);
+        if (state[0] == 0) {
+          state[0] = Timer.getFPGATimestamp();
+          state[1] = intakeRotator.getPosition().getValueAsDouble();
+        }
+        double elapsed = Timer.getFPGATimestamp() - state[0];
+        boolean goUp = ((int)(elapsed / (period / 2.0)) % 2 == 0);
+        double target = goUp ? state[1] + oscillationMotorRotations : state[1];
+        intakeRotator.setControl(rotatorOscillateRequest.withPosition(target));
+      })
+      .withTimeout(totalTime)
+      .finallyDo(() -> {
+        intake.set(0);
+        intakeRotator.setControl(rotatorOscillateRequest.withPosition(state[1]));
+        state[0] = 0;
+      });
+  }
+
   /** Runs the intake rotator at a slow duty cycle while held, stops on release.
    *  Updates rotatorTargetPosition so the hold command doesn't snap back. */
   public Command slowRotateCommand(double speed) {
