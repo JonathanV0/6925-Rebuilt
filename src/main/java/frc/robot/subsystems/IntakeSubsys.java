@@ -131,8 +131,26 @@ public class IntakeSubsys extends SubsystemBase {
     return Commands.runEnd(
       () -> intakeRotator.set(speed),
       () -> {
-        intakeRotator.set(0);
+        // Hold position using PID after release
         rotatorTargetPosition = intakeRotator.getPosition().getValueAsDouble();
+        intakeRotator.setControl(rotatorPositionRequest.withPosition(rotatorTargetPosition));
+      },
+      this
+    );
+  }
+
+  /** Creeps the rotator at ~1 RPM motor using position steps. Hold to run, holds position on release. */
+  public Command creepRotateCommand(double direction) {
+    // 1 RPM = 1/60 RPS. At 50Hz loop, each cycle moves 1/(60*50) = 1/3000 rotations
+    final double stepPerCycle = (1.0 / 3000.0) * Math.signum(direction);
+    return Commands.runEnd(
+      () -> {
+        rotatorTargetPosition += stepPerCycle;
+        intakeRotator.setControl(rotatorPositionRequest.withPosition(rotatorTargetPosition));
+      },
+      () -> {
+        rotatorTargetPosition = intakeRotator.getPosition().getValueAsDouble();
+        intakeRotator.setControl(rotatorPositionRequest.withPosition(rotatorTargetPosition));
       },
       this
     );
