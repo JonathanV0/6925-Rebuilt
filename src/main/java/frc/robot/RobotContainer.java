@@ -192,7 +192,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("IntakeMid", RobotCommands.intakeMid());
         NamedCommands.registerCommand("IntakeFast", RobotCommands.intakeFast());
         NamedCommands.registerCommand("StopIntake", RobotCommands.stopIntake());
-        NamedCommands.registerCommand("intakeDeploy", intake.rotateRotatorCommand(-573));
+        NamedCommands.registerCommand("intakeDeploy", intake.deployIntakeCommand(-573, 1.5));
         // Vision updates now run automatically in robotPeriodic() — no named command needed
         // ── Climber (for L1 auto climb) ───────────────────────────────────────
         NamedCommands.registerCommand("jolt", RobotCommands.jolt());

@@ -19,10 +19,12 @@ public class ClimberSubsys extends SubsystemBase {
 
   public ClimberSubsys() {
     climber.getConfigurator().apply(CTREConfigs.CLIMBER_CONFIG);
+    climber.setPosition(0);
   }
 
   public void setSpeed(ClimberSpeed speed) {
-    if (speed == ClimberSpeed.CLIMB_UP && climber.getPosition().getValueAsDouble() >=kMaxUpPosition) {
+    // CLIMB_DOWN (-0.5) physically raises the climber, so limit that direction
+    if (speed == ClimberSpeed.CLIMB_DOWN && climber.getPosition().getValueAsDouble() <= -kMaxUpPosition) {
       climber.set(0);
     }
     else {
@@ -45,8 +47,8 @@ public class ClimberSubsys extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // Hard safety: if the climber is above the limit and still moving up, kill it immediately
-    if (climber.getPosition().getValueAsDouble() >= kMaxUpPosition && climber.get() > 0) {
+    // Hard safety: if the climber is physically at the top and still moving up, kill it
+    if (climber.getPosition().getValueAsDouble() <= -kMaxUpPosition && climber.get() < 0) {
       climber.set(0);
     }
   }

@@ -28,7 +28,7 @@ public class LimelightSubsys extends SubsystemBase {
     public static final double kCameraSideInches = 0.0;       // centered left-right
     public static final double kCameraHeightInches = 25.39;   // 0.548 + 0.046 + 0.0508 m = 0.6448 m
     // Camera mounting angle: 110 deg from face down = 20 deg above horizontal
-    public static final double kCameraMountAngleDegrees = 20.0;
+    public static final double kCameraMountAngleDegrees = 18.0;
 
     // LL3 has better resolution — can reliably see tags from further away
     private static final double kMinTagAreaPercent = 0.1;

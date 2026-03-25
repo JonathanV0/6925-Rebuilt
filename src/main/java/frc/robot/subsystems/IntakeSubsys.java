@@ -119,6 +119,16 @@ public class IntakeSubsys extends SubsystemBase {
     }, this);
   }
 
+  /** Sets target and actively drives the rotator for the given duration. For use in auto. */
+  public Command deployIntakeCommand(double degrees, double seconds) {
+    return Commands.sequence(
+      rotateRotatorCommand(degrees),
+      this.run(() -> {
+        intakeRotator.setControl(rotatorPositionRequest.withPosition(rotatorTargetPosition));
+      }).withTimeout(seconds)
+    );
+  }
+
   @Override
   public void periodic() {
     SmartDashboard.putBoolean("Intake Running", intake.get() != 0);

@@ -5,28 +5,21 @@
     "data": {
       "commands": [
         {
-          "type": "parallel",
+          "type": "named",
           "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "RT-HP"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "hopperDeploy"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "intakeDeploy"
-                }
-              }
-            ]
+            "name": "hopperDeploy"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeDeploy"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RT-HP"
           }
         },
         {

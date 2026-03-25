@@ -368,10 +368,10 @@ public final class RobotCommands {
     /** Raises the climber briefly then lowers it back down to release the hopper. */
     public static Command hopperRelease() {
         return Commands.sequence(
-            climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_UP),
-            Commands.waitSeconds(0.5),
             climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_DOWN),
-            Commands.waitSeconds(0.4),
+            Commands.waitSeconds(1.0),
+            climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_UP),
+            Commands.waitSeconds(0.8),
             climberSubsys.setSpeedCommand(ClimberSpeed.OFF)
         );
     }
