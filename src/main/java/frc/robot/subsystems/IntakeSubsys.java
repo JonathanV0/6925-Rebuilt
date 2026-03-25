@@ -131,8 +131,8 @@ public class IntakeSubsys extends SubsystemBase {
     return Commands.runEnd(
       () -> intakeRotator.set(speed),
       () -> {
-        intakeRotator.set(0);
         rotatorTargetPosition = intakeRotator.getPosition().getValueAsDouble();
+        intakeRotator.setControl(rotatorPositionRequest.withPosition(rotatorTargetPosition));
       },
       this
     );
@@ -165,7 +165,7 @@ public class IntakeSubsys extends SubsystemBase {
     OFF(0),
     INTAKE_SLOW(-.1),
     INTAKE_MID(-.25),
-    INTAKE_FAST(-.5),
+    INTAKE_FAST(-.7),
     REVERSE(.25);
 
     public final double value;

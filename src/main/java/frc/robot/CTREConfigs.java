@@ -69,7 +69,7 @@ public class CTREConfigs {
     INTAKE_ROTATOR_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
     INTAKE_ROTATOR_CONFIG.CurrentLimits.SupplyCurrentLimit = 60;
     // Slot0: deploy/retract — gentle
-    INTAKE_ROTATOR_CONFIG.Slot0.kP = 0.25;
+    INTAKE_ROTATOR_CONFIG.Slot0.kP = 1.0;
     INTAKE_ROTATOR_CONFIG.Slot0.kV = 12.0 / (6000.0 / 60.0 / 8.0);  // 12V / max pivot RPS (6000 RPM / 8:1 reduction)
     // Slot1: oscillation — snappy
     INTAKE_ROTATOR_CONFIG.Slot1.kP = 10;
