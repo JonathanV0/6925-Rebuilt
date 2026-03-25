@@ -241,8 +241,11 @@ public final class RobotCommands {
         // Single run loop: aim, adjust RPM/hood, and drive all update together each cycle
         return Commands.runEnd(() -> {
             // 1. Aim at target using Limelight tx with PD control
-            final double tx = LimelightHelpers.getTV("limelight")
-                ? LimelightHelpers.getTX("limelight") + kAimOffsetDegrees : 0.0;
+            // When tag is lost, keep using last known tx so robot continues correcting
+            final boolean hasTarget = LimelightHelpers.getTV("limelight");
+            SmartDashboard.putBoolean("Limelight Has Target", hasTarget);
+            final double tx = hasTarget
+                ? LimelightHelpers.getTX("limelight") + kAimOffsetDegrees : lastTx[0];
             final double dTx = tx - lastTx[0];
             lastTx[0] = tx;
             final double rotRate = -tx * kAimP - dTx * kAimD;
@@ -253,7 +256,7 @@ public final class RobotCommands {
 
             // 2. Adjust RPM and hood using Limelight distance (ty), fallback to odometry
             final Distance distance;
-            if (LimelightHelpers.getTV("limelight")) {
+            if (hasTarget) {
                 final double ty = LimelightHelpers.getTY("limelight");
                 final double heightDiff = LimelightSubsys.kTargetHeightInches - LimelightSubsys.kCameraHeightInches;
                 final double angleRad = Math.toRadians(LimelightSubsys.kCameraMountAngleDegrees + ty);
