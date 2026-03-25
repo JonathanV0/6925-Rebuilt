@@ -192,7 +192,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("IntakeMid", RobotCommands.intakeMid());
         NamedCommands.registerCommand("IntakeFast", RobotCommands.intakeFast());
         NamedCommands.registerCommand("StopIntake", RobotCommands.stopIntake());
-        NamedCommands.registerCommand("intakeDeploy", intake.deployIntakeCommand(-573, 1.5));
+        NamedCommands.registerCommand("intakeDeploy", intake.goToPositionCommand(-14.904785));
         NamedCommands.registerCommand("intakeBounce", intake.autoBounceCommand(6));
         // Vision updates now run automatically in robotPeriodic() — no named command needed
         // ── Climber (for L1 auto climb) ───────────────────────────────────────
@@ -275,8 +275,8 @@ public class RobotContainer {
         operator.button(3).whileTrue(climber.holdSpeedCommand(ClimberSpeed.CLIMB_DOWN)); // Climber down
         operator.button(7).whileTrue(RobotCommands.windUpCloser());//infront hub shot
         operator.button(8).onTrue(RobotCommands.hopperRelease()); // Climber up/down to release hopper
-        operator.button(6).onTrue(intake.rotateRotatorCommand(-585)); // Deploy intake
-        operator.button(4).onTrue(intake.rotateRotatorCommand(580)); // Retract intake
+        operator.button(6).onTrue(intake.goToPositionCommand(-14.904785)); // Deploy intake
+        operator.button(4).onTrue(intake.goToPositionCommand(-0.12060546875)); // Retract intake (up position)
         operator.button(10).whileTrue(drivetrain.applyRequest(() ->
             point.withModuleDirection(new Rotation2d(0)))); // Snap wheels to 0°
         operator.pov(180).whileTrue(RobotCommands.reverseAll()); // Hat down = eject jammed ball

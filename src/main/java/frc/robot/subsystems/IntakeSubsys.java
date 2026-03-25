@@ -162,6 +162,14 @@ public class IntakeSubsys extends SubsystemBase {
     }, this);
   }
 
+  /** Moves the intake rotator to an absolute motor position (in rotations). */
+  public Command goToPositionCommand(double motorRotations) {
+    return Commands.runOnce(() -> {
+      rotatorTargetPosition = motorRotations;
+      intakeRotator.setControl(rotatorPositionRequest.withPosition(rotatorTargetPosition));
+    }, this);
+  }
+
   /** Sets target and actively drives the rotator for the given duration. For use in auto. */
   public Command deployIntakeCommand(double degrees, double seconds) {
     return Commands.sequence(

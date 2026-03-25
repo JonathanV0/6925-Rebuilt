@@ -235,28 +235,23 @@ public final class RobotCommands {
             .withDeadband(maxSpeed * 0.1)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
-        // D-term state for smooth aiming (persists across scheduler cycles)
-        final double[] lastTx = {0.0};
+        // Only aim at hub tags (2, 5, 10)
+        final int[] hubTagIDs = {2, 5, 10, 26, 18, 21};
 
         // Single run loop: aim, adjust RPM/hood, and drive all update together each cycle
-        return Commands.runEnd(() -> {
-            // 1. Aim at target using Limelight tx with PD control
-            // When tag is lost, keep using last known tx so robot continues correcting
-            final boolean hasTarget = LimelightHelpers.getTV("limelight");
-            SmartDashboard.putBoolean("Limelight Has Target", hasTarget);
-            final double tx = hasTarget
-                ? LimelightHelpers.getTX("limelight") + kAimOffsetDegrees : lastTx[0];
-            final double dTx = tx - lastTx[0];
-            lastTx[0] = tx;
-            final double rotRate = -tx * kAimP - dTx * kAimD;
+        return Commands.run(() -> {
+            LimelightHelpers.SetFiducialIDFiltersOverride("limelight", hubTagIDs);
+            // 1. Aim at target using Limelight tx
+            final double tx = LimelightHelpers.getTV("limelight")
+                ? LimelightHelpers.getTX("limelight") + kAimOffsetDegrees : 0.0;
             drivetrain.setControl(aimDrive
                 .withVelocityX(velocityX.getAsDouble())
                 .withVelocityY(velocityY.getAsDouble())
-                .withRotationalRate(rotRate));
+                .withRotationalRate(-tx * kAimP));
 
             // 2. Adjust RPM and hood using Limelight distance (ty), fallback to odometry
             final Distance distance;
-            if (hasTarget) {
+            if (LimelightHelpers.getTV("limelight")) {
                 final double ty = LimelightHelpers.getTY("limelight");
                 final double heightDiff = LimelightSubsys.kTargetHeightInches - LimelightSubsys.kCameraHeightInches;
                 final double angleRad = Math.toRadians(LimelightSubsys.kCameraMountAngleDegrees + ty);
@@ -269,10 +264,6 @@ public final class RobotCommands {
             shooterSubsys.setVelocityRPM(shot.shooterRPM);
             hoodSubsys.setPosition(shot.hoodPosition);
             SmartDashboard.putNumber("Auto Distance (inches)", distance.in(Inches));
-        }, () -> {
-            // On release: coast shooter and reset hood
-            shooterSubsys.stopShooter();
-            hoodSubsys.setPosition(0);
         }, drivetrain, shooterSubsys, hoodSubsys);
     }
 
@@ -371,10 +362,10 @@ public final class RobotCommands {
     /** Raises the climber briefly then lowers it back down to release the hopper. */
     public static Command hopperRelease() {
         return Commands.sequence(
-            climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_DOWN),
-            Commands.waitSeconds(1.0),
             climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_UP),
-            Commands.waitSeconds(0.8),
+            Commands.waitSeconds(0.5),
+            climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_DOWN),
+            Commands.waitSeconds(0.4),
             climberSubsys.setSpeedCommand(ClimberSpeed.OFF)
         );
     }
