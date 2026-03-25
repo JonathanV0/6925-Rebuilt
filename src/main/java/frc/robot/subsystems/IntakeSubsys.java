@@ -171,10 +171,9 @@ public class IntakeSubsys extends SubsystemBase {
   }
 
   /** Drives the rotator toward an absolute position at a fixed duty cycle, then holds with PID.
-   *  Speed is automatically negative/positive based on direction needed. */
+   *  Finishes automatically when it reaches the target. Single press to activate. */
   public Command goToPositionSlowCommand(double motorRotations, double speed) {
-    return this.runEnd(
-      () -> {
+    return this.run(() -> {
         double current = intakeRotator.getPosition().getValueAsDouble();
         if (Math.abs(current - motorRotations) < 0.1) {
           // Close enough — switch to PID hold
@@ -185,12 +184,12 @@ public class IntakeSubsys extends SubsystemBase {
           double direction = (motorRotations > current) ? 1.0 : -1.0;
           intakeRotator.set(speed * direction);
         }
-      },
-      () -> {
-        rotatorTargetPosition = intakeRotator.getPosition().getValueAsDouble();
+      })
+      .until(() -> Math.abs(intakeRotator.getPosition().getValueAsDouble() - motorRotations) < 0.1)
+      .finallyDo(() -> {
+        rotatorTargetPosition = motorRotations;
         intakeRotator.setControl(rotatorPositionRequest.withPosition(rotatorTargetPosition));
-      }
-    );
+      });
   }
 
   /** Sets target and actively drives the rotator for the given duration. For use in auto. */
