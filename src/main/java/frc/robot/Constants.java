@@ -31,19 +31,11 @@ public final class Constants {
     // Increase these values to make the shot go further (higher arc)
     public static final double kHoodAt47in = 0.1;
     public static final double kHoodAt84in = 0.37;
-<<<<<<< HEAD
     public static final double kHoodAt120in = 0.45;
 
     // Limelight aim PD gains (radians/sec per degree of tx error / change)
     public static final double kAimP = 0.1;
-    public static final double kAimD = 0.004;
-=======
-    public static final double kHoodAt120in = 0.5;
-
-    // Limelight aim PD gains (radians/sec per degree of tx error / change)
-    public static final double kAimP = 0.1;
     public static final double kAimD = 0.01;
->>>>>>> 9c2d33886c0a55c98d526128381c48f1ccfd737d
 
     // Aim offset in degrees - positive shifts aim to the right, negative shifts left
     // Tune this if the robot consistently aims too far left or right
