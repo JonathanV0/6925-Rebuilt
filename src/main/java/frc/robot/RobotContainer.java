@@ -270,8 +270,8 @@ public class RobotContainer {
         operator.button(11).whileTrue(RobotCommands.windUpTest());
         operator.button(9).whileTrue(RobotCommands.windUpClose()); // Close-range shot
         operator.button(2).whileTrue(intake.intakeWithOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_FAST));
-        operator.button(2).whileTrue(drivetrain.toggleSpeedMulti(1.0 / 3.0));
-        operator.button(1).whileTrue(drivetrain.toggleSpeedMulti(1.0 / 5.0));
+        operator.button(2).whileTrue(drivetrain.holdSpeedMulti(1.0 / 3.0));
+        operator.button(1).whileTrue(drivetrain.holdSpeedMulti(1.0 / 5.0));
         operator.button(12).whileTrue(intake.retractWithOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_FAST));
         operator.button(5).whileTrue(climber.holdSpeedCommand(ClimberSpeed.CLIMB_UP)); // Climber up
         operator.button(3).whileTrue(climber.holdSpeedCommand(ClimberSpeed.CLIMB_DOWN)); // Climber down
