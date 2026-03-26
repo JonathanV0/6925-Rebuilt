@@ -25,9 +25,10 @@ package frc.robot;
  *   - Neutral mode: Coast (flywheel spins down naturally)
  *   - Default RPM: 3350 for fixed shots
  *   - Distance-adjusted RPM uses interpolation table in RobotCommands:
- *       47"  → 3350 RPM,  hood 0.0
- *       84"  → 3350 RPM,  hood 0.27
- *       120" → 3350 RPM,  hood 0.45
+ *       47"   → 3350 RPM,  hood 0.1
+ *       84"   → 3350 RPM,  hood 0.37
+ *       120"  → 3350 RPM,  hood 0.45
+ *       165"  → 3650 RPM,  hood 0.48  (WCP CC extended range)
  *   - "Shooter At Speed" = within 100 RPM of target
  *
  * HOOD (HoodSubsys) — 2 servos

@@ -65,6 +65,7 @@ public class ShooterSubsys extends SubsystemBase {
   }
 
   private static final double kVelocityToleranceRPM = 100.0;
+  private static final double kFeedToleranceRPM = 600.0; // wider tolerance for allowing feeders to run
   private static final double kJamRPMDropThreshold = 500.0; // RPM drop that indicates a jam
   private static final double kJamReverseRPM = -500.0;      // RPM to reverse at when clearing jam
   private static final double kJamReverseDuration = 0.3;     // seconds to reverse
@@ -83,6 +84,11 @@ public class ShooterSubsys extends SubsystemBase {
   public boolean isVelocityWithinTolerance() {
     // Require a positive target — prevents false-positive when shooter is idle (0 RPM = "at speed")
     return targetRPM > 0 && Math.abs(getVelocityRPM() - targetRPM) < kVelocityToleranceRPM;
+  }
+
+  /** Wider tolerance check — used to gate the feeders so they can start before full speed. */
+  public boolean isReadyToFeed() {
+    return targetRPM > 0 && Math.abs(getVelocityRPM() - targetRPM) < kFeedToleranceRPM;
   }
   // ========== END AI GENERATED CODE ==========
 

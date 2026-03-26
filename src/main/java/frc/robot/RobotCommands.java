@@ -51,9 +51,12 @@ public final class RobotCommands {
     );
 
     static {
-        distanceToShotMap.put(Inches.of(47.0), new Shot(kFixedShotRPM, kHoodAt47in));
-        distanceToShotMap.put(Inches.of(84.0), new Shot(kFixedShotRPM, kHoodAt84in));
-        distanceToShotMap.put(Inches.of(120.0), new Shot(kFixedShotRPM, kHoodAt120in));
+        // Team-calibrated data points
+        distanceToShotMap.put(Inches.of(47.0), new Shot(kRPMAt47in, kHoodAt47in));
+        distanceToShotMap.put(Inches.of(84.0), new Shot(kRPMAt84in, kHoodAt84in));
+        distanceToShotMap.put(Inches.of(120.0), new Shot(kRPMAt120in, kHoodAt120in));
+        // WCP CC extended range
+        distanceToShotMap.put(Inches.of(165.5), new Shot(kRPMAt165in, kHoodAt165in));
     }
 
     public static void init(
@@ -82,31 +85,38 @@ public final class RobotCommands {
         }, shooterSubsys, hoodSubsys);
     }
 
-    /** Auto wind up (default): sets RPM/hood, waits until at speed (max 2s), then finishes. */
+    /** Auto wind up (default): delays 0.25s to avoid brownout at auto start,
+     *  sets RPM/hood, waits until at speed (max 2s), then finishes. */
     public static Command autoWindUp() {
-        return Commands.runOnce(() -> {
-            shooterSubsys.setVelocityRPM(kFixedShotRPM);
-            hoodSubsys.setPosition(kDefaultHoodPosition);
-        }, shooterSubsys, hoodSubsys)
-        .andThen(Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0));
+        return Commands.waitSeconds(0.25).andThen(
+            Commands.runOnce(() -> {
+                shooterSubsys.setVelocityRPM(kFixedShotRPM);
+                hoodSubsys.setPosition(kDefaultHoodPosition);
+            }, shooterSubsys, hoodSubsys),
+            Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0)
+        );
     }
 
-    /** Auto wind up (close): sets RPM/hood close, waits until at speed (max 2s), then finishes. */
+    /** Auto wind up (close): delays 0.25s, sets RPM/hood close, waits until at speed (max 2s). */
     public static Command autoWindUpClose() {
-        return Commands.runOnce(() -> {
-            shooterSubsys.setVelocityRPM(kFixedShotRPM);
-            hoodSubsys.setPosition(kCloseHoodPosition);
-        }, shooterSubsys, hoodSubsys)
-        .andThen(Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0));
+        return Commands.waitSeconds(0.25).andThen(
+            Commands.runOnce(() -> {
+                shooterSubsys.setVelocityRPM(kFixedShotRPM);
+                hoodSubsys.setPosition(kCloseHoodPosition);
+            }, shooterSubsys, hoodSubsys),
+            Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0)
+        );
     }
 
-    /** Auto wind up (closer/hub): sets RPM/hood closer, waits until at speed (max 2s), then finishes. */
+    /** Auto wind up (closer/hub): delays 0.25s, sets RPM/hood closer, waits until at speed (max 2s). */
     public static Command autoWindUpCloser() {
-        return Commands.runOnce(() -> {
-            shooterSubsys.setVelocityRPM(kFixedShotRPM);
-            hoodSubsys.setPosition(kCloserHoodPosition);
-        }, shooterSubsys, hoodSubsys)
-        .andThen(Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0));
+        return Commands.waitSeconds(0.25).andThen(
+            Commands.runOnce(() -> {
+                shooterSubsys.setVelocityRPM(kFixedShotRPM);
+                hoodSubsys.setPosition(kCloserHoodPosition);
+            }, shooterSubsys, hoodSubsys),
+            Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0)
+        );
     }
 
     /** Holds RPM/hood while button is held, coasts on release — for teleop */
@@ -173,15 +183,20 @@ public final class RobotCommands {
 
     public static Command Shoot() {
         return Commands.runEnd(
-            () -> feederSubsys.setSpeed(FeederSpeed.FEED_FAST),
+            () -> {
+                if (shooterSubsys.isReadyToFeed()) {
+                    feederSubsys.setSpeed(FeederSpeed.FEED_FAST);
+                }
+            },
             () -> feederSubsys.setSpeed(FeederSpeed.OFF),
             feederSubsys
         );
     }
 
-    /** Timed auto shoot: runs feeders for the given duration then stops. Use in sequential autos. */
+    /** Timed auto shoot: waits for shooter to be ready, runs feeders for the given duration, then stops. */
     public static Command autoShoot(double seconds) {
         return Commands.sequence(
+            Commands.waitUntil(shooterSubsys::isReadyToFeed).withTimeout(1.0),
             Commands.run(() -> feederSubsys.setSpeed(FeederSpeed.FEED_FAST), feederSubsys)
                 .withTimeout(seconds),
             Commands.runOnce(() -> feederSubsys.setSpeed(FeederSpeed.OFF), feederSubsys)
@@ -346,19 +361,21 @@ public final class RobotCommands {
     }
 
     /**
-     * Snaps RPM and hood to distance-table values once from current robot position,
-     * then blocks until the shooter reaches target RPM (±100 RPM).
+     * Delays 0.25s to avoid brownout, snaps RPM and hood to distance-table values
+     * from current robot position, then blocks until the shooter reaches target RPM (±100 RPM).
      * Times out after 2 seconds to prevent auto deadlock on CAN dropout or brownout.
      * Use in sequential autos before calling shoot().
      */
     public static Command adjustedWindUpOnce() {
-        return Commands.runOnce(() -> {
-            final Distance distance = getDistanceToTarget();
-            final Shot shot = distanceToShotMap.get(distance);
-            shooterSubsys.setVelocityRPM(shot.shooterRPM);
-            hoodSubsys.setPosition(shot.hoodPosition);
-        }, shooterSubsys, hoodSubsys)
-        .andThen(Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0));
+        return Commands.waitSeconds(0.25).andThen(
+            Commands.runOnce(() -> {
+                final Distance distance = getDistanceToTarget();
+                final Shot shot = distanceToShotMap.get(distance);
+                shooterSubsys.setVelocityRPM(shot.shooterRPM);
+                hoodSubsys.setPosition(shot.hoodPosition);
+            }, shooterSubsys, hoodSubsys),
+            Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0)
+        );
     }
 
     // ========== Hopper Release ==========

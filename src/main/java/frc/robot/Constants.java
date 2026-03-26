@@ -18,7 +18,7 @@ public final class Constants {
   }
 
   public static class ShooterConstants {
-    // Fixed-shot flywheel RPM (used by all windUp variants and the shot table)
+    // Fixed-shot flywheel RPM (used by basic windUp variants)
     public static final double kFixedShotRPM = 3350;
 
     // Hood positions for fixed-shot commands
@@ -27,11 +27,21 @@ public final class Constants {
     public static final double kTestHoodPosition = 0.45;
     public static final double kCloserHoodPosition = 0.0;
 
-    // Distance-to-shot interpolation table entries (hood positions)
-    // Increase these values to make the shot go further (higher arc)
+    // Distance-to-shot interpolation table entries (team-calibrated)
+    public static final double kRPMAt47in = 3350;
     public static final double kHoodAt47in = 0.1;
+    public static final double kRPMAt84in = 3350;
     public static final double kHoodAt84in = 0.37;
+    public static final double kRPMAt120in = 3350;
     public static final double kHoodAt120in = 0.45;
+
+    // Extended range data points (from WCP CC Big Dumper)
+    public static final double kRPMAt52in = 2800;
+    public static final double kHoodAt52in = 0.19;
+    public static final double kRPMAt114in = 3275;
+    public static final double kHoodAt114in = 0.40;
+    public static final double kRPMAt165in = 3650;
+    public static final double kHoodAt165in = 0.48;
 
     // Limelight aim PD gains (radians/sec per degree of tx error / change)
     public static final double kAimP = 0.1;
