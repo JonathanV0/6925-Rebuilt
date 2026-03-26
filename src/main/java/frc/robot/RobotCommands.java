@@ -239,7 +239,7 @@ public final class RobotCommands {
         final int[] hubTagIDs = {2, 5, 10, 26, 18, 21};
 
         // Single run loop: aim, adjust RPM/hood, and drive all update together each cycle
-        return Commands.run(() -> {
+        return Commands.runEnd(() -> {
             LimelightHelpers.SetFiducialIDFiltersOverride("limelight", hubTagIDs);
             // 1. Aim at target using Limelight tx
             final double tx = LimelightHelpers.getTV("limelight")
@@ -264,6 +264,10 @@ public final class RobotCommands {
             shooterSubsys.setVelocityRPM(shot.shooterRPM);
             hoodSubsys.setPosition(shot.hoodPosition);
             SmartDashboard.putNumber("Auto Distance (inches)", distance.in(Inches));
+        }, () -> {
+            // On release: coast shooter and reset hood
+            shooterSubsys.stopShooter();
+            hoodSubsys.setPosition(0);
         }, drivetrain, shooterSubsys, hoodSubsys);
     }
 
@@ -372,25 +376,11 @@ public final class RobotCommands {
 
     // ========== Intake Jolt ==========
 
-    /**
-     * Raises the climbers, drives forward briefly, then brakes hard to jolt the intake open,
-     * then lowers the climbers back down. Use at the start of an auto to deploy the intake.
-     */
+    /** Deploys the hopper then the intake. Replaces the old drive-and-brake jolt. */
     public static Command jolt() {
-        final SwerveRequest.RobotCentric joltDrive = new SwerveRequest.RobotCentric()
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
-        final SwerveRequest.SwerveDriveBrake hardBrake = new SwerveRequest.SwerveDriveBrake();
-
         return Commands.sequence(
-            climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_UP),
-            Commands.waitSeconds(0.5),
-            climberSubsys.setSpeedCommand(ClimberSpeed.OFF),
-            intakeSubsys.rotateRotatorCommand(-573), // Deploy intake (short of hard stop)
-            drivetrain.applyRequest(() -> joltDrive.withVelocityX(2.5)).withTimeout(0.35),
-            drivetrain.applyRequest(() -> hardBrake).withTimeout(0.15),
-            climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_DOWN),
-            Commands.waitSeconds(0.4),
-            climberSubsys.setSpeedCommand(ClimberSpeed.OFF)
+            hopperRelease(),
+            intakeSubsys.goToPositionCommand(-14.5)
         );
     }
 
