@@ -47,8 +47,8 @@ public class IntakeSubsys extends SubsystemBase {
   /** Runs the intake roller and oscillates the rotator to dislodge balls. Hold to run.
    *  The rotator bounces between the deployed position and slightly above it. */
   public Command intakeWithOscillateCommand(IntakeSpeed speed) {
-    // Oscillation range: 5° of output above deployed position
-    final double oscillationMotorRotations = (7.0 / 360.0) * 8.0;
+    // Oscillation range: 15° of output above deployed position
+    final double oscillationMotorRotations = (15.0 / 360.0) * 8.0;
     final double[] state = {0, 0}; // [startTime, deployedPosition]
     return this.runEnd(
       () -> {
@@ -58,8 +58,8 @@ public class IntakeSubsys extends SubsystemBase {
           state[1] = intakeRotator.getPosition().getValueAsDouble(); // capture deployed position
         }
         double elapsed = Timer.getFPGATimestamp() - state[0];
-        // Alternate between deployed position and slightly above every 0.3s
-        boolean goUp = ((int)(elapsed / 0.3) % 2 == 0);
+        // Alternate between deployed position and slightly above every 0.15s
+        boolean goUp = ((int)(elapsed / 0.15) % 2 == 0);
         double target = goUp ? state[1] + oscillationMotorRotations : state[1];
         intakeRotator.setControl(rotatorOscillateRequest.withPosition(target));
       },
@@ -75,7 +75,7 @@ public class IntakeSubsys extends SubsystemBase {
   /** Oscillates the rotator from deployed position upward by 60°, running roller to push balls in.
    *  Hold to run. On release, returns to deployed position. */
   public Command retractWithOscillateCommand(IntakeSpeed speed) {
-    final double oscillationMotorRotations = (60.0 / 360.0) * 8.0;
+    final double oscillationMotorRotations = (90.0 / 360.0) * 8.0;
     final double[] state = {0, 0}; // [startTime, deployedPosition]
     return this.runEnd(
       () -> {
@@ -85,8 +85,8 @@ public class IntakeSubsys extends SubsystemBase {
           state[1] = intakeRotator.getPosition().getValueAsDouble(); // capture deployed position
         }
         double elapsed = Timer.getFPGATimestamp() - state[0];
-        // Alternate between deployed position and 60° above every 0.3s
-        boolean goUp = ((int)(elapsed / 0.3) % 2 == 0);
+        // Alternate between deployed position and 90° above every 0.15s
+        boolean goUp = ((int)(elapsed / 0.15) % 2 == 0);
         double target = goUp ? state[1] + oscillationMotorRotations : state[1];
         intakeRotator.setControl(rotatorOscillateRequest.withPosition(target));
       },
@@ -175,7 +175,7 @@ public class IntakeSubsys extends SubsystemBase {
   public Command goToPositionSlowCommand(double motorRotations, double speed) {
     return this.run(() -> {
         double current = intakeRotator.getPosition().getValueAsDouble();
-        if (Math.abs(current - motorRotations) < 0.1) {
+        if (Math.abs(current - motorRotations) < 0.5) {
           // Close enough — switch to PID hold
           rotatorTargetPosition = motorRotations;
           intakeRotator.setControl(rotatorPositionRequest.withPosition(rotatorTargetPosition));
