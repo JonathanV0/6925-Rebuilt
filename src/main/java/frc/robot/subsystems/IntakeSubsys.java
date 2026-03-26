@@ -185,7 +185,7 @@ public class IntakeSubsys extends SubsystemBase {
           intakeRotator.set(speed * direction);
         }
       })
-      .until(() -> Math.abs(intakeRotator.getPosition().getValueAsDouble() - motorRotations) < 0.1)
+      .until(() -> Math.abs(intakeRotator.getPosition().getValueAsDouble() - motorRotations) < 0.5)
       .finallyDo(() -> {
         rotatorTargetPosition = motorRotations;
         intakeRotator.setControl(rotatorPositionRequest.withPosition(rotatorTargetPosition));
