@@ -14,7 +14,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ClimberSubsys extends SubsystemBase {
   /** Creates a new ClimberSubsys. */
-  private static final double kMaxUpPosition = 5.0;
+  private static final double kMaxDownPosition = 0.5;  // max negative (CLIMB_DOWN direction)
+  private static final double kMaxUpPosition = 0.5;    // max positive (CLIMB_UP / button 5 direction)
   private final TalonFX climber = new TalonFX(12, "");
 
   public ClimberSubsys() {
@@ -23,11 +24,12 @@ public class ClimberSubsys extends SubsystemBase {
   }
 
   public void setSpeed(ClimberSpeed speed) {
-    // CLIMB_DOWN (-0.5) physically raises the climber, so limit that direction
-    if (speed == ClimberSpeed.CLIMB_DOWN && climber.getPosition().getValueAsDouble() <= -kMaxUpPosition) {
+    double position = climber.getPosition().getValueAsDouble();
+    if (speed == ClimberSpeed.CLIMB_UP && position >= kMaxUpPosition) {
       climber.set(0);
-    }
-    else {
+    } else if (speed == ClimberSpeed.CLIMB_DOWN && position <= -kMaxDownPosition) {
+      climber.set(0);
+    } else {
       climber.set(speed.value);
     }
   }
@@ -47,10 +49,14 @@ public class ClimberSubsys extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // Hard safety: if the climber is physically at the top and still moving up, kill it
-    if (climber.getPosition().getValueAsDouble() <= -kMaxUpPosition && climber.get() < 0) {
+    double position = climber.getPosition().getValueAsDouble();
+    // Hard safety: if the climber is past either limit and still moving that direction, kill it
+    if (position >= kMaxUpPosition && climber.get() > 0) {
+      climber.set(0);
+    } else if (position <= -kMaxDownPosition && climber.get() < 0) {
       climber.set(0);
     }
+    SmartDashboard.putNumber("Climber Position", position);
   }
 
   public enum ClimberSpeed {
