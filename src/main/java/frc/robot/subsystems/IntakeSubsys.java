@@ -85,8 +85,8 @@ public class IntakeSubsys extends SubsystemBase {
           state[1] = intakeRotator.getPosition().getValueAsDouble(); // capture deployed position
         }
         double elapsed = Timer.getFPGATimestamp() - state[0];
-        // Alternate between deployed position and 90° above every 0.15s
-        boolean goUp = ((int)(elapsed / 0.15) % 2 == 0);
+        // Alternate between deployed position and 90° above every 0.3s
+        boolean goUp = ((int)(elapsed / 0.3) % 2 == 0);
         double target = goUp ? state[1] + oscillationMotorRotations : state[1];
         intakeRotator.setControl(rotatorOscillateRequest.withPosition(target));
       },
@@ -103,7 +103,7 @@ public class IntakeSubsys extends SubsystemBase {
    *  Like spamming button 12 repeatedly. */
   public Command autoBounceCommand(int bounces) {
     final double oscillationMotorRotations = (60.0 / 360.0) * 8.0;
-    final double period = 0.5; // seconds per bounce cycle
+    final double period = 0.8; // seconds per bounce cycle
     final double totalTime = bounces * period;
     final double[] state = {0, 0}; // [startTime, deployedPosition]
     return this.run(() -> {

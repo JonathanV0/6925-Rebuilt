@@ -278,8 +278,8 @@ public class RobotContainer {
         operator.button(3).whileTrue(climber.holdSpeedCommand(ClimberSpeed.CLIMB_DOWN)); // Climber down
         operator.button(7).whileTrue(RobotCommands.windUpCloser());//infront hub shot
         operator.button(8).onTrue(RobotCommands.hopperRelease()); // Climber up/down to release hopper
-        operator.button(6).onTrue(intake.goToPositionSlowCommand(-13.35, 0.08)); // Deploy intake
-        operator.button(4).onTrue(intake.goToPositionSlowCommand(-0.12060546875, 0.08)); // Retract intake
+        operator.button(6).onTrue(intake.goToPositionSlowCommand(-13.35, 0.12)); // Deploy intake
+        operator.button(4).onTrue(intake.goToPositionSlowCommand(-0.12060546875, 0.12)); // Retract intake
         operator.button(10).whileTrue(drivetrain.applyRequest(() ->
             point.withModuleDirection(new Rotation2d(0)))); // Snap wheels to 0°
         operator.pov(180).whileTrue(RobotCommands.reverseAll()); // Hat down = eject jammed ball
