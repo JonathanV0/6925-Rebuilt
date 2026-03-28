@@ -173,7 +173,7 @@ public class RobotContainer {
         // Register named commands for PathPlanner event markers
         // ── Shooting ──────────────────────────────────────────────────────────
         NamedCommands.registerCommand("shoot", RobotCommands.Shoot());
-        NamedCommands.registerCommand("autoShoot", RobotCommands.autoShoot(1.5));
+        NamedCommands.registerCommand("autoShoot", RobotCommands.autoShoot(7));
         NamedCommands.registerCommand("StopFeed", RobotCommands.stopFeed());
         // Fixed shot (no vision): set RPM/hood to hardcoded values
         NamedCommands.registerCommand("windUp", RobotCommands.windUp());
@@ -194,7 +194,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("IntakeFast", RobotCommands.intakeFast());
         NamedCommands.registerCommand("StopIntake", RobotCommands.stopIntake());
         NamedCommands.registerCommand("intakeDeploy", intake.goToPositionCommand(-14.5));
-        NamedCommands.registerCommand("intakeBounce", intake.autoBounceCommand(6));
+        NamedCommands.registerCommand("intakeBounce", intake.autoBounceCommand(10));
         // Vision updates now run automatically in robotPeriodic() — no named command needed
         // ── Climber (for L1 auto climb) ───────────────────────────────────────
         NamedCommands.registerCommand("jolt", RobotCommands.jolt());
@@ -278,7 +278,7 @@ public class RobotContainer {
         operator.button(3).whileTrue(climber.holdSpeedCommand(ClimberSpeed.CLIMB_DOWN)); // Climber down
         operator.button(7).whileTrue(RobotCommands.windUpCloser());//infront hub shot
         operator.button(8).onTrue(RobotCommands.hopperRelease()); // Climber up/down to release hopper
-        operator.button(6).onTrue(intake.goToPositionSlowCommand(-14.5, 0.08)); // Deploy intake
+        operator.button(6).onTrue(intake.goToPositionSlowCommand(-13.35, 0.08)); // Deploy intake
         operator.button(4).onTrue(intake.goToPositionSlowCommand(-0.12060546875, 0.08)); // Retract intake
         operator.button(10).whileTrue(drivetrain.applyRequest(() ->
             point.withModuleDirection(new Rotation2d(0)))); // Snap wheels to 0°

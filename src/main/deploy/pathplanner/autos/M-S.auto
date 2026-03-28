@@ -7,7 +7,7 @@
         {
           "type": "named",
           "data": {
-            "name": "autoWindUpClose"
+            "name": "AdjustedWindUp"
           }
         },
         {
@@ -25,7 +25,7 @@
         {
           "type": "named",
           "data": {
-            "name": "shoot"
+            "name": "autoShoot"
           }
         },
         {

@@ -23,27 +23,34 @@
           }
         },
         {
-          "type": "path",
+          "type": "deadline",
           "data": {
-            "pathName": "RT-HP"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "LB-LB"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "IntakeFast"
+                }
+              }
+            ]
           }
         },
         {
-          "type": "wait",
-          "data": {
-            "waitTime": 3.0
-          }
-        },
-        {
           "type": "path",
           "data": {
-            "pathName": "HP-H"
+            "pathName": "LB-S"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "autoWindUpCloser"
+            "name": "AdjustedWindUpOnce"
           }
         },
         {
@@ -60,12 +67,6 @@
                 "type": "named",
                 "data": {
                   "name": "intakeBounce"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "autoWindUpCloser"
                 }
               }
             ]

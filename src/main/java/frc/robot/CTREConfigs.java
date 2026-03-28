@@ -65,7 +65,7 @@ public class CTREConfigs {
     //Intake rotator config
     INTAKE_ROTATOR_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     INTAKE_ROTATOR_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
-    INTAKE_ROTATOR_CONFIG.CurrentLimits.StatorCurrentLimit = 80;
+    INTAKE_ROTATOR_CONFIG.CurrentLimits.StatorCurrentLimit =80;
     INTAKE_ROTATOR_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
     INTAKE_ROTATOR_CONFIG.CurrentLimits.SupplyCurrentLimit = 80;
     // Slot0: deploy/retract — gentle
@@ -84,16 +84,16 @@ public class CTREConfigs {
     //Feeder config
     FEEDER_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     FEEDER_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
-    FEEDER_CONFIG.CurrentLimits.StatorCurrentLimit = 50;
+    FEEDER_CONFIG.CurrentLimits.StatorCurrentLimit = 40;
     FEEDER_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
     FEEDER_CONFIG.CurrentLimits.SupplyCurrentLimit = 40;
 
     //Climber config
     CLIMBER_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     CLIMBER_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
-    CLIMBER_CONFIG.CurrentLimits.StatorCurrentLimit = 60;
+    CLIMBER_CONFIG.CurrentLimits.StatorCurrentLimit = 40;
     CLIMBER_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
-    CLIMBER_CONFIG.CurrentLimits.SupplyCurrentLimit = 60;
+    CLIMBER_CONFIG.CurrentLimits.SupplyCurrentLimit = 40;
 
     }
 }

@@ -38,6 +38,8 @@ public final class RobotCommands {
     private static CommandSwerveDrivetrain drivetrain;
     private static ClimberSubsys climberSubsys;
 
+    private static final double kAimOffsetDegrees = 5.0;
+
     // Distance-to-shot lookup table (team should calibrate these values)
     private static final InterpolatingTreeMap<Distance, Shot> distanceToShotMap = new InterpolatingTreeMap<>(
         (startValue, endValue, q) ->
@@ -51,12 +53,9 @@ public final class RobotCommands {
     );
 
     static {
-        // Team-calibrated data points
-        distanceToShotMap.put(Inches.of(47.0), new Shot(kRPMAt47in, kHoodAt47in));
-        distanceToShotMap.put(Inches.of(84.0), new Shot(kRPMAt84in, kHoodAt84in));
-        distanceToShotMap.put(Inches.of(120.0), new Shot(kRPMAt120in, kHoodAt120in));
-        // WCP CC extended range
-        distanceToShotMap.put(Inches.of(165.5), new Shot(kRPMAt165in, kHoodAt165in));
+        distanceToShotMap.put(Inches.of(47.0), new Shot(kFixedShotRPM, kHoodAt47in));
+        distanceToShotMap.put(Inches.of(84.0), new Shot(kFixedShotRPM, kHoodAt84in));
+        distanceToShotMap.put(Inches.of(120.0), new Shot(kFixedShotRPM, kHoodAt120in));
     }
 
     public static void init(
@@ -85,38 +84,31 @@ public final class RobotCommands {
         }, shooterSubsys, hoodSubsys);
     }
 
-    /** Auto wind up (default): delays 0.25s to avoid brownout at auto start,
-     *  sets RPM/hood, waits until at speed (max 2s), then finishes. */
+    /** Auto wind up (default): sets RPM/hood, waits until at speed (max 2s), then finishes. */
     public static Command autoWindUp() {
-        return Commands.waitSeconds(0.25).andThen(
-            Commands.runOnce(() -> {
-                shooterSubsys.setVelocityRPM(kFixedShotRPM);
-                hoodSubsys.setPosition(kDefaultHoodPosition);
-            }, shooterSubsys, hoodSubsys),
-            Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0)
-        );
+        return Commands.runOnce(() -> {
+            shooterSubsys.setVelocityRPM(kFixedShotRPM);
+            hoodSubsys.setPosition(kDefaultHoodPosition);
+        }, shooterSubsys, hoodSubsys)
+        .andThen(Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0));
     }
 
-    /** Auto wind up (close): delays 0.25s, sets RPM/hood close, waits until at speed (max 2s). */
+    /** Auto wind up (close): sets RPM/hood close, waits until at speed (max 2s), then finishes. */
     public static Command autoWindUpClose() {
-        return Commands.waitSeconds(0.25).andThen(
-            Commands.runOnce(() -> {
-                shooterSubsys.setVelocityRPM(kFixedShotRPM);
-                hoodSubsys.setPosition(kCloseHoodPosition);
-            }, shooterSubsys, hoodSubsys),
-            Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0)
-        );
+        return Commands.runOnce(() -> {
+            shooterSubsys.setVelocityRPM(kFixedShotRPM);
+            hoodSubsys.setPosition(kCloseHoodPosition);
+        }, shooterSubsys, hoodSubsys)
+        .andThen(Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0));
     }
 
-    /** Auto wind up (closer/hub): delays 0.25s, sets RPM/hood closer, waits until at speed (max 2s). */
+    /** Auto wind up (closer/hub): sets RPM/hood closer, waits until at speed (max 2s), then finishes. */
     public static Command autoWindUpCloser() {
-        return Commands.waitSeconds(0.25).andThen(
-            Commands.runOnce(() -> {
-                shooterSubsys.setVelocityRPM(kFixedShotRPM);
-                hoodSubsys.setPosition(kCloserHoodPosition);
-            }, shooterSubsys, hoodSubsys),
-            Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0)
-        );
+        return Commands.runOnce(() -> {
+            shooterSubsys.setVelocityRPM(kFixedShotRPM);
+            hoodSubsys.setPosition(kCloserHoodPosition);
+        }, shooterSubsys, hoodSubsys)
+        .andThen(Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0));
     }
 
     /** Holds RPM/hood while button is held, coasts on release — for teleop */
@@ -183,20 +175,15 @@ public final class RobotCommands {
 
     public static Command Shoot() {
         return Commands.runEnd(
-            () -> {
-                if (shooterSubsys.isReadyToFeed()) {
-                    feederSubsys.setSpeed(FeederSpeed.FEED_FAST);
-                }
-            },
+            () -> feederSubsys.setSpeed(FeederSpeed.FEED_FAST),
             () -> feederSubsys.setSpeed(FeederSpeed.OFF),
             feederSubsys
         );
     }
 
-    /** Timed auto shoot: waits for shooter to be ready, runs feeders for the given duration, then stops. */
+    /** Timed auto shoot: runs feeders for the given duration then stops. Use in sequential autos. */
     public static Command autoShoot(double seconds) {
         return Commands.sequence(
-            Commands.waitUntil(shooterSubsys::isReadyToFeed).withTimeout(1.0),
             Commands.run(() -> feederSubsys.setSpeed(FeederSpeed.FEED_FAST), feederSubsys)
                 .withTimeout(seconds),
             Commands.runOnce(() -> feederSubsys.setSpeed(FeederSpeed.OFF), feederSubsys)
@@ -226,14 +213,13 @@ public final class RobotCommands {
             () -> {
                 intakeSubsys.setSpeed(IntakeSpeed.REVERSE);
                 feederSubsys.setSpeed(FeederSpeed.REVERSE);
-                shooterSubsys.setVelocityRPM(-500);
             },
             () -> {
                 intakeSubsys.setSpeed(IntakeSpeed.OFF);
                 feederSubsys.setSpeed(FeederSpeed.OFF);
-                shooterSubsys.setVelocityRPM(0);
+            
             },
-            intakeSubsys, feederSubsys, shooterSubsys
+            intakeSubsys, feederSubsys
         );
     }
 
@@ -250,40 +236,35 @@ public final class RobotCommands {
             .withDeadband(maxSpeed * 0.1)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
-        // Only aim at hub tags (2, 5, 10)
-        final int[] hubTagIDs = {2, 5, 10, 26, 18, 21};
+        final int[] hubTagIDs = {2, 5, 10, 26, 18, 21};    
+        return Commands.run(() -> {
+            // Aim at target using Limelight tx — proportional rotation control
 
-        // Single run loop: aim, adjust RPM/hood, and drive all update together each cycle
-        return Commands.runEnd(() -> {
+            //TODO do the same ids for the blue alliance as well
             LimelightHelpers.SetFiducialIDFiltersOverride("limelight", hubTagIDs);
-            // 1. Aim at target using Limelight tx
-            final double tx = LimelightHelpers.getTV("limelight")
-                ? LimelightHelpers.getTX("limelight") + kAimOffsetDegrees : 0.0;
-            drivetrain.setControl(aimDrive
-                .withVelocityX(velocityX.getAsDouble())
-                .withVelocityY(velocityY.getAsDouble())
-                .withRotationalRate(-tx * kAimP));
-
-            // 2. Adjust RPM and hood using Limelight distance (ty), fallback to odometry
-            final Distance distance;
-            if (LimelightHelpers.getTV("limelight")) {
-                final double ty = LimelightHelpers.getTY("limelight");
-                final double heightDiff = LimelightSubsys.kTargetHeightInches - LimelightSubsys.kCameraHeightInches;
-                final double angleRad = Math.toRadians(LimelightSubsys.kCameraMountAngleDegrees + ty);
-                final double distInches = heightDiff / Math.tan(angleRad) + kHubCenterOffsetInches;
-                distance = Inches.of(distInches);
-            } else {
-                distance = getPredictedDistanceToTarget();
-            }
-            final Shot shot = distanceToShotMap.get(distance);
-            shooterSubsys.setVelocityRPM(shot.shooterRPM);
-            hoodSubsys.setPosition(shot.hoodPosition);
-            SmartDashboard.putNumber("Auto Distance (inches)", distance.in(Inches));
-        }, () -> {
-            // On release: coast shooter and reset hood
-            shooterSubsys.stopShooter();
-            hoodSubsys.setPosition(0);
-        }, drivetrain, shooterSubsys, hoodSubsys);
+                final double tx = LimelightHelpers.getTV("limelight")
+                    ? LimelightHelpers.getTX("limelight") + kAimOffsetDegrees : 0.0;
+                drivetrain.setControl(aimDrive
+                    .withVelocityX(velocityX.getAsDouble())
+                    .withVelocityY(velocityY.getAsDouble())
+                    .withRotationalRate(-tx * kAimP));
+                final Distance distance;
+                if (LimelightHelpers.getTV("limelight")) {
+                    final double ty = LimelightHelpers.getTY("limelight");
+                    final double heightDiff = LimelightSubsys.kTargetHeightInches - LimelightSubsys.kCameraHeightInches;
+                    final double angleRad = Math.toRadians(LimelightSubsys.kCameraMountAngleDegrees + ty);
+                    // Horizontal distance from camera to tag, plus half hub width to get center-to-center
+                    final double distInches = heightDiff / Math.tan(angleRad) + kHubCenterOffsetInches;
+                    distance = Inches.of(distInches);
+                } else {
+                    distance = getPredictedDistanceToTarget();
+                }
+                final Shot shot = distanceToShotMap.get(distance);
+                shooterSubsys.setVelocityRPM(shot.shooterRPM);
+                hoodSubsys.setPosition(shot.hoodPosition);
+                SmartDashboard.putNumber("Auto Distance (inches)", distance.in(Inches));
+            }, shooterSubsys, hoodSubsys)
+        ;
     }
 
     // ========== Range-Adjusted Shot Commands ==========
@@ -361,21 +342,19 @@ public final class RobotCommands {
     }
 
     /**
-     * Delays 0.25s to avoid brownout, snaps RPM and hood to distance-table values
-     * from current robot position, then blocks until the shooter reaches target RPM (±100 RPM).
+     * Snaps RPM and hood to distance-table values once from current robot position,
+     * then blocks until the shooter reaches target RPM (±100 RPM).
      * Times out after 2 seconds to prevent auto deadlock on CAN dropout or brownout.
      * Use in sequential autos before calling shoot().
      */
     public static Command adjustedWindUpOnce() {
-        return Commands.waitSeconds(0.25).andThen(
-            Commands.runOnce(() -> {
-                final Distance distance = getDistanceToTarget();
-                final Shot shot = distanceToShotMap.get(distance);
-                shooterSubsys.setVelocityRPM(shot.shooterRPM);
-                hoodSubsys.setPosition(shot.hoodPosition);
-            }, shooterSubsys, hoodSubsys),
-            Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0)
-        );
+        return Commands.runOnce(() -> {
+            final Distance distance = getDistanceToTarget();
+            final Shot shot = distanceToShotMap.get(distance);
+            shooterSubsys.setVelocityRPM(shot.shooterRPM);
+            hoodSubsys.setPosition(shot.hoodPosition);
+        }, shooterSubsys, hoodSubsys)
+        .andThen(Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0));
     }
 
     // ========== Hopper Release ==========
@@ -393,11 +372,25 @@ public final class RobotCommands {
 
     // ========== Intake Jolt ==========
 
-    /** Deploys the hopper then the intake. Replaces the old drive-and-brake jolt. */
+    /**
+     * Raises the climbers, drives forward briefly, then brakes hard to jolt the intake open,
+     * then lowers the climbers back down. Use at the start of an auto to deploy the intake.
+     */
     public static Command jolt() {
+        final SwerveRequest.RobotCentric joltDrive = new SwerveRequest.RobotCentric()
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+        final SwerveRequest.SwerveDriveBrake hardBrake = new SwerveRequest.SwerveDriveBrake();
+
         return Commands.sequence(
-            hopperRelease(),
-            intakeSubsys.goToPositionCommand(-14.5)
+            climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_UP),
+            Commands.waitSeconds(0.5),
+            climberSubsys.setSpeedCommand(ClimberSpeed.OFF),
+            intakeSubsys.rotateRotatorCommand(-573), // Deploy intake (short of hard stop)
+            drivetrain.applyRequest(() -> joltDrive.withVelocityX(2.5)).withTimeout(0.35),
+            drivetrain.applyRequest(() -> hardBrake).withTimeout(0.15),
+            climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_DOWN),
+            Commands.waitSeconds(0.4),
+            climberSubsys.setSpeedCommand(ClimberSpeed.OFF)
         );
     }
 

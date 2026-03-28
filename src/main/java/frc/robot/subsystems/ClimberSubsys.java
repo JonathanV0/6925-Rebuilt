@@ -14,8 +14,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ClimberSubsys extends SubsystemBase {
   /** Creates a new ClimberSubsys. */
-  private static final double kMaxDownPosition = 0.5;  // max negative (CLIMB_DOWN direction)
-  private static final double kMaxUpPosition = 0.5;    // max positive (CLIMB_UP / button 5 direction)
+  private static final double kMaxDownPosition = -40.0;  // max negative (CLIMB_DOWN direction)
+  private static final double kMaxUpPosition = 40.0;    // max positive (CLIMB_UP / button 5 direction)
   private final TalonFX climber = new TalonFX(12, "");
 
   public ClimberSubsys() {
