@@ -7,7 +7,7 @@
         {
           "type": "named",
           "data": {
-            "name": "autoWindUpClose"
+            "name": "AdjustedWindUp"
           }
         },
         {
@@ -17,35 +17,9 @@
           }
         },
         {
-          "type": "parallel",
+          "type": "path",
           "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Basic Shoot from infront target"
-                }
-              },
-              {
-                "type": "sequential",
-                "data": {
-                  "commands": [
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "hopperDeploy"
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "intakeDeploy"
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
+            "pathName": "Basic Shoot from infront target"
           }
         },
         {
@@ -58,6 +32,12 @@
           "type": "wait",
           "data": {
             "waitTime": 1.5
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "hopperDeploy"
           }
         }
       ]

@@ -145,6 +145,16 @@ public final class RobotCommands {
             shooterSubsys, hoodSubsys
         );
     }
+    public static Command windUpPass() {
+        return Commands.runEnd(
+            () -> {
+                shooterSubsys.setVelocityRPM(kPassShotRPM);
+                hoodSubsys.setPosition(kPassHoodPosition);
+            },
+            () -> shooterSubsys.stopShooter(),
+            shooterSubsys, hoodSubsys
+        );
+    }
 
     public static Command windUpTest() {
         return Commands.runEnd(
