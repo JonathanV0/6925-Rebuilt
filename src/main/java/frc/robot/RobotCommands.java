@@ -246,12 +246,8 @@ public final class RobotCommands {
             .withDeadband(maxSpeed * 0.1)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
-        final int[] hubTagIDs = {2, 5, 10, 26, 18, 21};    
         return Commands.run(() -> {
             // Aim at target using Limelight tx — proportional rotation control
-
-            //TODO do the same ids for the blue alliance as well
-            LimelightHelpers.SetFiducialIDFiltersOverride("limelight", hubTagIDs);
                 final double tx = LimelightHelpers.getTV("limelight")
                     ? LimelightHelpers.getTX("limelight") + kAimOffsetDegrees : 0.0;
                 drivetrain.setControl(aimDrive
