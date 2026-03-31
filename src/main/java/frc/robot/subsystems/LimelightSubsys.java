@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
@@ -34,10 +35,12 @@ public class LimelightSubsys extends SubsystemBase {
     private static final double kMinTagAreaPercent = 0.1;
 
     private final String name;
+    private final Supplier<Pose2d> poseSupplier;
     private final NetworkTable telemetryTable;
     private final StructPublisher<Pose2d> posePublisher;
-    public LimelightSubsys(String name) {
+    public LimelightSubsys(String name, Supplier<Pose2d> poseSupplier) {
         this.name = name;
+        this.poseSupplier = poseSupplier;
         this.telemetryTable = NetworkTableInstance.getDefault().getTable("SmartDashboard/" + name);
         this.posePublisher = telemetryTable.getStructTopic("Estimated Robot Pose", Pose2d.struct).publish();
 
@@ -52,7 +55,12 @@ public class LimelightSubsys extends SubsystemBase {
         );
     }
 
-    public Optional<Measurement> getMeasurement(Pose2d currentRobotPose) {
+    @Override
+    public void periodic() {
+        // Send gyro heading every cycle so MegaTag2 can always resolve pose ambiguity
+        final Pose2d currentPose = poseSupplier.get();
+        LimelightHelpers.SetRobotOrientation(name, currentPose.getRotation().getDegrees(), 0, 0, 0, 0, 0);
+
         // Update tag filter based on current alliance
         final Optional<Alliance> alliance = DriverStation.getAlliance();
         if (alliance.isPresent() && alliance.get() == Alliance.Blue) {
@@ -60,11 +68,10 @@ public class LimelightSubsys extends SubsystemBase {
         } else {
             LimelightHelpers.SetFiducialIDFiltersOverride(name, kRedTagIDs);
         }
+    }
 
-        // Feed gyro heading to LL3 — MegaTag2 uses this for accurate 3D multi-tag solving
-        LimelightHelpers.SetRobotOrientation(name, currentRobotPose.getRotation().getDegrees(), 0, 0, 0, 0, 0);
-
-        // MegaTag2: LL3 fuses multiple tags in 3D using the gyro heading for much better accuracy
+    public Optional<Measurement> getMeasurement() {
+        // MegaTag2: fuses multiple tags in 3D using the gyro heading for much better accuracy
         final PoseEstimate poseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name);
         if (poseEstimate == null || poseEstimate.tagCount == 0 || poseEstimate.avgTagArea < kMinTagAreaPercent) {
             return Optional.empty();

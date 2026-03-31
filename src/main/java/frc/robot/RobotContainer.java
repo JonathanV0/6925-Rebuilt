@@ -165,7 +165,7 @@ public class RobotContainer {
     private final FeederSubsys feeder = new FeederSubsys();
     private final ClimberSubsys climber = new ClimberSubsys();
     private final HoodSubsys hood = new HoodSubsys();
-    private final LimelightSubsys limelight = new LimelightSubsys("limelight");
+    private final LimelightSubsys limelight = new LimelightSubsys("limelight", () -> drivetrain.getState().Pose);
 
     public RobotContainer() {
         RobotCommands.init(shooter, feeder, hood, intake, drivetrain, climber);
@@ -301,8 +301,7 @@ public class RobotContainer {
      */
     public void updateVision() {
         if (limelight == null) return;
-        final Pose2d currentPose = drivetrain.getState().Pose;
-        limelight.getMeasurement(currentPose).ifPresent(measurement -> {
+        limelight.getMeasurement().ifPresent(measurement -> {
             drivetrain.addVisionMeasurement(
                 measurement.poseEstimate.pose,
                 measurement.poseEstimate.timestampSeconds,
@@ -319,7 +318,7 @@ public class RobotContainer {
     public void seedPoseFromVision() {
         if (limelight == null) return;
         final Pose2d currentPose = drivetrain.getState().Pose;
-        limelight.getMeasurement(currentPose).ifPresent(measurement -> {
+        limelight.getMeasurement().ifPresent(measurement -> {
             final double jump = currentPose.getTranslation()
                 .getDistance(measurement.poseEstimate.pose.getTranslation());
             if (jump < kMaxVisionJumpMeters || currentPose.getTranslation().getNorm() < 0.01) {
