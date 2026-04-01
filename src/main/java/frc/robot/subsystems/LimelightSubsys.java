@@ -38,6 +38,7 @@ public class LimelightSubsys extends SubsystemBase {
     private final Supplier<Pose2d> poseSupplier;
     private final NetworkTable telemetryTable;
     private final StructPublisher<Pose2d> posePublisher;
+    private boolean filterSet = false;
     public LimelightSubsys(String name, Supplier<Pose2d> poseSupplier) {
         this.name = name;
         this.poseSupplier = poseSupplier;
@@ -53,6 +54,9 @@ public class LimelightSubsys extends SubsystemBase {
             kCameraMountAngleDegrees,        // pitch (degrees)
             0.0                              // yaw (degrees)
         );
+
+        // Point of interest = hub center, 23" (0.5842m) behind the AprilTag face
+        LimelightHelpers.SetFidcuial3DOffset(name, -0.5842, 0.0, 0.0);
     }
 
     @Override
@@ -61,13 +65,18 @@ public class LimelightSubsys extends SubsystemBase {
         final Pose2d currentPose = poseSupplier.get();
         LimelightHelpers.SetRobotOrientation(name, currentPose.getRotation().getDegrees(), 0, 0, 0, 0, 0);
 
-        // Update tag filter based on current alliance
-        /*final Optional<Alliance> alliance = DriverStation.getAlliance();
-        if (alliance.isPresent() && alliance.get() == Alliance.Blue) {
-            LimelightHelpers.SetFiducialIDFiltersOverride(name, kBlueTagIDs);
-        } else {
-            LimelightHelpers.SetFiducialIDFiltersOverride(name, kRedTagIDs);
-        }*/
+        // Set tag filter once when alliance is first detected
+        if (!filterSet) {
+            final Optional<Alliance> alliance = DriverStation.getAlliance();
+            if (alliance.isPresent()) {
+                if (alliance.get() == Alliance.Blue) {
+                    LimelightHelpers.SetFiducialIDFiltersOverride(name, kBlueTagIDs);
+                } else {
+                    LimelightHelpers.SetFiducialIDFiltersOverride(name, kRedTagIDs);
+                }
+                filterSet = true;
+            }
+        }
     }
 
     public Optional<Measurement> getMeasurement() {
