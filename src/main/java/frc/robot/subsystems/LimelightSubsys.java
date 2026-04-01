@@ -62,12 +62,12 @@ public class LimelightSubsys extends SubsystemBase {
         LimelightHelpers.SetRobotOrientation(name, currentPose.getRotation().getDegrees(), 0, 0, 0, 0, 0);
 
         // Update tag filter based on current alliance
-        final Optional<Alliance> alliance = DriverStation.getAlliance();
+        /*final Optional<Alliance> alliance = DriverStation.getAlliance();
         if (alliance.isPresent() && alliance.get() == Alliance.Blue) {
             LimelightHelpers.SetFiducialIDFiltersOverride(name, kBlueTagIDs);
         } else {
             LimelightHelpers.SetFiducialIDFiltersOverride(name, kRedTagIDs);
-        }
+        }*/
     }
 
     public Optional<Measurement> getMeasurement() {
