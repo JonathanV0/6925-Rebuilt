@@ -56,6 +56,7 @@ public final class RobotCommands {
         distanceToShotMap.put(Inches.of(47.0), new Shot(kFixedShotRPM, kHoodAt47in));
         distanceToShotMap.put(Inches.of(84.0), new Shot(kFixedShotRPM, kHoodAt84in));
         distanceToShotMap.put(Inches.of(120.0), new Shot(kFixedShotRPM, kHoodAt120in));
+        distanceToShotMap.put(Inches.of(139.5), new Shot(kRPMAt139in, kHoodAt139in));
     }
 
     public static void init(
@@ -156,6 +157,17 @@ public final class RobotCommands {
         );
     }
 
+    public static Command windUp139() {
+        return Commands.runEnd(
+            () -> {
+                shooterSubsys.setVelocityRPM(kRPMAt139in);
+                hoodSubsys.setPosition(kHoodAt139in);
+            },
+            () -> shooterSubsys.stopShooter(),
+            shooterSubsys, hoodSubsys
+        );
+    }
+
     public static Command windUpTest() {
         return Commands.runEnd(
             () -> {
@@ -246,7 +258,7 @@ public final class RobotCommands {
             .withDeadband(maxSpeed * 0.1)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
-        return Commands.run(() -> {
+        return Commands.runEnd(() -> {
             // Aim at target using Limelight tx — proportional rotation control
                 final double tx = LimelightHelpers.getTV("limelight")
                     ? LimelightHelpers.getTX("limelight") + kAimOffsetDegrees : 0.0;
@@ -269,7 +281,9 @@ public final class RobotCommands {
                 shooterSubsys.setVelocityRPM(shot.shooterRPM);
                 hoodSubsys.setPosition(shot.hoodPosition);
                 SmartDashboard.putNumber("Auto Distance (inches)", distance.in(Inches));
-            }, shooterSubsys, hoodSubsys)
+            },
+            () -> shooterSubsys.stopShooter(),
+            shooterSubsys, hoodSubsys)
         ;
     }
 

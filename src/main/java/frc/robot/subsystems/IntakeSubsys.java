@@ -48,7 +48,7 @@ public class IntakeSubsys extends SubsystemBase {
    *  The rotator bounces between the deployed position and slightly above it. */
   public Command intakeWithOscillateCommand(IntakeSpeed speed) {
     // Oscillation range: 15° of output above deployed position
-    final double oscillationMotorRotations = (15.0 / 360.0) * 8.0;
+    final double oscillationMotorRotations = (11.5 / 360.0) * 8.0;
     final double[] state = {0, 0}; // [startTime, deployedPosition]
     return this.runEnd(
       () -> {
@@ -58,8 +58,8 @@ public class IntakeSubsys extends SubsystemBase {
           state[1] = intakeRotator.getPosition().getValueAsDouble(); // capture deployed position
         }
         double elapsed = Timer.getFPGATimestamp() - state[0];
-        // Alternate between deployed position and slightly above every 0.15s
-        boolean goUp = ((int)(elapsed / 0.15) % 2 == 0);
+        // Alternate between deployed position and slightly above every 0.10s
+        boolean goUp = ((int)(elapsed / 0.10) % 2 == 0);
         double target = goUp ? state[1] + oscillationMotorRotations : state[1];
         intakeRotator.setControl(rotatorOscillateRequest.withPosition(target));
       },

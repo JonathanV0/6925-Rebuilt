@@ -249,7 +249,7 @@ public class RobotContainer {
         joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         // D-pad up/down = manual intake up/down
-        joystick.povUp().whileTrue(intake.slowRotateCommand(-0.025));
+        joystick.povUp().whileTrue(RobotCommands.windUp139()); // 139.5" wind up
         joystick.povDown().whileTrue(intake.slowRotateCommand(.025));
         // D-pad left/right = precise intake rotation at 1 RPM motor
         joystick.povLeft().whileTrue(intake.creepRotateCommand(-1));
@@ -278,7 +278,7 @@ public class RobotContainer {
         operator.button(3).whileTrue(climber.holdSpeedCommand(ClimberSpeed.CLIMB_DOWN)); // Climber down
         operator.button(7).whileTrue(RobotCommands.windUpCloser());//infront hub shot
         operator.button(8).onTrue(RobotCommands.hopperRelease()); // Climber up/down to release hopper
-        operator.button(6).onTrue(intake.goToPositionSlowCommand(-13.35, 0.3)); // Deploy intake
+        operator.button(6).onTrue(intake.goToPositionSlowCommand(-13.10, 0.3)); // Deploy intake
         operator.button(4).onTrue(intake.goToPositionSlowCommand(-0.12060546875, 0.2)); // Retract intake
         // operator.button(10).whileTrue(drivetrain.applyRequest(() ->
         //     point.withModuleDirection(new Rotation2d(0)))); // Snap wheels to 0°

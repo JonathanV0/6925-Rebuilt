@@ -66,7 +66,7 @@ public class LimelightSubsys extends SubsystemBase {
         LimelightHelpers.SetRobotOrientation(name, currentPose.getRotation().getDegrees(), 0, 0, 0, 0, 0);
 
         // Set tag filter once when alliance is first detected
-        if (!filterSet) {
+        /*if (!filterSet) {
             final Optional<Alliance> alliance = DriverStation.getAlliance();
             if (alliance.isPresent()) {
                 if (alliance.get() == Alliance.Blue) {
@@ -76,7 +76,7 @@ public class LimelightSubsys extends SubsystemBase {
                 }
                 filterSet = true;
             }
-        }
+        }*/
     }
 
     public Optional<Measurement> getMeasurement() {

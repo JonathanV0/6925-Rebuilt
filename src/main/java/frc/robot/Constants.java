@@ -36,6 +36,8 @@ public final class Constants {
     public static final double kHoodAt84in = 0.37;
     public static final double kRPMAt120in = 3350;
     public static final double kHoodAt120in = 0.45;
+    public static final double kRPMAt139in = 3350;
+    public static final double kHoodAt139in = 0.6;
 
     // Extended range data points (from WCP CC Big Dumper)
     public static final double kRPMAt52in = 2800;
