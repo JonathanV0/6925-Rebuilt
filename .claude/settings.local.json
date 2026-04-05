@@ -6,7 +6,9 @@
       "Bash(git stash:*)",
       "Bash(git pull:*)",
       "Bash(./gradlew build:*)",
-      "WebFetch(domain:youtu.be)"
+      "WebFetch(domain:youtu.be)",
+      "WebSearch",
+      "WebFetch(domain:firstfrc.blob.core.windows.net)"
     ]
   }
 }

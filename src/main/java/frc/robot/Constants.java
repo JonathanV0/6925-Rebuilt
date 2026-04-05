@@ -36,6 +36,8 @@ public final class Constants {
     public static final double kHoodAt84in = 0.37;
     public static final double kRPMAt120in = 3350;
     public static final double kHoodAt120in = 0.45;
+    public static final double kRPMAt75in = 3350;
+    public static final double kHoodAt75in = 0.15;
     public static final double kRPMAt139in = 3350;
     public static final double kHoodAt139in = 0.6;
 
@@ -53,7 +55,7 @@ public final class Constants {
 
     // Aim offset in degrees - positive shifts aim to the right, negative shifts left
     // Tune this if the robot consistently aims too far left or right
-    public static final double kAimOffsetDegrees = -3.0;
+    public static final double kAimOffsetDegrees = -11.0;
 
     // How far ahead (seconds) to predict robot position for shot calculations
     public static final double kLookAheadSeconds = 0.25;

@@ -54,6 +54,7 @@ public final class RobotCommands {
 
     static {
         distanceToShotMap.put(Inches.of(47.0), new Shot(kFixedShotRPM, kHoodAt47in));
+        distanceToShotMap.put(Inches.of(75.125), new Shot(kRPMAt75in, kHoodAt75in));
         distanceToShotMap.put(Inches.of(84.0), new Shot(kFixedShotRPM, kHoodAt84in));
         distanceToShotMap.put(Inches.of(120.0), new Shot(kFixedShotRPM, kHoodAt120in));
         distanceToShotMap.put(Inches.of(139.5), new Shot(kRPMAt139in, kHoodAt139in));
@@ -157,11 +158,23 @@ public final class RobotCommands {
         );
     }
 
+    // TODO: 139.5" was measured from limelight to hub center, not robot center to hub center — remeasure
     public static Command windUp139() {
         return Commands.runEnd(
             () -> {
                 shooterSubsys.setVelocityRPM(kRPMAt139in);
                 hoodSubsys.setPosition(kHoodAt139in);
+            },
+            () -> shooterSubsys.stopShooter(),
+            shooterSubsys, hoodSubsys
+        );
+    }
+
+    public static Command windUp75() {
+        return Commands.runEnd(
+            () -> {
+                shooterSubsys.setVelocityRPM(kRPMAt75in);
+                hoodSubsys.setPosition(kHoodAt75in);
             },
             () -> shooterSubsys.stopShooter(),
             shooterSubsys, hoodSubsys

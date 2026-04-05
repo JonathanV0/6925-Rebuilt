@@ -249,7 +249,7 @@ public class RobotContainer {
         joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         // D-pad up/down = manual intake up/down
-        joystick.povUp().whileTrue(RobotCommands.windUp139()); // 139.5" wind up
+        joystick.povUp().whileTrue(RobotCommands.windUp75()); // 75.125" wind up
         joystick.povDown().whileTrue(intake.slowRotateCommand(.025));
         // D-pad left/right = precise intake rotation at 1 RPM motor
         joystick.povLeft().whileTrue(intake.creepRotateCommand(-1));
