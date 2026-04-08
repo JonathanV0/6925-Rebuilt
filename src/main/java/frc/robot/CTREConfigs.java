@@ -18,7 +18,7 @@ public class CTREConfigs {
     public static final TalonFXConfiguration INTAKE_ROTATOR_CONFIG = new TalonFXConfiguration();
     public static final TalonFXConfiguration FUEL_FEED_CONFIG = new TalonFXConfiguration();
     public static final TalonFXConfiguration FEEDER_CONFIG = new TalonFXConfiguration();
-    public static final TalonFXConfiguration CLIMBER_CONFIG  = new TalonFXConfiguration();
+
 
     static {
 
@@ -26,7 +26,7 @@ public class CTREConfigs {
     SHOOTER_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     SHOOTER_CONFIG.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; // Motor 8 spins opposite from 9/10
     SHOOTER_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
-    SHOOTER_CONFIG.CurrentLimits.StatorCurrentLimit = 120;
+    SHOOTER_CONFIG.CurrentLimits.StatorCurrentLimit = 90;
     SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
     SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimit = 70;
     // Velocity PID — Motor 8 (right)
@@ -38,7 +38,7 @@ public class CTREConfigs {
     SHOOTER_CONFIG_9.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     SHOOTER_CONFIG_9.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // Motors 9/10 opposite from 8
     SHOOTER_CONFIG_9.CurrentLimits.StatorCurrentLimitEnable = true;
-    SHOOTER_CONFIG_9.CurrentLimits.StatorCurrentLimit = 120;
+    SHOOTER_CONFIG_9.CurrentLimits.StatorCurrentLimit = 90;
     SHOOTER_CONFIG_9.CurrentLimits.SupplyCurrentLimitEnable = true;
     SHOOTER_CONFIG_9.CurrentLimits.SupplyCurrentLimit = 70;
     SHOOTER_CONFIG_9.Slot0.kP = 0.77;
@@ -49,7 +49,7 @@ public class CTREConfigs {
     SHOOTER_CONFIG_10.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     SHOOTER_CONFIG_10.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // Motors 9/10 opposite from 8
     SHOOTER_CONFIG_10.CurrentLimits.StatorCurrentLimitEnable = true;
-    SHOOTER_CONFIG_10.CurrentLimits.StatorCurrentLimit = 120;
+    SHOOTER_CONFIG_10.CurrentLimits.StatorCurrentLimit = 90;
     SHOOTER_CONFIG_10.CurrentLimits.SupplyCurrentLimitEnable = true;
     SHOOTER_CONFIG_10.CurrentLimits.SupplyCurrentLimit = 70;
     SHOOTER_CONFIG_10.Slot0.kP = 0.8;
@@ -87,13 +87,6 @@ public class CTREConfigs {
     FEEDER_CONFIG.CurrentLimits.StatorCurrentLimit = 40;
     FEEDER_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
     FEEDER_CONFIG.CurrentLimits.SupplyCurrentLimit = 40;
-
-    //Climber config
-    CLIMBER_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    CLIMBER_CONFIG.CurrentLimits.StatorCurrentLimitEnable = true;
-    CLIMBER_CONFIG.CurrentLimits.StatorCurrentLimit = 40;
-    CLIMBER_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
-    CLIMBER_CONFIG.CurrentLimits.SupplyCurrentLimit = 40;
 
     }
 }

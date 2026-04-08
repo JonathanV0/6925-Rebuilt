@@ -5,9 +5,9 @@
 package frc.robot;
 
 /*
- * ╔══════════════════════════════════════════════════════════════════════════╗
- * ║                    FRC TEAM 6925 — ROBOT OVERVIEW                      ║
- * ╠══════════════════════════════════════════════════════════════════════════╣
+ * =========================================================================
+ *                     FRC TEAM 6925 - ROBOT OVERVIEW
+ * =========================================================================
  *
  * DRIVETRAIN (CommandSwerveDrivetrain)
  *   - Swerve drive using CTRE TunerX-generated constants
@@ -109,7 +109,7 @@ package frc.robot;
  *   51 = Feeder
  *   (Swerve drive motors are defined in TunerConstants)
  *
- * ╚══════════════════════════════════════════════════════════════════════════╝
+ * =========================================================================
  */
 
 import static edu.wpi.first.units.Units.*;
@@ -130,8 +130,6 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.lib.util.CommandX3DController;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.ClimberSubsys;
-import frc.robot.subsystems.ClimberSubsys.ClimberSpeed;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsys;
 import frc.robot.subsystems.IntakeSubsys;
@@ -163,12 +161,11 @@ public class RobotContainer {
     private final ShooterSubsys shooter = new ShooterSubsys();
     private final IntakeSubsys intake = new IntakeSubsys();
     private final FeederSubsys feeder = new FeederSubsys();
-    private final ClimberSubsys climber = new ClimberSubsys();
     private final HoodSubsys hood = new HoodSubsys();
     private final LimelightSubsys limelight = new LimelightSubsys("limelight", () -> drivetrain.getState().Pose);
 
     public RobotContainer() {
-        RobotCommands.init(shooter, feeder, hood, intake, drivetrain, climber);
+        RobotCommands.init(shooter, feeder, hood, intake, drivetrain);
         configureBindings();
         // Register named commands for PathPlanner event markers
         // ── Shooting ──────────────────────────────────────────────────────────
@@ -196,13 +193,13 @@ public class RobotContainer {
         NamedCommands.registerCommand("intakeDeploy", intake.goToPositionCommand(-14.5));
         NamedCommands.registerCommand("intakeBounce", intake.autoBounceCommand(10));
         // Vision updates now run automatically in robotPeriodic() — no named command needed
-        // ── Climber (for L1 auto climb) ───────────────────────────────────────
-        NamedCommands.registerCommand("jolt", RobotCommands.jolt());
-        NamedCommands.registerCommand("ClimbUp", climber.setSpeedCommand(ClimberSpeed.CLIMB_UP));
-        NamedCommands.registerCommand("ClimbDown", climber.setSpeedCommand(ClimberSpeed.CLIMB_DOWN));
-        NamedCommands.registerCommand("climbDown", climber.setSpeedCommand(ClimberSpeed.CLIMB_DOWN)); // some autos use lowercase
-        NamedCommands.registerCommand("StopClimber", climber.setSpeedCommand(ClimberSpeed.OFF));
-        NamedCommands.registerCommand("hopperDeploy", RobotCommands.hopperRelease());
+        // ── Climber commands (motor removed — register as no-ops so PathPlanner autos don't error)
+        NamedCommands.registerCommand("jolt", Commands.none());
+        NamedCommands.registerCommand("ClimbUp", Commands.none());
+        NamedCommands.registerCommand("ClimbDown", Commands.none());
+        NamedCommands.registerCommand("climbDown", Commands.none());
+        NamedCommands.registerCommand("StopClimber", Commands.none());
+        NamedCommands.registerCommand("hopperDeploy", Commands.none());
         NamedCommands.registerCommand("hoodReset", Commands.runOnce(() -> hood.setPosition(0)));
 
         autoChooser = AutoBuilder.buildAutoChooser("M-S");
@@ -274,10 +271,7 @@ public class RobotContainer {
         operator.button(2).whileTrue(drivetrain.holdSpeedMulti(1.0 / 3.0));
         operator.button(1).whileTrue(drivetrain.holdSpeedMulti(1.0 / 5.0));
         operator.button(12).whileTrue(intake.retractWithOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_FAST));
-        operator.button(5).whileTrue(climber.holdSpeedCommand(ClimberSpeed.CLIMB_UP)); // Climber up
-        operator.button(3).whileTrue(climber.holdSpeedCommand(ClimberSpeed.CLIMB_DOWN)); // Climber down
         operator.button(7).whileTrue(RobotCommands.windUpCloser());//infront hub shot
-        operator.button(8).onTrue(RobotCommands.hopperRelease()); // Climber up/down to release hopper
         operator.button(6).onTrue(intake.goToPositionSlowCommand(-13.10, 0.3)); // Deploy intake
         operator.button(4).onTrue(intake.goToPositionSlowCommand(-0.12060546875, 0.2)); // Retract intake
         // operator.button(10).whileTrue(drivetrain.applyRequest(() ->

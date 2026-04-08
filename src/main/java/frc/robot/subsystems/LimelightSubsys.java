@@ -56,7 +56,8 @@ public class LimelightSubsys extends SubsystemBase {
         );
 
         // Point of interest = hub center, 23" (0.5842m) behind the AprilTag face
-        LimelightHelpers.SetFidcuial3DOffset(name, -0.5842, 0.0, 0.0);
+        LimelightHelpers.setFiducial3DOffset(name, -0.5842, 0.0, 0.0);
+
     }
 
     @Override

@@ -19,8 +19,6 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.subsystems.ClimberSubsys;
-import frc.robot.subsystems.ClimberSubsys.ClimberSpeed;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsys;
 import frc.robot.subsystems.FeederSubsys.FeederSpeed;
@@ -36,9 +34,41 @@ public final class RobotCommands {
     private static HoodSubsys hoodSubsys;
     private static IntakeSubsys intakeSubsys;
     private static CommandSwerveDrivetrain drivetrain;
-    private static ClimberSubsys climberSubsys;
 
-    private static final double kAimOffsetDegrees = 5.0;
+    private static final double kAimOffsetDegrees = 0.0;
+
+    // Hub center is 23" behind tag face, offset tags are 14" from center of face
+    private static final double kHubDepthMeters = -0.5842;       // 23" behind tag
+    private static final double kTagLateralOffsetMeters = 0.3556; // 14" lateral correction
+
+    /** Sets the Limelight 3D offset so the crosshair targets the hub center,
+     *  regardless of which tag is being tracked. */
+    private static void set3DOffsetForTag(int tagID) {
+        switch (tagID) {
+            // Centered (main) tags — no lateral correction
+            case 2: case 5: case 10:   // Red
+            case 18: case 21: case 26: // Blue
+                LimelightHelpers.setFiducial3DOffset("limelight",
+                    kHubDepthMeters, 0.0, 0.0);
+                break;
+            // Offset-LEFT tags — shift 3D point right to reach hub center
+            case 9: case 11:   // Red
+            case 25: case 27:  // Blue
+                LimelightHelpers.setFiducial3DOffset("limelight",
+                    kHubDepthMeters, kTagLateralOffsetMeters, 0.0);
+                break;
+            // Offset-RIGHT tags — shift 3D point left to reach hub center
+            case 8:   // Red
+            case 24:  // Blue
+                LimelightHelpers.setFiducial3DOffset("limelight",
+                    kHubDepthMeters, -kTagLateralOffsetMeters, 0.0);
+                break;
+            default:
+                LimelightHelpers.setFiducial3DOffset("limelight",
+                    kHubDepthMeters, 0.0, 0.0);
+                break;
+        }
+    }
 
     // Distance-to-shot lookup table (team should calibrate these values)
     private static final InterpolatingTreeMap<Distance, Shot> distanceToShotMap = new InterpolatingTreeMap<>(
@@ -56,6 +86,7 @@ public final class RobotCommands {
         distanceToShotMap.put(Inches.of(47.0), new Shot(kFixedShotRPM, kHoodAt47in));
         distanceToShotMap.put(Inches.of(75.125), new Shot(kRPMAt75in, kHoodAt75in));
         distanceToShotMap.put(Inches.of(84.0), new Shot(kFixedShotRPM, kHoodAt84in));
+        distanceToShotMap.put(Inches.of(92.0), new Shot(kRPMAt92in, kHoodAt92in));
         distanceToShotMap.put(Inches.of(120.0), new Shot(kFixedShotRPM, kHoodAt120in));
         distanceToShotMap.put(Inches.of(139.5), new Shot(kRPMAt139in, kHoodAt139in));
     }
@@ -65,15 +96,13 @@ public final class RobotCommands {
         FeederSubsys feeder,
         HoodSubsys hood,
         IntakeSubsys intake,
-        CommandSwerveDrivetrain drive,
-        ClimberSubsys climber
+        CommandSwerveDrivetrain drive
     ) {
         RobotCommands.shooterSubsys = shooter;
         RobotCommands.feederSubsys = feeder;
         RobotCommands.hoodSubsys = hood;
         RobotCommands.intakeSubsys = intake;
         RobotCommands.drivetrain = drive;
-        RobotCommands.climberSubsys = climber;
     }
 
     // ========== Fixed Shot Commands ==========
@@ -272,28 +301,50 @@ public final class RobotCommands {
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
         return Commands.runEnd(() -> {
-            // Aim at target using Limelight tx — proportional rotation control
-                final double tx = LimelightHelpers.getTV("limelight")
-                    ? LimelightHelpers.getTX("limelight") + kAimOffsetDegrees : 0.0;
-                drivetrain.setControl(aimDrive
-                    .withVelocityX(velocityX.getAsDouble())
-                    .withVelocityY(velocityY.getAsDouble())
-                    .withRotationalRate(-tx * kAimP));
+                final int tagID = (int) LimelightHelpers.getFiducialID("limelight");
+                SmartDashboard.putNumber("Tracked Tag ID", tagID);
+
+                // Compute distance first — needed for both aiming correction and shot lookup
                 final Distance distance;
+                double lateralCorrectionDeg = 0.0;
                 if (LimelightHelpers.getTV("limelight")) {
                     final double ty = LimelightHelpers.getTY("limelight");
                     final double heightDiff = LimelightSubsys.kTargetHeightInches - LimelightSubsys.kCameraHeightInches;
                     final double angleRad = Math.toRadians(LimelightSubsys.kCameraMountAngleDegrees + ty);
-                    // Horizontal distance from camera to tag, plus half hub width to get center-to-center
                     final double distInches = heightDiff / Math.tan(angleRad) + kHubCenterOffsetInches;
                     distance = Inches.of(distInches);
+
+                    // Compute angular correction for offset tags (14" lateral → degrees at this distance)
+                    final double lateralInches = 8.0;
+                    switch (tagID) {
+                        case 8: case 24:           // Offset-RIGHT tags — hub center is LEFT
+                            lateralCorrectionDeg = -Math.toDegrees(Math.atan2(lateralInches, distInches));
+                            break;
+                        case 9: case 11:           // Offset-LEFT tags — hub center is RIGHT
+                        case 25: case 27:
+                            lateralCorrectionDeg = Math.toDegrees(Math.atan2(lateralInches, distInches));
+                            break;
+                    }
                 } else {
                     distance = getPredictedDistanceToTarget();
                 }
+
+                // Aim: raw tx + fixed offset + per-tag lateral correction
+                final double tx = LimelightHelpers.getTV("limelight")
+                    ? LimelightHelpers.getTX("limelight") + kAimOffsetDegrees + lateralCorrectionDeg : 0.0;
+                drivetrain.setControl(aimDrive
+                    .withVelocityX(velocityX.getAsDouble())
+                    .withVelocityY(velocityY.getAsDouble())
+                    .withRotationalRate(-tx * kAimP));
+
                 final Shot shot = distanceToShotMap.get(distance);
                 shooterSubsys.setVelocityRPM(shot.shooterRPM);
                 hoodSubsys.setPosition(shot.hoodPosition);
                 SmartDashboard.putNumber("Auto Distance (inches)", distance.in(Inches));
+                SmartDashboard.putNumber("Lateral Correction (deg)", lateralCorrectionDeg);
+                SmartDashboard.putBoolean("LL TV (code)", LimelightHelpers.getTV("limelight"));
+                SmartDashboard.putNumber("LL TX (code)", LimelightHelpers.getTX("limelight"));
+                SmartDashboard.putNumber("Aim Rotation Rate", -tx * kAimP);
             },
             () -> shooterSubsys.stopShooter(),
             shooterSubsys, hoodSubsys)
@@ -388,43 +439,6 @@ public final class RobotCommands {
             hoodSubsys.setPosition(shot.hoodPosition);
         }, shooterSubsys, hoodSubsys)
         .andThen(Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0));
-    }
-
-    // ========== Hopper Release ==========
-
-    /** Raises the climber briefly then lowers it back down to release the hopper. */
-    public static Command hopperRelease() {
-        return Commands.sequence(
-            climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_UP),
-            Commands.waitSeconds(0.5),
-            climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_DOWN),
-            Commands.waitSeconds(0.4),
-            climberSubsys.setSpeedCommand(ClimberSpeed.OFF)
-        );
-    }
-
-    // ========== Intake Jolt ==========
-
-    /**
-     * Raises the climbers, drives forward briefly, then brakes hard to jolt the intake open,
-     * then lowers the climbers back down. Use at the start of an auto to deploy the intake.
-     */
-    public static Command jolt() {
-        final SwerveRequest.RobotCentric joltDrive = new SwerveRequest.RobotCentric()
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
-        final SwerveRequest.SwerveDriveBrake hardBrake = new SwerveRequest.SwerveDriveBrake();
-
-        return Commands.sequence(
-            climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_UP),
-            Commands.waitSeconds(0.5),
-            climberSubsys.setSpeedCommand(ClimberSpeed.OFF),
-            intakeSubsys.rotateRotatorCommand(-573), // Deploy intake (short of hard stop)
-            drivetrain.applyRequest(() -> joltDrive.withVelocityX(2.5)).withTimeout(0.35),
-            drivetrain.applyRequest(() -> hardBrake).withTimeout(0.15),
-            climberSubsys.setSpeedCommand(ClimberSpeed.CLIMB_DOWN),
-            Commands.waitSeconds(0.4),
-            climberSubsys.setSpeedCommand(ClimberSpeed.OFF)
-        );
     }
 
     // ========== Shot Data ==========

@@ -32,7 +32,6 @@ public class Robot extends TimedRobot {
 
     @Override
     public void disabledPeriodic() {
-        // Continuously seed pose from vision while disabled so auto starts with accurate position
         m_robotContainer.seedPoseFromVision();
     }
 
