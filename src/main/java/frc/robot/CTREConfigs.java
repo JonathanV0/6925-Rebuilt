@@ -71,8 +71,9 @@ public class CTREConfigs {
     // Slot0: deploy/retract — gentle
     INTAKE_ROTATOR_CONFIG.Slot0.kP = 1.0;
     INTAKE_ROTATOR_CONFIG.Slot0.kV = 12.0 / (6000.0 / 60.0 / 8.0);  // 12V / max pivot RPS (6000 RPM / 8:1 reduction)
-    // Slot1: oscillation — snappy
-    INTAKE_ROTATOR_CONFIG.Slot1.kP = 10;
+    // Slot1: oscillation
+    INTAKE_ROTATOR_CONFIG.Slot1.kP = 2;
+    INTAKE_ROTATOR_CONFIG.Slot1.kD = 0.5;
 
     //Fuel feed config (shooter subsystem motor 11)
     FUEL_FEED_CONFIG.MotorOutput.NeutralMode = NeutralModeValue.Coast;

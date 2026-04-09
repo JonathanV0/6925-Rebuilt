@@ -8,7 +8,12 @@
       "Bash(./gradlew build:*)",
       "WebFetch(domain:youtu.be)",
       "WebSearch",
-      "WebFetch(domain:firstfrc.blob.core.windows.net)"
+      "WebFetch(domain:firstfrc.blob.core.windows.net)",
+      "Bash(JAVA_HOME=\"/c/Users/Public/wpilib/2026/jdk\" ./gradlew build)",
+      "Bash(JAVA_HOME=\"C:/Users/Public/wpilib/2025/jdk\" ./gradlew build)",
+      "Bash(curl -s https://api.github.com/repos/LimelightVision/limelightlib-wpijava/releases/latest)",
+      "Bash(curl -s https://api.github.com/repos/LimelightVision/limelightlib-wpijava)",
+      "Bash(curl -s https://api.github.com/repos/LimelightVision/limelightlib-wpijava/contents/LimelightHelpers.java?ref=main)"
     ]
   }
 }

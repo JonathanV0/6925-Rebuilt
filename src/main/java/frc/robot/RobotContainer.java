@@ -271,9 +271,10 @@ public class RobotContainer {
         operator.button(2).whileTrue(drivetrain.holdSpeedMulti(1.0 / 3.0));
         operator.button(1).whileTrue(drivetrain.holdSpeedMulti(1.0 / 5.0));
         operator.button(12).whileTrue(intake.retractWithOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_FAST));
+        operator.button(1).whileTrue(intake.retractWithGentleOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_FAST));
         operator.button(7).whileTrue(RobotCommands.windUpCloser());//infront hub shot
-        operator.button(6).onTrue(intake.goToPositionSlowCommand(-13.10, 0.3)); // Deploy intake
-        operator.button(4).onTrue(intake.goToPositionSlowCommand(-0.12060546875, 0.2)); // Retract intake
+        operator.button(6).onTrue(intake.goToPositionSlowCommand(-14.20, 0.3)); // Deploy intake
+        operator.button(4).onTrue(intake.goToPositionSlowCommand(-0.14423828125, 0.2)); // Retract intake
         // operator.button(10).whileTrue(drivetrain.applyRequest(() ->
         //     point.withModuleDirection(new Rotation2d(0)))); // Snap wheels to 0°
         operator.pov(180).whileTrue(RobotCommands.reverseAll()); // Hat down = eject jammed ball

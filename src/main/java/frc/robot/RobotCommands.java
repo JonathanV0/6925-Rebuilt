@@ -37,39 +37,6 @@ public final class RobotCommands {
 
     private static final double kAimOffsetDegrees = 0.0;
 
-    // Hub center is 23" behind tag face, offset tags are 14" from center of face
-    private static final double kHubDepthMeters = -0.5842;       // 23" behind tag
-    private static final double kTagLateralOffsetMeters = 0.3556; // 14" lateral correction
-
-    /** Sets the Limelight 3D offset so the crosshair targets the hub center,
-     *  regardless of which tag is being tracked. */
-    private static void set3DOffsetForTag(int tagID) {
-        switch (tagID) {
-            // Centered (main) tags — no lateral correction
-            case 2: case 5: case 10:   // Red
-            case 18: case 21: case 26: // Blue
-                LimelightHelpers.setFiducial3DOffset("limelight",
-                    kHubDepthMeters, 0.0, 0.0);
-                break;
-            // Offset-LEFT tags — shift 3D point right to reach hub center
-            case 9: case 11:   // Red
-            case 25: case 27:  // Blue
-                LimelightHelpers.setFiducial3DOffset("limelight",
-                    kHubDepthMeters, kTagLateralOffsetMeters, 0.0);
-                break;
-            // Offset-RIGHT tags — shift 3D point left to reach hub center
-            case 8:   // Red
-            case 24:  // Blue
-                LimelightHelpers.setFiducial3DOffset("limelight",
-                    kHubDepthMeters, -kTagLateralOffsetMeters, 0.0);
-                break;
-            default:
-                LimelightHelpers.setFiducial3DOffset("limelight",
-                    kHubDepthMeters, 0.0, 0.0);
-                break;
-        }
-    }
-
     // Distance-to-shot lookup table (team should calibrate these values)
     private static final InterpolatingTreeMap<Distance, Shot> distanceToShotMap = new InterpolatingTreeMap<>(
         (startValue, endValue, q) ->
@@ -87,8 +54,7 @@ public final class RobotCommands {
         distanceToShotMap.put(Inches.of(75.125), new Shot(kRPMAt75in, kHoodAt75in));
         distanceToShotMap.put(Inches.of(84.0), new Shot(kFixedShotRPM, kHoodAt84in));
         distanceToShotMap.put(Inches.of(92.0), new Shot(kRPMAt92in, kHoodAt92in));
-        distanceToShotMap.put(Inches.of(120.0), new Shot(kFixedShotRPM, kHoodAt120in));
-        distanceToShotMap.put(Inches.of(139.5), new Shot(kRPMAt139in, kHoodAt139in));
+        distanceToShotMap.put(Inches.of(100.0), new Shot(kRPMAt100in, kHoodAt100in));
     }
 
     public static void init(
@@ -304,34 +270,36 @@ public final class RobotCommands {
                 final int tagID = (int) LimelightHelpers.getFiducialID("limelight");
                 SmartDashboard.putNumber("Tracked Tag ID", tagID);
 
-                // Compute distance first — needed for both aiming correction and shot lookup
+                // Compute distance and aim angle to hub center
                 final Distance distance;
-                double lateralCorrectionDeg = 0.0;
+                double tx = 0.0;
                 if (LimelightHelpers.getTV("limelight")) {
+                    final double rawTx = LimelightHelpers.getTX("limelight");
                     final double ty = LimelightHelpers.getTY("limelight");
                     final double heightDiff = LimelightSubsys.kTargetHeightInches - LimelightSubsys.kCameraHeightInches;
                     final double angleRad = Math.toRadians(LimelightSubsys.kCameraMountAngleDegrees + ty);
-                    final double distInches = heightDiff / Math.tan(angleRad) + kHubCenterOffsetInches;
+                    final double cameraToTagInches = heightDiff / Math.tan(angleRad);
+                    final double distInches = cameraToTagInches + kHubCenterOffsetInches;
                     distance = Inches.of(distInches);
 
-                    // Compute angular correction for offset tags (14" lateral → degrees at this distance)
-                    final double lateralInches = 8.0;
+                    // Compute aim angle to hub center (behind tag + lateral offset)
+                    final double rawTxRad = Math.toRadians(rawTx);
+                    double lateralInches = 0.0;
                     switch (tagID) {
                         case 8: case 24:           // Offset-RIGHT tags — hub center is LEFT
-                            lateralCorrectionDeg = -Math.toDegrees(Math.atan2(lateralInches, distInches));
+                            lateralInches = -8.0;
                             break;
                         case 9: case 11:           // Offset-LEFT tags — hub center is RIGHT
                         case 25: case 27:
-                            lateralCorrectionDeg = Math.toDegrees(Math.atan2(lateralInches, distInches));
+                            lateralInches = 8.0;
                             break;
                     }
+                    final double hubLateral = cameraToTagInches * Math.sin(rawTxRad) + lateralInches;
+                    final double hubForward = cameraToTagInches * Math.cos(rawTxRad) + kHubCenterOffsetInches;
+                    tx = Math.toDegrees(Math.atan2(hubLateral, hubForward)) + kAimOffsetDegrees;
                 } else {
                     distance = getPredictedDistanceToTarget();
                 }
-
-                // Aim: raw tx + fixed offset + per-tag lateral correction
-                final double tx = LimelightHelpers.getTV("limelight")
-                    ? LimelightHelpers.getTX("limelight") + kAimOffsetDegrees + lateralCorrectionDeg : 0.0;
                 drivetrain.setControl(aimDrive
                     .withVelocityX(velocityX.getAsDouble())
                     .withVelocityY(velocityY.getAsDouble())
@@ -341,7 +309,7 @@ public final class RobotCommands {
                 shooterSubsys.setVelocityRPM(shot.shooterRPM);
                 hoodSubsys.setPosition(shot.hoodPosition);
                 SmartDashboard.putNumber("Auto Distance (inches)", distance.in(Inches));
-                SmartDashboard.putNumber("Lateral Correction (deg)", lateralCorrectionDeg);
+                SmartDashboard.putNumber("Corrected TX (deg)", tx);
                 SmartDashboard.putBoolean("LL TV (code)", LimelightHelpers.getTV("limelight"));
                 SmartDashboard.putNumber("LL TX (code)", LimelightHelpers.getTX("limelight"));
                 SmartDashboard.putNumber("Aim Rotation Rate", -tx * kAimP);

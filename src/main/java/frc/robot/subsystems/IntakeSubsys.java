@@ -92,8 +92,32 @@ public class IntakeSubsys extends SubsystemBase {
       },
       () -> {
         intake.set(0);
-        // Return to deployed position
         intakeRotator.setControl(rotatorOscillateRequest.withPosition(state[1]));
+        state[0] = 0;
+      }
+    );
+  }
+
+  /** Gentle oscillation for use during shooting — slower period, wider sweep, softer PID */
+  public Command retractWithGentleOscillateCommand(IntakeSpeed speed) {
+    final double oscillationMotorRotations = (160.0 / 360.0) * 8.0;
+    final double[] state = {0, 0}; // [startTime, deployedPosition]
+    return this.runEnd(
+      () -> {
+        intake.set(speed.value);
+        if (state[0] == 0) {
+          state[0] = Timer.getFPGATimestamp();
+          state[1] = intakeRotator.getPosition().getValueAsDouble();
+        }
+        double elapsed = Timer.getFPGATimestamp() - state[0];
+        // Alternate between deployed position and 160° above every 0.75s
+        boolean goUp = ((int)(elapsed / 0.75) % 2 == 0);
+        double target = goUp ? state[1] + oscillationMotorRotations : state[1];
+        intakeRotator.setControl(rotatorPositionRequest.withPosition(target));
+      },
+      () -> {
+        intake.set(0);
+        intakeRotator.setControl(rotatorPositionRequest.withPosition(state[1]));
         state[0] = 0;
       }
     );
