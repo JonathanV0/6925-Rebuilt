@@ -211,12 +211,15 @@ public final class RobotCommands {
         );
     }
 
-    /** Timed auto shoot: runs feeders for the given duration then stops. Use in sequential autos. */
+    /** Timed auto shoot: bounces intake + feeds for the given duration, then stops and redeploys intake. */
     public static Command autoShoot(double seconds) {
-        return Commands.sequence(
-            Commands.run(() -> feederSubsys.setSpeed(FeederSpeed.FEED_FAST), feederSubsys)
-                .withTimeout(seconds),
-            Commands.runOnce(() -> feederSubsys.setSpeed(FeederSpeed.OFF), feederSubsys)
+        return Commands.deadline(
+            Commands.waitSeconds(seconds),
+            Commands.run(() -> feederSubsys.setSpeed(FeederSpeed.FEED_FAST), feederSubsys),
+            intakeSubsys.autoBounceCommand((int) Math.ceil(seconds / 0.8) + 1)
+        ).andThen(
+            Commands.runOnce(() -> feederSubsys.setSpeed(FeederSpeed.OFF), feederSubsys),
+            intakeSubsys.goToPositionCommand(-14.5)
         );
     }
 
@@ -243,10 +246,12 @@ public final class RobotCommands {
             () -> {
                 intakeSubsys.setSpeed(IntakeSpeed.REVERSE);
                 feederSubsys.setSpeed(FeederSpeed.REVERSE);
+                
             },
             () -> {
                 intakeSubsys.setSpeed(IntakeSpeed.OFF);
                 feederSubsys.setSpeed(FeederSpeed.OFF);
+                
             
             },
             intakeSubsys, feederSubsys

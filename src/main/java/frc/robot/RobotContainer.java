@@ -170,7 +170,7 @@ public class RobotContainer {
         // Register named commands for PathPlanner event markers
         // ── Shooting ──────────────────────────────────────────────────────────
         NamedCommands.registerCommand("shoot", RobotCommands.Shoot());
-        NamedCommands.registerCommand("autoShoot", RobotCommands.autoShoot(7));
+        NamedCommands.registerCommand("autoShoot", RobotCommands.autoShoot(4));
         NamedCommands.registerCommand("StopFeed", RobotCommands.stopFeed());
         // Fixed shot (no vision): set RPM/hood to hardcoded values
         NamedCommands.registerCommand("windUp", RobotCommands.windUp());
@@ -268,7 +268,7 @@ public class RobotContainer {
         operator.button(11).whileTrue(RobotCommands.windUpTest());
         operator.button(9).whileTrue(RobotCommands.windUpClose()); // Close-range shot
         operator.button(2).whileTrue(intake.intakeWithOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_FAST));
-        operator.button(2).whileTrue(drivetrain.holdSpeedMulti(1.0 / 3.0));
+        operator.button(2).whileTrue(drivetrain.holdSpeedMulti(1.0 / 2.0));
         operator.button(1).whileTrue(drivetrain.holdSpeedMulti(1.0 / 5.0));
         operator.button(12).whileTrue(intake.retractWithOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_FAST));
         operator.button(1).whileTrue(intake.retractWithGentleOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_FAST));

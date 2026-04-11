@@ -21,7 +21,9 @@ public class Robot extends TimedRobot {
     @Override
     public void robotPeriodic() {
         CommandScheduler.getInstance().run();
-        m_robotContainer.updateVision();
+        if (!isAutonomous()) {
+            m_robotContainer.updateVision();
+        }
         SmartDashboard.putString("Selected Auto",
             m_robotContainer.getAutonomousCommand() != null
             ? m_robotContainer.getAutonomousCommand().getName() : "None");

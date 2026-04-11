@@ -37,13 +37,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "HP-H"
+            "pathName": "HP-MH"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "autoWindUpCloser"
+            "name": "AdjustedWindUpOnce"
           }
         },
         {
@@ -65,7 +65,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "autoWindUpCloser"
+                  "name": "AdjustedWindUpOnce"
                 }
               }
             ]

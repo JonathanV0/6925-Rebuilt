@@ -40,8 +40,8 @@ public final class Constants {
     public static final double kHoodAt75in = 0.15;
     public static final double kRPMAt92in = 3400;
     public static final double kHoodAt92in = 0.42;
-    public static final double kRPMAt100in = 3500;
-    public static final double kHoodAt100in = 0.33;
+    public static final double kRPMAt100in = 3600;
+    public static final double kHoodAt100in = 0.42;
     public static final double kRPMAt139in = 3350;
     public static final double kHoodAt139in = 0.6;
 

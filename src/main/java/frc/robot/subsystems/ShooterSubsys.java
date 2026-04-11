@@ -86,4 +86,6 @@ public class ShooterSubsys extends SubsystemBase {
     SmartDashboard.putNumber("Shooter RPM Motor 10", fuelShoot1.getVelocity().getValueAsDouble() * 60.0);
     SmartDashboard.putNumber("Shooter Target RPM", targetRPM);
   }
+
+  
 }
