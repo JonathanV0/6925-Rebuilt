@@ -16,6 +16,7 @@ import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.interpolation.Interpolator;
 import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -204,23 +205,58 @@ public final class RobotCommands {
     }
 
     public static Command Shoot() {
+        final double oscillationMotorRotations = (60.0 / 360.0) * 8.0;
+        final double period = 0.8;
+        final double[] state = {0, 0}; // [startTime, deployedPosition]
         return Commands.runEnd(
-            () -> feederSubsys.setSpeed(FeederSpeed.FEED_FAST),
-            () -> feederSubsys.setSpeed(FeederSpeed.OFF),
-            feederSubsys
+            () -> {
+                feederSubsys.setSpeed(FeederSpeed.FEED_FAST);
+                intakeSubsys.setSpeed(IntakeSpeed.INTAKE_FAST);
+                if (state[0] == 0) {
+                    state[0] = Timer.getFPGATimestamp();
+                    state[1] = intakeSubsys.getRotatorPosition();
+                }
+                double elapsed = Timer.getFPGATimestamp() - state[0];
+                boolean goUp = ((int)(elapsed / (period / 2.0)) % 2 == 0);
+                double target = goUp ? state[1] + oscillationMotorRotations : state[1];
+                intakeSubsys.setRotatorOscillate(target);
+            },
+            () -> {
+                feederSubsys.setSpeed(FeederSpeed.OFF);
+                intakeSubsys.setSpeed(IntakeSpeed.OFF);
+                state[0] = 0;
+            },
+            feederSubsys, intakeSubsys
         );
     }
 
     /** Timed auto shoot: bounces intake + feeds for the given duration, then stops and redeploys intake. */
     public static Command autoShoot(double seconds) {
-        return Commands.deadline(
-            Commands.waitSeconds(seconds),
-            Commands.run(() -> feederSubsys.setSpeed(FeederSpeed.FEED_FAST), feederSubsys),
-            intakeSubsys.autoBounceCommand((int) Math.ceil(seconds / 0.8) + 1)
-        ).andThen(
-            Commands.runOnce(() -> feederSubsys.setSpeed(FeederSpeed.OFF), feederSubsys),
-            intakeSubsys.goToPositionCommand(-14.5)
-        );
+        final double oscillationMotorRotations = (60.0 / 360.0) * 8.0;
+        final double period = 0.8;
+        final double[] state = {0, 0}; // [startTime, deployedPosition]
+        return Commands.runEnd(
+            () -> {
+                feederSubsys.setSpeed(FeederSpeed.FEED_FAST);
+                intakeSubsys.setSpeed(IntakeSpeed.INTAKE_FAST);
+                if (state[0] == 0) {
+                    state[0] = Timer.getFPGATimestamp();
+                    state[1] = intakeSubsys.getRotatorPosition();
+                }
+                double elapsed = Timer.getFPGATimestamp() - state[0];
+                boolean goUp = ((int)(elapsed / (period / 2.0)) % 2 == 0);
+                double target = goUp ? state[1] + oscillationMotorRotations : state[1];
+                intakeSubsys.setRotatorOscillate(target);
+            },
+            () -> {
+                feederSubsys.setSpeed(FeederSpeed.OFF);
+                intakeSubsys.setSpeed(IntakeSpeed.OFF);
+                intakeSubsys.setRotatorTarget(-14.5);
+                shooterSubsys.stopShooter();
+                state[0] = 0;
+            },
+            feederSubsys, intakeSubsys, shooterSubsys
+        ).withTimeout(seconds);
     }
 
     public static Command stopFeed() {

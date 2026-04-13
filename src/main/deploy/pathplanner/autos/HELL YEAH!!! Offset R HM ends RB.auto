@@ -11,21 +11,22 @@
           }
         },
         {
-          "type": "path",
+          "type": "deadline",
           "data": {
-            "pathName": "RB-HP"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 3.0
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "HP-RB"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "RB-RB"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "IntakeFast"
+                }
+              }
+            ]
           }
         },
         {
@@ -41,13 +42,13 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "AdjustedWindUpOnce"
+                  "name": "autoShoot"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "autoShoot"
+                  "name": "AdjustedWindUpOnce"
                 }
               }
             ]
@@ -56,13 +57,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RB2-RB"
+            "pathName": "New New Path"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 3.0
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "RB-S"
+            "pathName": "HP-RB"
           }
         },
         {

@@ -44,6 +44,18 @@ public class IntakeSubsys extends SubsystemBase {
     intake.set(speed.value);
   }
 
+  public double getRotatorPosition() {
+    return intakeRotator.getPosition().getValueAsDouble();
+  }
+
+  public void setRotatorOscillate(double position) {
+    intakeRotator.setControl(rotatorOscillateRequest.withPosition(position));
+  }
+
+  public void setRotatorTarget(double position) {
+    rotatorTargetPosition = position;
+  }
+
   /** Runs the intake roller and oscillates the rotator to dislodge balls. Hold to run.
    *  The rotator bounces between the deployed position and slightly above it. */
   public Command intakeWithOscillateCommand(IntakeSpeed speed) {

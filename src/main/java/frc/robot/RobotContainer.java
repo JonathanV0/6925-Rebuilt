@@ -191,7 +191,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("IntakeFast", RobotCommands.intakeFast());
         NamedCommands.registerCommand("StopIntake", RobotCommands.stopIntake());
         NamedCommands.registerCommand("intakeDeploy", intake.goToPositionCommand(-14.5));
-        NamedCommands.registerCommand("intakeBounce", intake.autoBounceCommand(10));
+        NamedCommands.registerCommand("intakeBounce", Commands.none()); // bounce is now built into autoShoot
         // Vision updates now run automatically in robotPeriodic() — no named command needed
         // ── Climber commands (motor removed — register as no-ops so PathPlanner autos don't error)
         NamedCommands.registerCommand("jolt", Commands.none());
@@ -200,6 +200,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("climbDown", Commands.none());
         NamedCommands.registerCommand("StopClimber", Commands.none());
         NamedCommands.registerCommand("hopperDeploy", Commands.none());
+        NamedCommands.registerCommand("VisionUpdate", Commands.none());
         NamedCommands.registerCommand("hoodReset", Commands.runOnce(() -> hood.setPosition(0)));
 
         autoChooser = AutoBuilder.buildAutoChooser("M-S");
