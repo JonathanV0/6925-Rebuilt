@@ -272,7 +272,8 @@ public class RobotContainer {
         operator.button(2).whileTrue(drivetrain.holdSpeedMulti(1.0 / 2.0));
         operator.button(1).whileTrue(drivetrain.holdSpeedMulti(1.0 / 5.0));
         operator.button(12).whileTrue(intake.retractWithOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_FAST));
-        operator.button(1).whileTrue(intake.retractWithGentleOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_FAST));
+        // Removed: was conflicting with Shoot() on intakeSubsys — Shoot() already bounces the intake
+        // operator.button(1).whileTrue(intake.retractWithGentleOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_FAST));
         operator.button(7).whileTrue(RobotCommands.windUpCloser());//infront hub shot
         operator.button(6).onTrue(intake.goToPositionSlowCommand(-14.20, 0.3)); // Deploy intake
         operator.button(4).onTrue(intake.goToPositionSlowCommand(-0.14423828125, 0.2)); // Retract intake

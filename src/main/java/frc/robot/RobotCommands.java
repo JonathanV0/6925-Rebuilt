@@ -51,11 +51,11 @@ public final class RobotCommands {
     );
 
     static {
-        distanceToShotMap.put(Inches.of(47.0), new Shot(kFixedShotRPM, kHoodAt47in));
-        distanceToShotMap.put(Inches.of(75.125), new Shot(kRPMAt75in, kHoodAt75in));
-        distanceToShotMap.put(Inches.of(84.0), new Shot(kFixedShotRPM, kHoodAt84in));
-        distanceToShotMap.put(Inches.of(92.0), new Shot(kRPMAt92in, kHoodAt92in));
-        distanceToShotMap.put(Inches.of(100.0), new Shot(kRPMAt100in, kHoodAt100in));
+        distanceToShotMap.put(Inches.of(47.0), new Shot(kFixedShotRPM + 150, kHoodAt47in));
+        distanceToShotMap.put(Inches.of(75.125), new Shot(kRPMAt75in + 150, kHoodAt75in));
+        distanceToShotMap.put(Inches.of(84.0), new Shot(kFixedShotRPM + 150, kHoodAt84in));
+        distanceToShotMap.put(Inches.of(92.0), new Shot(kRPMAt92in + 150, kHoodAt92in));
+        distanceToShotMap.put(Inches.of(100.0), new Shot(kRPMAt100in + 150, kHoodAt100in));
     }
 
     public static void init(
@@ -255,7 +255,7 @@ public final class RobotCommands {
                 shooterSubsys.stopShooter();
                 state[0] = 0;
             },
-            feederSubsys, intakeSubsys, shooterSubsys
+            feederSubsys, intakeSubsys
         ).withTimeout(seconds);
     }
 
