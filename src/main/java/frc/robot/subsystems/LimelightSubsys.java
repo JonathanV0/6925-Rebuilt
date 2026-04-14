@@ -91,13 +91,12 @@ public class LimelightSubsys extends SubsystemBase {
         final Matrix<N3, N1> standardDeviations;
 
         if (poseEstimate.tagCount >= 2) {
-            // Multi-tag MegaTag2: very high confidence — tight XY, trust heading
-            final double xyStdDev = 0.02 * distance;
-            standardDeviations = VecBuilder.fill(xyStdDev, xyStdDev, 0.1);
+            // Multi-tag MegaTag2: almost total trust — override gyro drift
+            standardDeviations = VecBuilder.fill(0.01, 0.01, 0.01);
         } else {
-            // Single tag: trust XY with quadratic distance falloff, ignore heading
-            final double xyStdDev = 0.05 * distance * distance;
-            standardDeviations = VecBuilder.fill(xyStdDev, xyStdDev, 9999.0);
+            // Single tag: high trust XY, still trust heading to fight gyro drift
+            final double xyStdDev = 0.02 * distance;
+            standardDeviations = VecBuilder.fill(xyStdDev, xyStdDev, 0.05);
         }
 
         posePublisher.set(poseEstimate.pose);
