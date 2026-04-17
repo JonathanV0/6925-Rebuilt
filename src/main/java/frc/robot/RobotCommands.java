@@ -304,13 +304,18 @@ public final class RobotCommands {
             .withDeadband(maxSpeed * 0.1)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
+        // Hold last known values so flicker frames don't cause jumps
+        final double[] lastTx = {0.0};
+        final Distance[] lastDistance = {null};  // null = no reading yet, accept first one unconditionally
+        final int[] outlierCount = {0};  // consecutive cycles the reading was rejected
+
         return Commands.runEnd(() -> {
                 final int tagID = (int) LimelightHelpers.getFiducialID("limelight");
                 SmartDashboard.putNumber("Tracked Tag ID", tagID);
 
                 // Compute distance and aim angle to hub center
                 final Distance distance;
-                double tx = 0.0;
+                double tx;
                 if (LimelightHelpers.getTV("limelight")) {
                     final double rawTx = LimelightHelpers.getTX("limelight");
                     final double ty = LimelightHelpers.getTY("limelight");
@@ -318,7 +323,28 @@ public final class RobotCommands {
                     final double angleRad = Math.toRadians(LimelightSubsys.kCameraMountAngleDegrees + ty);
                     final double cameraToTagInches = heightDiff / Math.tan(angleRad);
                     final double distInches = cameraToTagInches + kHubCenterOffsetInches;
-                    distance = Inches.of(distInches);
+                    final Distance rawDistance = Inches.of(distInches);
+
+                    // Accept first reading unconditionally; after that, reject outlier spikes
+                    // unless they persist for 3+ cycles (then it's real movement)
+                    if (lastDistance[0] == null) {
+                        distance = rawDistance;
+                        lastDistance[0] = distance;
+                    } else if (Math.abs(distInches - lastDistance[0].in(Inches)) > 20.0) {
+                        outlierCount[0]++;
+                        if (outlierCount[0] >= 3) {
+                            // Sustained new distance — accept it
+                            distance = rawDistance;
+                            lastDistance[0] = distance;
+                            outlierCount[0] = 0;
+                        } else {
+                            distance = lastDistance[0];
+                        }
+                    } else {
+                        distance = rawDistance;
+                        lastDistance[0] = distance;
+                        outlierCount[0] = 0;
+                    }
 
                     // Compute aim angle to hub center (behind tag + lateral offset)
                     final double rawTxRad = Math.toRadians(rawTx);
@@ -335,8 +361,13 @@ public final class RobotCommands {
                     final double hubLateral = cameraToTagInches * Math.sin(rawTxRad) + lateralInches;
                     final double hubForward = cameraToTagInches * Math.cos(rawTxRad) + kHubCenterOffsetInches;
                     tx = Math.toDegrees(Math.atan2(hubLateral, hubForward)) + kAimOffsetDegrees;
+
+                    // Update last-known aim angle
+                    lastTx[0] = tx;
                 } else {
-                    distance = getPredictedDistanceToTarget();
+                    // No target — hold last known aim and distance, or use odometry if no reading yet
+                    tx = lastTx[0];
+                    distance = lastDistance[0] != null ? lastDistance[0] : getPredictedDistanceToTarget();
                 }
                 drivetrain.setControl(aimDrive
                     .withVelocityX(velocityX.getAsDouble())
@@ -445,6 +476,51 @@ public final class RobotCommands {
             hoodSubsys.setPosition(shot.hoodPosition);
         }, shooterSubsys, hoodSubsys)
         .andThen(Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0));
+    }
+
+    // ========== Auto Exposure Tuning ==========
+
+    /**
+     * Slowly sweeps Limelight exposure from low to high until an AprilTag is
+     * detected continuously for 0.1 seconds. Publishes the current exposure
+     * to SmartDashboard so you can see where it lands.
+     *
+     * Exposure range: 10 µs to 10000 µs, stepping by 50 µs every 100 ms.
+     */
+    public static Command autoTuneExposure() {
+        final double[] exposure = {10.0};       // current exposure in µs
+        final double[] tagSeenSince = {-1.0};   // timestamp when tag was first continuously seen
+        final double kStep = 50.0;              // µs per step
+        final double kMaxExposure = 10000.0;    // max exposure µs
+        final double kStableTime = 0.35;        // seconds of continuous detection to accept
+
+        return Commands.run(() -> {
+            // Set exposure: sensor_set takes [autoExposure, exposure_us, autoGain, gain]
+            // autoExposure=0 means manual
+            LimelightHelpers.setLimelightNTDoubleArray("limelight", "sensor_set",
+                new double[]{0, exposure[0], 1, 20});
+
+            SmartDashboard.putNumber("LL Auto-Tune Exposure (us)", exposure[0]);
+
+            if (LimelightHelpers.getTV("limelight")) {
+                if (tagSeenSince[0] < 0) {
+                    tagSeenSince[0] = Timer.getFPGATimestamp();
+                }
+            } else {
+                tagSeenSince[0] = -1.0;
+            }
+
+            // If tag not yet stable, keep increasing exposure
+            if (tagSeenSince[0] < 0 || Timer.getFPGATimestamp() - tagSeenSince[0] < kStableTime) {
+                exposure[0] = Math.min(exposure[0] + kStep, kMaxExposure);
+            }
+            // Otherwise: tag is stable — stop incrementing (command keeps running to hold the value)
+        }).until(() ->
+            // Finish when tag has been stable for kStableTime
+            tagSeenSince[0] > 0 && Timer.getFPGATimestamp() - tagSeenSince[0] >= kStableTime
+        ).finallyDo(() ->
+            SmartDashboard.putNumber("LL Tuned Exposure (us)", exposure[0])
+        );
     }
 
     // ========== Shot Data ==========

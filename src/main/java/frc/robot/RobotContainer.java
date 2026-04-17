@@ -135,15 +135,20 @@ import frc.robot.subsystems.FeederSubsys;
 import frc.robot.subsystems.IntakeSubsys;
 import frc.robot.subsystems.HoodSubsys;
 import frc.robot.subsystems.LimelightSubsys;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import frc.robot.subsystems.ShooterSubsys;
 
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(1.5).in(RadiansPerSecond); // 1.5 rotations per second max angular velocity
 
+    // Slew rate limiters: 1.5/sec accel, 100/sec decel (instant stop)
+    private final SlewRateLimiter xLimiter = new SlewRateLimiter(1.5, -100, 0);
+    private final SlewRateLimiter yLimiter = new SlewRateLimiter(1.5, -100, 0);
+
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+            .withDeadband(MaxSpeed * 0.125).withRotationalDeadband(MaxAngularRate * 0.075) // 30% translation, 15% rotation deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
@@ -212,18 +217,28 @@ public class RobotContainer {
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
-            drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed * drivetrain.getCurrentSpeedMulti()) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getLeftX() * MaxSpeed * drivetrain.getCurrentSpeedMulti()) // Drive left with negative X (left)
-                    .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
-            )
+            drivetrain.applyRequest(() -> {
+                // Squared input + slew rate limiting for smooth, precise control
+                double leftY = joystick.getLeftY();
+                double leftX = joystick.getLeftX();
+                double rightX = joystick.getRightX();
+                double squaredY = -Math.copySign(leftY * leftY, leftY); // squared curve for translation
+                double squaredX = -Math.copySign(leftX * leftX, leftX);
+                double sqrtRot = -Math.copySign(Math.pow(Math.abs(rightX), 1.5), rightX); // x^1.5 curve for rotation
+                double slewedY = xLimiter.calculate(squaredY);
+                double slewedX = yLimiter.calculate(squaredX);
+                return drive.withVelocityX(slewedY * MaxSpeed * drivetrain.getCurrentSpeedMulti())
+                    .withVelocityY(slewedX * MaxSpeed * drivetrain.getCurrentSpeedMulti())
+                    .withRotationalRate(sqrtRot * MaxAngularRate);
+            })
         );
 
-        // Toggle half speed with left trigger
-        joystick.leftTrigger().onTrue(drivetrain.toggleSpeedMulti(1.0 / 3.0));
-        // Toggle 1/5th speed with right trigger
+        // Snap wheels to 0 for 0.5s then resume driving (steer motors hold in Brake mode)
+        joystick.leftTrigger().onTrue(
+            drivetrain.applyRequest(() -> point.withModuleDirection(new Rotation2d(0)))
+                .withTimeout(0.5));
+        // Toggle 1/5th speed with right trigger (press once to toggle)
         joystick.rightTrigger().onTrue(drivetrain.toggleSpeedMulti(1.0 / 5.0));
-
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
         final var idle = new SwerveRequest.Idle();
@@ -277,10 +292,11 @@ public class RobotContainer {
         operator.button(7).whileTrue(RobotCommands.windUpCloser());//infront hub shot
         operator.button(6).onTrue(intake.goToPositionSlowCommand(-14.20, 0.3)); // Deploy intake
         operator.button(4).onTrue(intake.goToPositionSlowCommand(-0.14423828125, 0.2)); // Retract intake
-        // operator.button(10).whileTrue(drivetrain.applyRequest(() ->
-        //     point.withModuleDirection(new Rotation2d(0)))); // Snap wheels to 0°
+        operator.button(10).whileTrue(drivetrain.applyRequest(() ->
+            point.withModuleDirection(new Rotation2d(0)))); // Snap wheels forward
         operator.pov(180).whileTrue(RobotCommands.reverseAll()); // Hat down = eject jammed ball
-        operator.button(10).whileTrue(RobotCommands.windUpPass());
+        operator.pov(270).onTrue(RobotCommands.autoTuneExposure()); // Hat left = auto-tune LL exposure
+        operator.button(8).whileTrue(RobotCommands.windUpPass());
     }
 
     public Command getAutonomousCommand() {

@@ -32,7 +32,12 @@ public class HoodSubsys extends SubsystemBase {
 
     private double currentPosition = 0.0;
     private double targetPosition = 0.0;
+    private double smoothedPosition = 0.0;
     private Time lastUpdateTime = Seconds.of(0);
+
+    // EMA smoothing factor: 0.0 = no change, 1.0 = no smoothing
+    // 0.15 blends ~15% new value per cycle — smooth but still responsive
+    private static final double kSmoothingAlpha = 0.1;
 
     public HoodSubsys() {
         leftServo = new Servo(kLeftServoPWM);
@@ -43,12 +48,13 @@ public class HoodSubsys extends SubsystemBase {
         //SmartDashboard.putData(this);
     }
 
-    /** Expects a position between 0.0 and 1.0 */
+    /** Expects a position between 0.0 and 1.0. Applies EMA smoothing to reduce jitter. */
     public void setPosition(double position) {
         final double clampedPosition = MathUtil.clamp(position, kMinPosition, kMaxPosition);
-        leftServo.set(clampedPosition);
-        rightServo.set(clampedPosition);
-        targetPosition = clampedPosition;
+        smoothedPosition += kSmoothingAlpha * (clampedPosition - smoothedPosition);
+        leftServo.set(smoothedPosition);
+        rightServo.set(smoothedPosition);
+        targetPosition = smoothedPosition;
     }
 
     /** Expects a position between 0.0 and 1.0 */
