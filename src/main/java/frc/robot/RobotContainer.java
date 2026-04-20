@@ -170,7 +170,7 @@ public class RobotContainer {
     private final LimelightSubsys limelight = new LimelightSubsys("limelight", () -> drivetrain.getState().Pose);
 
     public RobotContainer() {
-        RobotCommands.init(shooter, feeder, hood, intake, drivetrain);
+        RobotCommands.init(shooter, feeder, hood, intake, drivetrain, limelight);
         configureBindings();
         // Register named commands for PathPlanner event markers
         // ── Shooting ──────────────────────────────────────────────────────────

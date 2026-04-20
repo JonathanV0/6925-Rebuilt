@@ -27,9 +27,9 @@ public class LimelightSubsys extends SubsystemBase {
     // Camera mounting position relative to robot center
     public static final double kCameraForwardInches = -1.46;  // 1.46" behind center
     public static final double kCameraSideInches = 0.0;       // centered left-right
-    public static final double kCameraHeightInches = 25.75;
-    // Camera mounting angle above horizontal (calibrated from known 118" measurement)
-    public static final double kCameraMountAngleDegrees = 29.4;
+    public static final double kCameraHeightInches = 25.39;   // 0.548 + 0.046 + 0.0508 m = 0.6448 m
+    // Camera mounting angle above horizontal (calibrated from known 94" measurement)
+    public static final double kCameraMountAngleDegrees = 26.0;
 
     // LL3 has better resolution — can reliably see tags from further away
     private static final double kMinTagAreaPercent = 0.1;
@@ -54,6 +54,9 @@ public class LimelightSubsys extends SubsystemBase {
             kCameraMountAngleDegrees,        // pitch (degrees)
             0.0                              // yaw (degrees)
         );
+
+        // Point of interest = hub center, 23" (0.5842m) behind the AprilTag face
+        LimelightHelpers.setFiducial3DOffset(name, -0.5842, 0.0, 0.0);
 
     }
 
@@ -88,12 +91,13 @@ public class LimelightSubsys extends SubsystemBase {
         final Matrix<N3, N1> standardDeviations;
 
         if (poseEstimate.tagCount >= 2) {
-            // Multi-tag MegaTag2: trust XY, ignore heading (MegaTag2 already uses our gyro)
-            standardDeviations = VecBuilder.fill(0.3, 0.3, 9999999);
+            // Multi-tag MegaTag2: very high confidence — tight XY, trust heading
+            final double xyStdDev = 0.02 * distance;
+            standardDeviations = VecBuilder.fill(xyStdDev, xyStdDev, 0.1);
         } else {
-            // Single tag: scale XY trust by distance squared, ignore heading
-            final double xyStdDev = 0.1 * distance * distance;
-            standardDeviations = VecBuilder.fill(xyStdDev, xyStdDev, 9999999);
+            // Single tag: trust XY with quadratic distance falloff, ignore heading
+            final double xyStdDev = 0.05 * distance * distance;
+            standardDeviations = VecBuilder.fill(xyStdDev, xyStdDev, 9999.0);
         }
 
         posePublisher.set(poseEstimate.pose);

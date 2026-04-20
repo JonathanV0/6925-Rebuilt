@@ -30,18 +30,20 @@ public final class Constants {
     public static final double kPassHoodPosition = .75;
 
     // Distance-to-shot interpolation table entries (team-calibrated)
-    public static final double kRPMAt47in = 3350;
-    public static final double kHoodAt47in = 0.1;
+    public static final double kRPMAt47in = 3100;
+    public static final double kHoodAt47in = 0.00;
+    public static final double kRPMAt50in = 3100;
+    public static final double kHoodAt50in = 0.02;
     public static final double kRPMAt84in = 3350;
     public static final double kHoodAt84in = 0.15;
     public static final double kRPMAt120in = 3350;
-    public static final double kHoodAt120in = 0.45;
+    public static final double kHoodAt120in = 0.35;
     public static final double kRPMAt75in = 3350;
-    public static final double kHoodAt75in = .07;
-    public static final double kRPMAt92in = 3400;
-    public static final double kHoodAt92in = 0.42;
-    public static final double kRPMAt100in = 3600;
-    public static final double kHoodAt100in = 0.42;
+    public static final double kHoodAt75in = .05;
+    public static final double kRPMAt92in = 3350;
+    public static final double kHoodAt92in = 0.1;
+    public static final double kRPMAt100in = 3350;
+    public static final double kHoodAt100in = 0.2;
     public static final double kRPMAt139in = 3350;
     public static final double kHoodAt139in = 0.6;
 

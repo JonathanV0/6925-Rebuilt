@@ -35,6 +35,7 @@ public final class RobotCommands {
     private static HoodSubsys hoodSubsys;
     private static IntakeSubsys intakeSubsys;
     private static CommandSwerveDrivetrain drivetrain;
+    private static LimelightSubsys limelightSubsys;
 
     private static final double kAimOffsetDegrees = 0.0;
 
@@ -52,10 +53,12 @@ public final class RobotCommands {
 
     static {
         distanceToShotMap.put(Inches.of(47.0), new Shot(kFixedShotRPM + 150, kHoodAt47in));
+        distanceToShotMap.put(Inches.of(50.0), new Shot(kRPMAt50in + 150, kHoodAt50in));
         distanceToShotMap.put(Inches.of(75.125), new Shot(kRPMAt75in + 150, kHoodAt75in));
         distanceToShotMap.put(Inches.of(84.0), new Shot(kFixedShotRPM + 150, kHoodAt84in));
         distanceToShotMap.put(Inches.of(92.0), new Shot(kRPMAt92in + 150, kHoodAt92in));
         distanceToShotMap.put(Inches.of(100.0), new Shot(kRPMAt100in + 150, kHoodAt100in));
+        distanceToShotMap.put(Inches.of(120.0), new Shot(kRPMAt120in + 150, kHoodAt120in));
     }
 
     public static void init(
@@ -63,13 +66,15 @@ public final class RobotCommands {
         FeederSubsys feeder,
         HoodSubsys hood,
         IntakeSubsys intake,
-        CommandSwerveDrivetrain drive
+        CommandSwerveDrivetrain drive,
+        LimelightSubsys limelight
     ) {
         RobotCommands.shooterSubsys = shooter;
         RobotCommands.feederSubsys = feeder;
         RobotCommands.hoodSubsys = hood;
         RobotCommands.intakeSubsys = intake;
         RobotCommands.drivetrain = drive;
+        RobotCommands.limelightSubsys = limelight;
     }
 
     // ========== Fixed Shot Commands ==========
@@ -304,18 +309,13 @@ public final class RobotCommands {
             .withDeadband(maxSpeed * 0.1)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
-        // Hold last known values so flicker frames don't cause jumps
-        final double[] lastTx = {0.0};
-        final Distance[] lastDistance = {null};  // null = no reading yet, accept first one unconditionally
-        final int[] outlierCount = {0};  // consecutive cycles the reading was rejected
-
         return Commands.runEnd(() -> {
                 final int tagID = (int) LimelightHelpers.getFiducialID("limelight");
                 SmartDashboard.putNumber("Tracked Tag ID", tagID);
 
                 // Compute distance and aim angle to hub center
                 final Distance distance;
-                double tx;
+                double tx = 0.0;
                 if (LimelightHelpers.getTV("limelight")) {
                     final double rawTx = LimelightHelpers.getTX("limelight");
                     final double ty = LimelightHelpers.getTY("limelight");
@@ -323,28 +323,7 @@ public final class RobotCommands {
                     final double angleRad = Math.toRadians(LimelightSubsys.kCameraMountAngleDegrees + ty);
                     final double cameraToTagInches = heightDiff / Math.tan(angleRad);
                     final double distInches = cameraToTagInches + kHubCenterOffsetInches;
-                    final Distance rawDistance = Inches.of(distInches);
-
-                    // Accept first reading unconditionally; after that, reject outlier spikes
-                    // unless they persist for 3+ cycles (then it's real movement)
-                    if (lastDistance[0] == null) {
-                        distance = rawDistance;
-                        lastDistance[0] = distance;
-                    } else if (Math.abs(distInches - lastDistance[0].in(Inches)) > 20.0) {
-                        outlierCount[0]++;
-                        if (outlierCount[0] >= 3) {
-                            // Sustained new distance — accept it
-                            distance = rawDistance;
-                            lastDistance[0] = distance;
-                            outlierCount[0] = 0;
-                        } else {
-                            distance = lastDistance[0];
-                        }
-                    } else {
-                        distance = rawDistance;
-                        lastDistance[0] = distance;
-                        outlierCount[0] = 0;
-                    }
+                    distance = Inches.of(distInches);
 
                     // Compute aim angle to hub center (behind tag + lateral offset)
                     final double rawTxRad = Math.toRadians(rawTx);
@@ -361,13 +340,8 @@ public final class RobotCommands {
                     final double hubLateral = cameraToTagInches * Math.sin(rawTxRad) + lateralInches;
                     final double hubForward = cameraToTagInches * Math.cos(rawTxRad) + kHubCenterOffsetInches;
                     tx = Math.toDegrees(Math.atan2(hubLateral, hubForward)) + kAimOffsetDegrees;
-
-                    // Update last-known aim angle
-                    lastTx[0] = tx;
                 } else {
-                    // No target — hold last known aim and distance, or use odometry if no reading yet
-                    tx = lastTx[0];
-                    distance = lastDistance[0] != null ? lastDistance[0] : getPredictedDistanceToTarget();
+                    distance = getPredictedDistanceToTarget();
                 }
                 drivetrain.setControl(aimDrive
                     .withVelocityX(velocityX.getAsDouble())
@@ -384,7 +358,7 @@ public final class RobotCommands {
                 SmartDashboard.putNumber("Aim Rotation Rate", -tx * kAimP);
             },
             () -> shooterSubsys.stopShooter(),
-            shooterSubsys, hoodSubsys)
+            drivetrain, shooterSubsys, hoodSubsys)
         ;
     }
 
