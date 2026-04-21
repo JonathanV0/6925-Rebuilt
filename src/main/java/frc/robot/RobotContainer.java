@@ -278,6 +278,15 @@ public class RobotContainer {
             )
         );
 
+        // Hold Y to auto-aim pass: aims 15° inward from trench AprilTag + spins up pass RPM
+        joystick.y().whileTrue(
+            RobotCommands.aimAndPass(
+                () -> -joystick.getLeftY() * MaxSpeed,
+                () -> -joystick.getLeftX() * MaxSpeed,
+                MaxSpeed
+            )
+        );
+
         // ===== Operator X3D Joystick =====
         operator.button(1).whileTrue(RobotCommands.Shoot());
        // operator.button(15).whileTrue(RobotCommands.windUp());

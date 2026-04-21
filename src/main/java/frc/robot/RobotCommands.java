@@ -362,6 +362,50 @@ public final class RobotCommands {
         ;
     }
 
+    // ========== Auto-Aim Full-Field Pass ==========
+
+    /** Trench AprilTag IDs used for pass aiming */
+    private static final int[] kTrenchTagIDs = {7, 12, 23, 28};
+
+    /**
+     * Auto-aim pass: rotates the robot to face 15° inward from a trench AprilTag
+     * toward field center, while spinning up to pass RPM/hood.
+     * Driver retains full translation control. If no trench tag is visible,
+     * just spins up without auto-rotation.
+     */
+    public static Command aimAndPass(DoubleSupplier velocityX, DoubleSupplier velocityY, double maxSpeed) {
+        final SwerveRequest.FieldCentric passDrive = new SwerveRequest.FieldCentric()
+            .withDeadband(maxSpeed * 0.1)
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+
+        return Commands.runEnd(() -> {
+                shooterSubsys.setVelocityRPM(kPassShotRPM);
+                hoodSubsys.setPosition(kPassHoodPosition);
+
+                final int tagID = (int) LimelightHelpers.getFiducialID("limelight");
+                final boolean isTrenchTag = tagID == 7 || tagID == 12 || tagID == 23 || tagID == 28;
+
+                double rotationRate = 0.0;
+                if (LimelightHelpers.getTV("limelight") && isTrenchTag) {
+                    final double rawTx = LimelightHelpers.getTX("limelight");
+                    // Tags 12, 28 → offset left (-15°); Tags 7, 23 → offset right (+15°)
+                    final double offset = (tagID == 12 || tagID == 28)
+                        ? -kPassAimOffsetDegrees
+                        :  kPassAimOffsetDegrees;
+                    final double correctedTx = rawTx + offset;
+                    rotationRate = -correctedTx * kAimP;
+                }
+
+                drivetrain.setControl(passDrive
+                    .withVelocityX(velocityX.getAsDouble())
+                    .withVelocityY(velocityY.getAsDouble())
+                    .withRotationalRate(rotationRate));
+            },
+            () -> shooterSubsys.stopShooter(),
+            shooterSubsys, hoodSubsys
+        );
+    }
+
     // ========== Range-Adjusted Shot Commands ==========
 
     // How far ahead (seconds) to predict robot position for shot calculations.

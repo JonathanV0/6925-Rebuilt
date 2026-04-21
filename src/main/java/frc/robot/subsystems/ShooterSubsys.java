@@ -22,11 +22,13 @@ public class ShooterSubsys extends SubsystemBase {
 
 
 
-  public ShooterSubsys() {
+  private static final double kIdleRPM = 3000;
 
+  public ShooterSubsys() {
     fuelShoot.getConfigurator().apply(CTREConfigs.SHOOTER_CONFIG);
     fuelShoot0.getConfigurator().apply(CTREConfigs.SHOOTER_CONFIG_9);
     fuelShoot1.getConfigurator().apply(CTREConfigs.SHOOTER_CONFIG_10);
+    setDefaultCommand(Commands.run(() -> setVelocityRPM(kIdleRPM), this));
   }
 
   // Each motor gets its own velocity PID so they independently hold RPM
