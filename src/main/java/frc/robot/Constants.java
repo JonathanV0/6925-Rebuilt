@@ -20,14 +20,14 @@ public final class Constants {
   public static class ShooterConstants {
     // Fixed-shot flywheel RPM (used by basic windUp variants)
     public static final double kFixedShotRPM = 3350;
-    public static final double kPassShotRPM = 4000;
+    public static final double kPassShotRPM = 3500;
 
     // Hood positions for fixed-shot commands
     public static final double kDefaultHoodPosition = 0.5;
     public static final double kCloseHoodPosition = 0.3;
     public static final double kTestHoodPosition = 0.45;
     public static final double kCloserHoodPosition = 0.0;
-    public static final double kPassHoodPosition = 1.0;
+    public static final double kPassHoodPosition = .75;
 
     // Distance-to-shot interpolation table entries (team-calibrated)
     public static final double kRPMAt47in = 3100;
@@ -41,11 +41,11 @@ public final class Constants {
     public static final double kRPMAt75in = 3350;
     public static final double kHoodAt75in = .05;
     public static final double kRPMAt92in = 3350;
-    public static final double kHoodAt92in = 0.1;
-    public static final double kRPMAt100in = 3350;
-    public static final double kHoodAt100in = 0.2;
-    public static final double kRPMAt139in = 3350;
-    public static final double kHoodAt139in = 0.6;
+    public static final double kHoodAt92in = 0.3;
+    public static final double kRPMAt100in = 3450;
+    public static final double kHoodAt100in = 0.45;
+    public static final double kRPMAt110in = 3500;
+    public static final double kHoodAt110in = 0.5;
 
     // Extended range data points (from WCP CC Big Dumper)
     public static final double kRPMAt52in = 2800;
@@ -56,7 +56,7 @@ public final class Constants {
     public static final double kHoodAt165in = 0.48;
 
     // Limelight aim PD gains (radians/sec per degree of tx error / change)
-    public static final double kAimP = 0.1;
+    public static final double kAimP = 0.15;
     public static final double kAimD = 0.01;
 
     // How far ahead (seconds) to predict robot position for shot calculations

@@ -37,7 +37,7 @@ public class HoodSubsys extends SubsystemBase {
 
     // EMA smoothing factor: 0.0 = no change, 1.0 = no smoothing
     // 0.15 blends ~15% new value per cycle — smooth but still responsive
-    private static final double kSmoothingAlpha = 0.1;
+    private static final double kSmoothingAlpha = 1.0;
 
     public HoodSubsys() {
         leftServo = new Servo(kLeftServoPWM);
@@ -87,6 +87,7 @@ public class HoodSubsys extends SubsystemBase {
     @Override
     public void periodic() {
         updateCurrentPosition();
+        SmartDashboard.putBoolean("Hood At Position", isPositionWithinTolerance());
     }
 
     @Override
