@@ -222,11 +222,26 @@ public class RobotContainer {
                 double leftY = joystick.getLeftY();
                 double leftX = joystick.getLeftX();
                 double rightX = joystick.getRightX();
-                double squaredY = -Math.copySign(leftY * leftY, leftY); // squared curve for translation
-                double squaredX = -Math.copySign(leftX * leftX, leftX);
+
+                // If translation joystick is within deadband, stop instantly (no slew ramp-down)
+                boolean translationDead = Math.abs(leftY) < 0.05 && Math.abs(leftX) < 0.05;
+                boolean rotationDead = Math.abs(rightX) < 0.075;
+
+                if (translationDead) {
+                    xLimiter.reset(0);
+                    yLimiter.reset(0);
+                }
+
+                // If everything is in deadband, lock the wheels
+                if (translationDead && rotationDead) {
+                    return brake;
+                }
+
+                double squaredY = translationDead ? 0 : -Math.copySign(leftY * leftY, leftY);
+                double squaredX = translationDead ? 0 : -Math.copySign(leftX * leftX, leftX);
                 double sqrtRot = -Math.copySign(Math.pow(Math.abs(rightX), 1.5), rightX); // x^1.5 curve for rotation
-                double slewedY = xLimiter.calculate(squaredY);
-                double slewedX = yLimiter.calculate(squaredX);
+                double slewedY = translationDead ? 0 : xLimiter.calculate(squaredY);
+                double slewedX = translationDead ? 0 : yLimiter.calculate(squaredX);
                 return drive.withVelocityX(slewedY * MaxSpeed * drivetrain.getCurrentSpeedMulti())
                     .withVelocityY(slewedX * MaxSpeed * drivetrain.getCurrentSpeedMulti())
                     .withRotationalRate(sqrtRot * MaxAngularRate);
@@ -247,9 +262,8 @@ public class RobotContainer {
         );
 
         joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
-        joystick.b().whileTrue(drivetrain.applyRequest(() ->
-            point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
-        ));
+        // Toggle full speed with B button (default is 75%)
+        joystick.b().onTrue(drivetrain.toggleSpeedMulti(1.0));
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.

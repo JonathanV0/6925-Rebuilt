@@ -342,17 +342,18 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     /* Speed Multiplier */
-    private double speedMulti = 1.0;
+    private static final double kDefaultSpeedMulti = 0.75;
+    private double speedMulti = kDefaultSpeedMulti;
 
     public Command toggleSpeedMulti(double multi) {
-        return Commands.runOnce(() -> speedMulti = (speedMulti == 1.0 ? multi : 1.0), this);
+        return Commands.runOnce(() -> speedMulti = (speedMulti == kDefaultSpeedMulti ? multi : kDefaultSpeedMulti), this);
     }
 
-    /** Temporarily sets speed multiplier while held, restores 1.0 on release. */
+    /** Temporarily sets speed multiplier while held, restores default on release. */
     public Command holdSpeedMulti(double multi) {
         return Commands.startEnd(
             () -> speedMulti = multi,
-            () -> speedMulti = 1.0
+            () -> speedMulti = kDefaultSpeedMulti
         );
     }
 
