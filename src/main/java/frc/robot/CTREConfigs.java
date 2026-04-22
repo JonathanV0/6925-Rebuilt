@@ -30,8 +30,9 @@ public class CTREConfigs {
     SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimitEnable = true;
     SHOOTER_CONFIG.CurrentLimits.SupplyCurrentLimit = 70;
     // Velocity PID — Motor 8 (right)
-    SHOOTER_CONFIG.Slot0.kP = 0.55;
+    SHOOTER_CONFIG.Slot0.kP = 0.7;
     SHOOTER_CONFIG.Slot0.kI = 0.5;
+    SHOOTER_CONFIG.Slot0.kD = 0.01;
     SHOOTER_CONFIG.Slot0.kV = 0.1;
 
     // Velocity PID — Motor 9 (middle)
@@ -41,8 +42,9 @@ public class CTREConfigs {
     SHOOTER_CONFIG_9.CurrentLimits.StatorCurrentLimit = 90;
     SHOOTER_CONFIG_9.CurrentLimits.SupplyCurrentLimitEnable = true;
     SHOOTER_CONFIG_9.CurrentLimits.SupplyCurrentLimit = 70;
-    SHOOTER_CONFIG_9.Slot0.kP = 0.55;
+    SHOOTER_CONFIG_9.Slot0.kP = 0.7;
     SHOOTER_CONFIG_9.Slot0.kI = 0.5;
+    SHOOTER_CONFIG_9.Slot0.kD = 0.01;
     SHOOTER_CONFIG_9.Slot0.kV = 0.1;
 
     // Velocity PID — Motor 10 (left)
@@ -52,8 +54,9 @@ public class CTREConfigs {
     SHOOTER_CONFIG_10.CurrentLimits.StatorCurrentLimit = 90;
     SHOOTER_CONFIG_10.CurrentLimits.SupplyCurrentLimitEnable = true;
     SHOOTER_CONFIG_10.CurrentLimits.SupplyCurrentLimit = 70;
-    SHOOTER_CONFIG_10.Slot0.kP = 0.55;
+    SHOOTER_CONFIG_10.Slot0.kP = 0.7;
     SHOOTER_CONFIG_10.Slot0.kI = 0.5;
+    SHOOTER_CONFIG_10.Slot0.kD = 0.01;
     SHOOTER_CONFIG_10.Slot0.kV = 0.1;
 
     //Intake config
