@@ -30,14 +30,10 @@ public final class Constants {
     public static final double kPassHoodPosition = .75;
 
     // Distance-to-shot interpolation table entries (team-calibrated)
-    public static final double kRPMAt47in = 3100;
     public static final double kHoodAt47in = 0.00;
     public static final double kRPMAt50in = 3100;
     public static final double kHoodAt50in = 0.02;
-    public static final double kRPMAt84in = 3350;
     public static final double kHoodAt84in = 0.15;
-    public static final double kRPMAt120in = 3350;
-    public static final double kHoodAt120in = 0.35;
     public static final double kRPMAt75in = 3350;
     public static final double kHoodAt75in = .05;
     public static final double kRPMAt92in = 3350;
@@ -46,14 +42,6 @@ public final class Constants {
     public static final double kHoodAt100in = 0.45;
     public static final double kRPMAt110in = 3500;
     public static final double kHoodAt110in = 0.5;
-
-    // Extended range data points (from WCP CC Big Dumper)
-    public static final double kRPMAt52in = 2800;
-    public static final double kHoodAt52in = 0.19;
-    public static final double kRPMAt114in = 3275;
-    public static final double kHoodAt114in = 0.40;
-    public static final double kRPMAt165in = 3650;
-    public static final double kHoodAt165in = 0.48;
 
     // Limelight aim PD gains (radians/sec per degree of tx error / change)
     public static final double kAimP = 0.15;

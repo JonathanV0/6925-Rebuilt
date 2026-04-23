@@ -232,11 +232,6 @@ public class RobotContainer {
                     yLimiter.reset(0);
                 }
 
-                // If everything is in deadband, lock the wheels
-                if (translationDead && rotationDead) {
-                    return brake;
-                }
-
                 double squaredY = translationDead ? 0 : -Math.copySign(leftY * leftY, leftY);
                 double squaredX = translationDead ? 0 : -Math.copySign(leftX * leftX, leftX);
                 double sqrtRot = -Math.copySign(Math.pow(Math.abs(rightX), 1.5), rightX); // x^1.5 curve for rotation
@@ -307,13 +302,13 @@ public class RobotContainer {
         operator.button(11).whileTrue(RobotCommands.windUpTest());
         operator.button(9).whileTrue(RobotCommands.windUpClose()); // Close-range shot
         operator.button(2).whileTrue(intake.intakeWithOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_FAST));
-        operator.button(2).whileTrue(drivetrain.holdSpeedMulti(1.0 / 2.0));
+        operator.button(2).whileTrue(drivetrain.holdSpeedMulti(0.75 / 2.0));
         operator.button(1).whileTrue(drivetrain.holdSpeedMulti(1.0 / 5.0));
         operator.button(12).whileTrue(intake.retractWithOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_FAST));
         // Removed: was conflicting with Shoot() on intakeSubsys — Shoot() already bounces the intake
         // operator.button(1).whileTrue(intake.retractWithGentleOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_FAST));
         operator.button(7).whileTrue(RobotCommands.windUpCloser());//infront hub shot
-        operator.button(6).onTrue(intake.goToPositionSlowCommand(-14.20, 0.3)); // Deploy intake
+        operator.button(6).onTrue(intake.goToPositionSlowCommand(-14.0, 0.3)); // Deploy intake
         operator.button(4).onTrue(intake.goToPositionSlowCommand(-0.14423828125, 0.2)); // Retract intake
         operator.button(10).whileTrue(drivetrain.applyRequest(() ->
             point.withModuleDirection(new Rotation2d(0)))); // Snap wheels forward

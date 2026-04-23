@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -27,6 +28,9 @@ public class Robot extends TimedRobot {
         SmartDashboard.putString("Selected Auto",
             m_robotContainer.getAutonomousCommand() != null
             ? m_robotContainer.getAutonomousCommand().getName() : "None");
+
+        final ChassisSpeeds speeds = m_robotContainer.drivetrain.getState().Speeds;
+        SmartDashboard.putNumber("Robot Speed (m/s)", Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond));
     }
 
     @Override
