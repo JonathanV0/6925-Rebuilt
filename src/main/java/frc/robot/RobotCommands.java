@@ -332,9 +332,16 @@ public final class RobotCommands {
                 if (tagPose.isPresent()) {
                     final Translation2d tagPosition = tagPose.get().toPose2d().getTranslation();
 
-                    // Distance = robot-to-tag + 23.5" hub center offset behind tag face
-                    final double distanceToTagInches = robotPos.getDistance(tagPosition) / 0.0254;
-                    final double distInches = distanceToTagInches + kHubCenterOffsetInches;
+                    // Compute hub center: 23.5" behind tag face along robot-to-tag direction
+                    final Translation2d robotToTag = tagPosition.minus(robotPos);
+                    final double tagDistMeters = robotToTag.getNorm();
+                    final Translation2d unitDir = new Translation2d(
+                        robotToTag.getX() / tagDistMeters,
+                        robotToTag.getY() / tagDistMeters);
+                    final Translation2d hubCenter = tagPosition.plus(
+                        unitDir.times(kHubCenterOffsetInches * 0.0254));
+
+                    final double distInches = tagDistMeters / 0.0254 + kHubCenterOffsetInches;
                     distance = Inches.of(distInches);
 
                     // Aim: field-frame angle from robot to tag
@@ -345,8 +352,8 @@ public final class RobotCommands {
                         drivetrain.getState().Speeds, robotPose.getRotation());
                     final double distMeters = distInches * 0.0254;
                     final double flightTime = distMeters / BALL_VELOCITY_MS;
-                    // Virtual target = tag position minus robot velocity * flight time
-                    final Translation2d virtualTarget = tagPosition.minus(
+                    // Virtual target = hub center minus robot velocity * flight time
+                    final Translation2d virtualTarget = hubCenter.minus(
                         new Translation2d(
                             fieldSpeeds.vxMetersPerSecond * flightTime,
                             fieldSpeeds.vyMetersPerSecond * flightTime));
@@ -367,14 +374,14 @@ public final class RobotCommands {
                 drivetrain.setControl(aimDrive
                     .withVelocityX(velocityX.getAsDouble())
                     .withVelocityY(velocityY.getAsDouble())
-                    .withRotationalRate(-tx * kAimP));
+                    .withRotationalRate(tx * kAimP));
 
                 final Shot shot = distanceToShotMap.get(distance);
                 shooterSubsys.setVelocityRPM(shot.shooterRPM);
                 hoodSubsys.setPosition(shot.hoodPosition);
                 SmartDashboard.putNumber("Auto Distance (inches)", distance.in(Inches));
                 SmartDashboard.putNumber("Corrected TX (deg)", tx);
-                SmartDashboard.putNumber("Aim Rotation Rate", -tx * kAimP);
+                SmartDashboard.putNumber("Aim Rotation Rate", tx * kAimP);
             },
             () -> shooterSubsys.stopShooter(),
             drivetrain, shooterSubsys, hoodSubsys)
