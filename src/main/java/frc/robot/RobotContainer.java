@@ -225,17 +225,13 @@ public class RobotContainer {
 
                 // If translation joystick is within deadband, stop instantly (no slew ramp-down)
                 boolean translationDead = Math.abs(leftY) < 0.05 && Math.abs(leftX) < 0.05;
-                boolean rotationDead = Math.abs(rightX) < 0.075;
+
 
                 if (translationDead) {
                     xLimiter.reset(0);
                     yLimiter.reset(0);
                 }
 
-                // If everything is in deadband, lock the wheels
-                if (translationDead && rotationDead) {
-                    return brake;
-                }
 
                 double squaredY = translationDead ? 0 : -Math.copySign(leftY * leftY, leftY);
                 double squaredX = translationDead ? 0 : -Math.copySign(leftX * leftX, leftX);
