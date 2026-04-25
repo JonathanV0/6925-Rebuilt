@@ -31,17 +31,25 @@ public final class Constants {
 
     // Distance-to-shot interpolation table entries (team-calibrated)
     public static final double kHoodAt47in = 0.00;
-    public static final double kRPMAt50in = 3100;
+    public static final double kRPMAt50in = 3150;
     public static final double kHoodAt50in = 0.02;
     public static final double kHoodAt84in = 0.15;
+    public static final double kRPMAt65in = 3250;
+    public static final double kHoodAt65in = 0.035;
     public static final double kRPMAt75in = 3350;
-    public static final double kHoodAt75in = .05;
+    public static final double kHoodAt75in = 0.2;
     public static final double kRPMAt92in = 3350;
-    public static final double kHoodAt92in = 0.3;
-    public static final double kRPMAt100in = 3450;
-    public static final double kHoodAt100in = 0.45;
-    public static final double kRPMAt110in = 3500;
-    public static final double kHoodAt110in = 0.5;
+    public static final double kHoodAt92in = 0.2;
+    public static final double kRPMAt100in = 3350;
+    public static final double kHoodAt100in = 0.3;
+    public static final double kRPMAt110in = 3450;
+    public static final double kHoodAt110in = 0.4;
+    public static final double kRPMAt120in = 3400;
+    public static final double kHoodAt120in = 0.4;
+    public static final double kRPMAt130in = 3650;
+    public static final double kHoodAt130in = 0.60;
+    public static final double kRPMAt140in = 3750;
+    public static final double kHoodAt140in = 0.70;
 
     // Limelight aim PD gains (radians/sec per degree of tx error / change)
     public static final double kAimP = 0.1;

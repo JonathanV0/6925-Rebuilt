@@ -23,12 +23,20 @@ public class ShooterSubsys extends SubsystemBase {
 
 
   private static final double kIdleRPM = 3000;
+  private boolean idleEnabled = true;
 
   public ShooterSubsys() {
     fuelShoot.getConfigurator().apply(CTREConfigs.SHOOTER_CONFIG);
     fuelShoot0.getConfigurator().apply(CTREConfigs.SHOOTER_CONFIG_9);
     fuelShoot1.getConfigurator().apply(CTREConfigs.SHOOTER_CONFIG_10);
-    setDefaultCommand(Commands.run(() -> setVelocityRPM(kIdleRPM), this));
+    setDefaultCommand(Commands.run(() -> {
+      if (idleEnabled) setVelocityRPM(kIdleRPM);
+      else stopShooter();
+    }, this));
+  }
+
+  public void toggleIdle() {
+    idleEnabled = !idleEnabled;
   }
 
   // Each motor gets its own velocity PID so they independently hold RPM
@@ -83,6 +91,7 @@ public class ShooterSubsys extends SubsystemBase {
   @Override
   public void periodic() {
     SmartDashboard.putBoolean("Shooter At Speed", isVelocityWithinTolerance());
+    SmartDashboard.putBoolean("Shooter Idle On", idleEnabled);
     SmartDashboard.putNumber("Shooter RPM", getVelocityRPM());
     SmartDashboard.putNumber("Shooter RPM Motor 9", fuelShoot0.getVelocity().getValueAsDouble() * 60.0);
     SmartDashboard.putNumber("Shooter RPM Motor 10", fuelShoot1.getVelocity().getValueAsDouble() * 60.0);

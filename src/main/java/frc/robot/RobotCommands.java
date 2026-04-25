@@ -4,16 +4,12 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static frc.robot.Constants.ShooterConstants.*;
 
-import java.util.Optional;
 import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
@@ -41,9 +37,6 @@ public final class RobotCommands {
     private static CommandSwerveDrivetrain drivetrain;
     private static LimelightSubsys limelightSubsys;
 
-    private static final AprilTagFieldLayout aprilTagFieldLayout =
-        AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
-
     private static final double kAimOffsetDegrees = 0.0;
     private static final double BALL_VELOCITY_MS = 8.0;
 
@@ -62,11 +55,15 @@ public final class RobotCommands {
     static {
         distanceToShotMap.put(Inches.of(47.0), new Shot(kFixedShotRPM + 150, kHoodAt47in));
         distanceToShotMap.put(Inches.of(50.0), new Shot(kRPMAt50in + 150, kHoodAt50in));
+        distanceToShotMap.put(Inches.of(65.0), new Shot(kRPMAt65in + 150, kHoodAt65in));
         distanceToShotMap.put(Inches.of(75.125), new Shot(kRPMAt75in + 150, kHoodAt75in));
         distanceToShotMap.put(Inches.of(84.0), new Shot(kFixedShotRPM + 150, kHoodAt84in));
         distanceToShotMap.put(Inches.of(92.0), new Shot(kRPMAt92in + 150, kHoodAt92in));
         distanceToShotMap.put(Inches.of(100.0), new Shot(kRPMAt100in + 150, kHoodAt100in));
         distanceToShotMap.put(Inches.of(110.0), new Shot(kRPMAt110in + 150, kHoodAt110in));
+        distanceToShotMap.put(Inches.of(120.0), new Shot(kRPMAt120in + 150, kHoodAt120in));
+        distanceToShotMap.put(Inches.of(130.0), new Shot(kRPMAt130in + 150, kHoodAt130in));
+        distanceToShotMap.put(Inches.of(140.0), new Shot(kRPMAt140in + 150, kHoodAt140in));
     }
 
     public static void init(
@@ -217,7 +214,7 @@ public final class RobotCommands {
     }
 
     public static Command Shoot() {
-        final double oscillationMotorRotations = (60.0 / 360.0) * 8.0;
+        final double oscillationMotorRotations = (90.0 / 360.0) * 8.0;
         final double period = 0.8;
         final double[] state = {0, 0}; // [startTime, deployedPosition]
         return Commands.runEnd(
@@ -244,7 +241,7 @@ public final class RobotCommands {
 
     /** Timed auto shoot: bounces intake + feeds for the given duration, then stops and redeploys intake. */
     public static Command autoShoot(double seconds) {
-        final double oscillationMotorRotations = (60.0 / 360.0) * 8.0;
+        final double oscillationMotorRotations = (90.0 / 360.0) * 8.0;
         final double period = 0.8;
         final double[] state = {0, 0}; // [startTime, deployedPosition]
         return Commands.runEnd(
@@ -269,6 +266,10 @@ public final class RobotCommands {
             },
             feederSubsys, intakeSubsys
         ).withTimeout(seconds);
+    }
+
+    public static Command toggleShooterIdle() {
+        return Commands.runOnce(() -> shooterSubsys.toggleIdle());
     }
 
     public static Command stopFeed() {
@@ -320,56 +321,29 @@ public final class RobotCommands {
                 // Get robot pose from MT2-fused odometry
                 final Pose2d robotPose = drivetrain.getState().Pose;
                 final Translation2d robotPos = robotPose.getTranslation();
+                final Translation2d hubCenter = Landmarks.targetPosition();
 
-                // Get the detected tag's field position
-                final int tagID = (int) LimelightHelpers.getFiducialID("limelight");
-                SmartDashboard.putNumber("Tracked Tag ID", tagID);
-                final Optional<Pose3d> tagPose = aprilTagFieldLayout.getTagPose(tagID);
+                // Distance from robot to hub center (odometry-based, no TY/vision)
+                final double distMeters = robotPos.getDistance(hubCenter);
+                final Distance distance = Meters.of(distMeters);
 
-                final Distance distance;
-                double tx = 0.0;
+                // Shoot-on-the-move velocity compensation
+                final ChassisSpeeds fieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
+                    drivetrain.getState().Speeds, robotPose.getRotation());
+                final double flightTime = distMeters / BALL_VELOCITY_MS;
+                // Virtual target = hub center minus robot velocity * flight time
+                final Translation2d virtualTarget = hubCenter.minus(
+                    new Translation2d(
+                        fieldSpeeds.vxMetersPerSecond * flightTime,
+                        fieldSpeeds.vyMetersPerSecond * flightTime));
+                final Translation2d robotToVirtual = virtualTarget.minus(robotPos);
+                final double virtualFieldAngle = Math.atan2(robotToVirtual.getY(), robotToVirtual.getX());
 
-                if (tagPose.isPresent()) {
-                    final Translation2d tagPosition = tagPose.get().toPose2d().getTranslation();
-
-                    // Compute hub center: 23.5" behind tag face along robot-to-tag direction
-                    final Translation2d robotToTag = tagPosition.minus(robotPos);
-                    final double tagDistMeters = robotToTag.getNorm();
-                    final Translation2d unitDir = new Translation2d(
-                        robotToTag.getX() / tagDistMeters,
-                        robotToTag.getY() / tagDistMeters);
-                    final Translation2d hubCenter = tagPosition.plus(
-                        unitDir.times(kHubCenterOffsetInches * 0.0254));
-
-                    final double distInches = tagDistMeters / 0.0254 + kHubCenterOffsetInches;
-                    distance = Inches.of(distInches);
-
-                    // Aim: field-frame angle from robot to tag
-                    final double headingRad = robotPose.getRotation().getRadians();
-
-                    // Shoot-on-the-move velocity compensation
-                    final ChassisSpeeds fieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
-                        drivetrain.getState().Speeds, robotPose.getRotation());
-                    final double distMeters = distInches * 0.0254;
-                    final double flightTime = distMeters / BALL_VELOCITY_MS;
-                    // Virtual target = hub center minus robot velocity * flight time
-                    final Translation2d virtualTarget = hubCenter.minus(
-                        new Translation2d(
-                            fieldSpeeds.vxMetersPerSecond * flightTime,
-                            fieldSpeeds.vyMetersPerSecond * flightTime));
-                    final Translation2d robotToVirtual = virtualTarget.minus(robotPos);
-                    final double virtualFieldAngle = Math.atan2(robotToVirtual.getY(), robotToVirtual.getX());
-
-                    // tx = angle error in robot-relative degrees
-                    tx = Math.toDegrees(virtualFieldAngle - headingRad) + kAimOffsetDegrees;
-                    // Normalize to [-180, 180]
-                    tx = Math.IEEEremainder(tx, 360.0);
-
-                    SmartDashboard.putNumber("Flight Time", flightTime);
-                } else {
-                    // No valid tag ID — fall back to pose-only distance, no aim correction
-                    distance = Meters.of(robotPos.getDistance(Landmarks.targetPosition()));
-                }
+                // tx = heading error in robot-relative degrees
+                final double headingRad = robotPose.getRotation().getRadians();
+                double tx = Math.toDegrees(virtualFieldAngle - headingRad) + kAimOffsetDegrees;
+                // Normalize to [-180, 180]
+                tx = Math.IEEEremainder(tx, 360.0);
 
                 drivetrain.setControl(aimDrive
                     .withVelocityX(velocityX.getAsDouble())
@@ -382,6 +356,7 @@ public final class RobotCommands {
                 SmartDashboard.putNumber("Auto Distance (inches)", distance.in(Inches));
                 SmartDashboard.putNumber("Corrected TX (deg)", tx);
                 SmartDashboard.putNumber("Aim Rotation Rate", tx * kAimP);
+                SmartDashboard.putNumber("Flight Time", flightTime);
             },
             () -> shooterSubsys.stopShooter(),
             drivetrain, shooterSubsys, hoodSubsys)
