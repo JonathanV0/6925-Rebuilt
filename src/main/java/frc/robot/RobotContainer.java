@@ -288,9 +288,9 @@ public class RobotContainer {
             )
         );
 
-        // Hold Y to auto-aim pass: aims 15° inward from trench AprilTag + spins up pass RPM
+        // Hold Y to auto-aim full-field pass: aims 15° inward from trench AprilTag + spins up full-field pass RPM
         joystick.y().whileTrue(
-            RobotCommands.aimAndPass(
+            RobotCommands.aimAndPassFullField(
                 () -> -joystick.getLeftY() * MaxSpeed,
                 () -> -joystick.getLeftX() * MaxSpeed,
                 MaxSpeed

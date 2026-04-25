@@ -21,6 +21,7 @@ public final class Constants {
     // Fixed-shot flywheel RPM (used by basic windUp variants)
     public static final double kFixedShotRPM = 3350;
     public static final double kPassShotRPM = 3500;
+    public static final double kFullFieldPassShotRPM = 5450;
 
     // Hood positions for fixed-shot commands
     public static final double kDefaultHoodPosition = 0.5;
@@ -28,6 +29,7 @@ public final class Constants {
     public static final double kTestHoodPosition = 0.45;
     public static final double kCloserHoodPosition = 0.0;
     public static final double kPassHoodPosition = .75;
+    public static final double kFullFieldPassHoodPosition = 0.7;
 
     // Distance-to-shot interpolation table entries (team-calibrated)
     public static final double kRPMAt47in = 3100;
