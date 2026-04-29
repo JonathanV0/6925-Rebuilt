@@ -175,13 +175,12 @@ public class RobotContainer {
         // Register named commands for PathPlanner event markers
         // ── Shooting ──────────────────────────────────────────────────────────
         NamedCommands.registerCommand("shoot", RobotCommands.Shoot());
-        NamedCommands.registerCommand("autoShoot", RobotCommands.autoShoot(4));
+        NamedCommands.registerCommand("autoShoot", RobotCommands.autoShoot(3));
         NamedCommands.registerCommand("StopFeed", RobotCommands.stopFeed());
         // Fixed shot (no vision): set RPM/hood to hardcoded values
         NamedCommands.registerCommand("windUp", RobotCommands.windUp());
         NamedCommands.registerCommand("windUpOnce", RobotCommands.windUpOnce());
         // Auto wind-up commands: set RPM/hood, wait until at speed (max 2s), then finish
-        NamedCommands.registerCommand("autoWindUp", RobotCommands.autoWindUp());
         NamedCommands.registerCommand("autoWindUpClose", RobotCommands.autoWindUpClose());
         NamedCommands.registerCommand("autoWindUpCloser", RobotCommands.autoWindUpCloser());
         // Distance-adjusted shot: interpolates RPM/hood from odometry distance
@@ -191,6 +190,8 @@ public class RobotContainer {
         NamedCommands.registerCommand("AdjustedShootWhileMoving", RobotCommands.adjustedShootWhileMoving());
         // Static shot wind-up: snaps to distance-based RPM/hood then waits for spinup
         NamedCommands.registerCommand("AdjustedWindUpOnce", RobotCommands.adjustedWindUpOnce());
+        // Auto-aim for autonomous: rotates robot to face hub + sets RPM/hood, finishes when ready
+        NamedCommands.registerCommand("autoAimAndWindUp", RobotCommands.autoAimAndWindUp());
         // ── Intake ────────────────────────────────────────────────────────────
         NamedCommands.registerCommand("IntakeMid", RobotCommands.intakeMid());
         NamedCommands.registerCommand("IntakeFast", RobotCommands.intakeFast());

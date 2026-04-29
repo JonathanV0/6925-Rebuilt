@@ -52,6 +52,10 @@ public class IntakeSubsys extends SubsystemBase {
     intakeRotator.setControl(rotatorOscillateRequest.withPosition(position));
   }
 
+  public void setRotatorGentle(double position) {
+    intakeRotator.setControl(rotatorPositionRequest.withPosition(position));
+  }
+
   public void setRotatorTarget(double position) {
     rotatorTargetPosition = position;
   }
@@ -60,7 +64,7 @@ public class IntakeSubsys extends SubsystemBase {
    *  The rotator bounces between the deployed position and slightly above it. */
   public Command intakeWithOscillateCommand(IntakeSpeed speed) {
     // Oscillation range: 15° of output above deployed position
-    final double oscillationMotorRotations = (11.5 / 360.0) * 8.0;
+    final double oscillationMotorRotations = (15.0 / 360.0) * 8.0;
     final double[] state = {0, 0}; // [startTime, deployedPosition]
     return this.runEnd(
       () -> {

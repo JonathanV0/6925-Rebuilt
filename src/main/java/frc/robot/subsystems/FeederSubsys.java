@@ -38,6 +38,7 @@ public class FeederSubsys extends SubsystemBase {
     OFF(0.0, 0.0),
     FEED_SLOW(-0.3, 0.1),
     FEED_FAST(-0.8, 0.8),
+    FEED_TURBO(-1.0, 1.0),
     REVERSE(0.5, -0.4);
 
     public final double value;

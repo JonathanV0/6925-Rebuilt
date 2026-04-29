@@ -1,0 +1,112 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "hopperDeploy"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RB-HP"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 3.0
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "HP-MH"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "autoAimAndWindUp"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "autoAimAndWindUp"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "autoShoot"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "MH-D"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "DI"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "IntakeFast"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "autoAimAndWindUp"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "autoAimAndWindUp"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "autoShoot"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

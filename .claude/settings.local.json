@@ -13,7 +13,10 @@
       "Bash(JAVA_HOME=\"C:/Users/Public/wpilib/2025/jdk\" ./gradlew build)",
       "Bash(curl -s https://api.github.com/repos/LimelightVision/limelightlib-wpijava/releases/latest)",
       "Bash(curl -s https://api.github.com/repos/LimelightVision/limelightlib-wpijava)",
-      "Bash(curl -s https://api.github.com/repos/LimelightVision/limelightlib-wpijava/contents/LimelightHelpers.java?ref=main)"
+      "Bash(curl -s https://api.github.com/repos/LimelightVision/limelightlib-wpijava/contents/LimelightHelpers.java?ref=main)",
+      "Bash(find c:Usersus98.DESKTOP-2T459K9DesktopCode6925-Rebuilt/src/main/java/frc/robot/commands -type f -name *.java)",
+      "Bash(ls -la /c/Users/us98.DESKTOP-2T459K9/Desktop/Code/6925-Rebuilt/src/main/deploy/pathplanner/paths/*.path)",
+      "Bash(find c:Usersus98.DESKTOP-2T459K9DesktopCode6925-Rebuilt -name *.auto -o -name *paths* -o -name *autos*)"
     ]
   }
 }

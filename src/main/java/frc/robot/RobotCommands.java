@@ -56,8 +56,8 @@ public final class RobotCommands {
         distanceToShotMap.put(Inches.of(47.0), new Shot(kFixedShotRPM + 150, kHoodAt47in));
         distanceToShotMap.put(Inches.of(50.0), new Shot(kRPMAt50in + 150, kHoodAt50in));
         distanceToShotMap.put(Inches.of(65.0), new Shot(kRPMAt65in + 150, kHoodAt65in));
-        distanceToShotMap.put(Inches.of(75.125), new Shot(kRPMAt75in + 150, kHoodAt75in));
-        distanceToShotMap.put(Inches.of(84.0), new Shot(kFixedShotRPM + 150, kHoodAt84in));
+        distanceToShotMap.put(Inches.of(75.125), new Shot(kRPMAt75in + 150, kHoodAt75in));                                                                                                                                                                                                                              
+        distanceToShotMap.put(Inches.of(85.0), new Shot(kRPMAt85in + 150, kHoodAt85in));
         distanceToShotMap.put(Inches.of(92.0), new Shot(kRPMAt92in + 150, kHoodAt92in));
         distanceToShotMap.put(Inches.of(100.0), new Shot(kRPMAt100in + 150, kHoodAt100in));
         distanceToShotMap.put(Inches.of(110.0), new Shot(kRPMAt110in + 150, kHoodAt110in));
@@ -214,55 +214,48 @@ public final class RobotCommands {
     }
 
     public static Command Shoot() {
-        final double oscillationMotorRotations = (90.0 / 360.0) * 8.0;
-        final double period = 0.8;
-        final double[] state = {0, 0}; // [startTime, deployedPosition]
+        final double raiseAmount = (180.0 / 360.0) * 8.0;
+        final double[] deployedPosition = {Double.NaN};
         return Commands.runEnd(
             () -> {
                 feederSubsys.setSpeed(FeederSpeed.FEED_FAST);
                 intakeSubsys.setSpeed(IntakeSpeed.INTAKE_FAST);
-                if (state[0] == 0) {
-                    state[0] = Timer.getFPGATimestamp();
-                    state[1] = intakeSubsys.getRotatorPosition();
+                if (Double.isNaN(deployedPosition[0])) {
+                    deployedPosition[0] = intakeSubsys.getRotatorPosition();
                 }
-                double elapsed = Timer.getFPGATimestamp() - state[0];
-                boolean goUp = ((int)(elapsed / (period / 2.0)) % 2 == 0);
-                double target = goUp ? state[1] + oscillationMotorRotations : state[1];
-                intakeSubsys.setRotatorOscillate(target);
+                intakeSubsys.setRotatorGentle(deployedPosition[0] + raiseAmount);
             },
             () -> {
                 feederSubsys.setSpeed(FeederSpeed.OFF);
                 intakeSubsys.setSpeed(IntakeSpeed.OFF);
-                state[0] = 0;
+                if (!Double.isNaN(deployedPosition[0])) {
+                    intakeSubsys.setRotatorTarget(deployedPosition[0]);
+                }
+                deployedPosition[0] = Double.NaN;
             },
             feederSubsys, intakeSubsys
         );
     }
 
-    /** Timed auto shoot: bounces intake + feeds for the given duration, then stops and redeploys intake. */
+    /** Timed auto shoot: raises intake + feeds for the given duration, then stops and redeploys intake. */
     public static Command autoShoot(double seconds) {
-        final double oscillationMotorRotations = (90.0 / 360.0) * 8.0;
-        final double period = 0.8;
-        final double[] state = {0, 0}; // [startTime, deployedPosition]
+        final double raiseAmount = (180.0 / 360.0) * 8.0;
+        final double[] deployedPosition = {Double.NaN};
         return Commands.runEnd(
             () -> {
                 feederSubsys.setSpeed(FeederSpeed.FEED_FAST);
                 intakeSubsys.setSpeed(IntakeSpeed.INTAKE_FAST);
-                if (state[0] == 0) {
-                    state[0] = Timer.getFPGATimestamp();
-                    state[1] = intakeSubsys.getRotatorPosition();
+                if (Double.isNaN(deployedPosition[0])) {
+                    deployedPosition[0] = intakeSubsys.getRotatorPosition();
                 }
-                double elapsed = Timer.getFPGATimestamp() - state[0];
-                boolean goUp = ((int)(elapsed / (period / 2.0)) % 2 == 0);
-                double target = goUp ? state[1] + oscillationMotorRotations : state[1];
-                intakeSubsys.setRotatorOscillate(target);
+                intakeSubsys.setRotatorGentle(deployedPosition[0] + raiseAmount);
             },
             () -> {
                 feederSubsys.setSpeed(FeederSpeed.OFF);
                 intakeSubsys.setSpeed(IntakeSpeed.OFF);
                 intakeSubsys.setRotatorTarget(-14.5);
                 shooterSubsys.stopShooter();
-                state[0] = 0;
+                deployedPosition[0] = Double.NaN;
             },
             feederSubsys, intakeSubsys
         ).withTimeout(seconds);
@@ -495,6 +488,58 @@ public final class RobotCommands {
             hoodSubsys.setPosition(shot.hoodPosition);
         }, shooterSubsys, hoodSubsys)
         .andThen(Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0));
+    }
+
+    // ========== Autonomous Auto-Aim ==========
+
+    /**
+     * Autonomous auto-aim: rotates the robot to face the hub AND sets
+     * RPM/hood from the distance interpolation table.
+     * Finishes when heading error < 2° AND shooter is at target RPM.
+     * Times out at 3 seconds to prevent auto deadlock.
+     *
+     * Use as a PathPlanner event marker at any shoot point in an auto routine.
+     * Follow this with the "shoot" named command to fire.
+     */
+    public static Command autoAimAndWindUp() {
+        final double kHeadingToleranceDeg = 2.0;
+        final double[] txRef = {Double.MAX_VALUE}; // shared heading error (degrees)
+        final SwerveRequest.FieldCentric aimRequest = new SwerveRequest.FieldCentric()
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+
+        return Commands.run(() -> {
+                final Pose2d robotPose = drivetrain.getState().Pose;
+                final Translation2d robotPos = robotPose.getTranslation();
+                final Translation2d hubCenter = Landmarks.targetPosition();
+
+                // Distance for RPM/hood interpolation
+                final double distMeters = robotPos.getDistance(hubCenter);
+                final Distance distance = Meters.of(distMeters);
+
+                // Heading error: angle from robot to hub minus robot's current heading
+                final Translation2d robotToHub = hubCenter.minus(robotPos);
+                final double targetFieldAngle = Math.atan2(robotToHub.getY(), robotToHub.getX());
+                final double headingRad = robotPose.getRotation().getRadians();
+                txRef[0] = Math.IEEEremainder(
+                    Math.toDegrees(targetFieldAngle - headingRad) + kAimOffsetDegrees, 360.0);
+
+                // Rotate toward target, no translation (robot holds position while aiming)
+                drivetrain.setControl(aimRequest
+                    .withVelocityX(0)
+                    .withVelocityY(0)
+                    .withRotationalRate(txRef[0] * kAimP));
+
+                // Set RPM and hood from distance table
+                final Shot shot = distanceToShotMap.get(distance);
+                shooterSubsys.setVelocityRPM(shot.shooterRPM);
+                hoodSubsys.setPosition(shot.hoodPosition);
+
+                SmartDashboard.putNumber("Auto Aim TX (deg)", txRef[0]);
+                SmartDashboard.putNumber("Auto Aim Distance (in)", distance.in(Inches));
+            }, drivetrain, shooterSubsys, hoodSubsys)
+            .until(() -> Math.abs(txRef[0]) < kHeadingToleranceDeg
+                      && shooterSubsys.isVelocityWithinTolerance())
+            .withTimeout(3.0);
     }
 
     // ========== Auto Exposure Tuning ==========
