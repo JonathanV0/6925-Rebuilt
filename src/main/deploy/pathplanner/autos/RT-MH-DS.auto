@@ -7,7 +7,7 @@
         {
           "type": "named",
           "data": {
-            "name": "hopperDeploy"
+            "name": "intakeDeploy"
           }
         },
         {
@@ -60,6 +60,18 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "IntakeFast"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "waitForDeploy"
+          }
+        },
+        {
           "type": "parallel",
           "data": {
             "commands": [
@@ -68,14 +80,14 @@
                 "data": {
                   "pathName": "DI"
                 }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "IntakeFast"
-                }
               }
             ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
           }
         },
         {

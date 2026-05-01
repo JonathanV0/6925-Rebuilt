@@ -19,6 +19,7 @@ public class IntakeSubsys extends SubsystemBase {
   private final TalonFX intakeRotator = new TalonFX(50, "CANivore");
   private final PositionVoltage rotatorPositionRequest = new PositionVoltage(0); // Slot0 = gentle
   private final PositionVoltage rotatorOscillateRequest = new PositionVoltage(0).withSlot(1); // Slot1 = snappy
+  private final PositionVoltage rotatorMediumRequest = new PositionVoltage(0).withSlot(2); // Slot2 = medium
 
   private double rotatorTargetPosition;
 
@@ -200,6 +201,13 @@ public class IntakeSubsys extends SubsystemBase {
     return Commands.runOnce(() -> {
       rotatorTargetPosition = intakeRotator.getPosition().getValueAsDouble() + (degrees / 360.0) * 8.0;
     }, this);
+  }
+
+  /** Blocks until the rotator is within 0.5 rotations of its target, with a 1s safety timeout. */
+  public Command waitForDeployCommand() {
+    return Commands.waitUntil(
+        () -> Math.abs(intakeRotator.getPosition().getValueAsDouble() - rotatorTargetPosition) < 0.5
+    ).withTimeout(1.0);
   }
 
   /** Moves the intake rotator to an absolute motor position (in rotations) instantly. */

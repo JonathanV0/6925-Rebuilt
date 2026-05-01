@@ -37,6 +37,8 @@ public final class RobotCommands {
     private static CommandSwerveDrivetrain drivetrain;
     private static LimelightSubsys limelightSubsys;
 
+    private static double lastDeployedPosition = 0.0;
+
     private static final double kAimOffsetDegrees = 0.0;
     private static final double BALL_VELOCITY_MS = 8.0;
 
@@ -214,27 +216,56 @@ public final class RobotCommands {
     }
 
     public static Command Shoot() {
-        final double raiseAmount = (180.0 / 360.0) * 8.0;
-        final double[] deployedPosition = {Double.NaN};
+        final double retractedPosition = 0.0; // fully retracted motor position (rotations)
+        final double raiseDuration = 5.0;     // seconds to fully retract from deployed
+        final double shakeAmount = (30.0 / 360.0) * 8.0;
+        final double shakePeriod = 0.8;
+        final double[] state = {Double.NaN, 0}; // [deployedPosition, startTime]
         return Commands.runEnd(
             () -> {
                 feederSubsys.setSpeed(FeederSpeed.FEED_FAST);
-                intakeSubsys.setSpeed(IntakeSpeed.INTAKE_FAST);
-                if (Double.isNaN(deployedPosition[0])) {
-                    deployedPosition[0] = intakeSubsys.getRotatorPosition();
+                intakeSubsys.setSpeed(IntakeSpeed.INTAKE_MID);
+                if (Double.isNaN(state[0])) {
+                    state[0] = intakeSubsys.getRotatorPosition();
+                    state[1] = Timer.getFPGATimestamp();
+                    lastDeployedPosition = state[0];
                 }
-                intakeSubsys.setRotatorGentle(deployedPosition[0] + raiseAmount);
+                double elapsed = Timer.getFPGATimestamp() - state[1];
+                double progress = Math.min(elapsed / raiseDuration, 1.0);
+                double baseTarget = state[0] + progress * (retractedPosition - state[0]);
+                boolean goUp = ((int)(elapsed / (shakePeriod / 2.0)) % 2 == 0);
+                intakeSubsys.setRotatorOscillate(goUp ? baseTarget + shakeAmount : baseTarget);
             },
             () -> {
                 feederSubsys.setSpeed(FeederSpeed.OFF);
                 intakeSubsys.setSpeed(IntakeSpeed.OFF);
-                if (!Double.isNaN(deployedPosition[0])) {
-                    intakeSubsys.setRotatorTarget(deployedPosition[0]);
-                }
-                deployedPosition[0] = Double.NaN;
+                state[0] = Double.NaN;
             },
             feederSubsys, intakeSubsys
         );
+    }
+
+    /** Smoothly drives the intake back to its deployed position over 3 seconds.
+     *  Bind with operator.button(1).onFalse() to run automatically after Shoot() ends. */
+    public static Command redeployAfterShoot() {
+        final double redeployDuration = 0.5;
+        final double[] state = {Double.NaN, 0}; // [startPos, startTime]
+        return Commands.runEnd(
+            () -> {
+                if (Double.isNaN(state[0])) {
+                    state[0] = intakeSubsys.getRotatorPosition();
+                    state[1] = Timer.getFPGATimestamp();
+                }
+                double elapsed = Timer.getFPGATimestamp() - state[1];
+                double progress = Math.min(elapsed / redeployDuration, 1.0);
+                intakeSubsys.setRotatorGentle(state[0] + progress * (lastDeployedPosition - state[0]));
+            },
+            () -> {
+                intakeSubsys.setRotatorTarget(lastDeployedPosition);
+                state[0] = Double.NaN;
+            },
+            intakeSubsys
+        ).withTimeout(redeployDuration);
     }
 
     /** Timed auto shoot: raises intake + feeds for the given duration, then stops and redeploys intake. */

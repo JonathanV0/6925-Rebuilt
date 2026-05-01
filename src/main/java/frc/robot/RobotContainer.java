@@ -197,6 +197,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("IntakeFast", RobotCommands.intakeFast());
         NamedCommands.registerCommand("StopIntake", RobotCommands.stopIntake());
         NamedCommands.registerCommand("intakeDeploy", intake.goToPositionCommand(-14.5));
+        NamedCommands.registerCommand("waitForDeploy", intake.waitForDeployCommand());
         NamedCommands.registerCommand("intakeBounce", Commands.none()); // bounce is now built into autoShoot
         // Vision updates now run automatically in robotPeriodic() — no named command needed
         // ── Climber commands (motor removed — register as no-ops so PathPlanner autos don't error)
@@ -299,6 +300,7 @@ public class RobotContainer {
 
         // ===== Operator X3D Joystick =====
         operator.button(1).whileTrue(RobotCommands.Shoot());
+        operator.button(1).onFalse(RobotCommands.redeployAfterShoot());
        // operator.button(15).whileTrue(RobotCommands.windUp());
         operator.button(11).whileTrue(RobotCommands.windUpTest());
         operator.button(9).whileTrue(RobotCommands.windUpClose()); // Close-range shot
