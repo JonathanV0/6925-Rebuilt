@@ -171,6 +171,7 @@ public class RobotContainer {
 
     public RobotContainer() {
         RobotCommands.init(shooter, feeder, hood, intake, drivetrain, limelight);
+        SmartDashboard.putBoolean("Vision Enabled", true);
         configureBindings();
         // Register named commands for PathPlanner event markers
         // ── Shooting ──────────────────────────────────────────────────────────
@@ -303,6 +304,7 @@ public class RobotContainer {
         operator.button(1).onFalse(RobotCommands.redeployAfterShoot());
        // operator.button(15).whileTrue(RobotCommands.windUp());
         operator.button(11).whileTrue(RobotCommands.windUpTest());
+        operator.button(5).whileTrue(RobotCommands.manualWindUp());
         operator.button(9).whileTrue(RobotCommands.windUpClose()); // Close-range shot
         operator.button(2).whileTrue(intake.intakeWithOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_TURBO));
         operator.button(2).whileTrue(drivetrain.holdSpeedMulti(0.75 / 2.0));
@@ -336,6 +338,7 @@ public class RobotContainer {
      */
     public void updateVision() {
         if (limelight == null) return;
+        if (!SmartDashboard.getBoolean("Vision Enabled", true)) return;
         limelight.getMeasurement().ifPresent(measurement -> {
             drivetrain.addVisionMeasurement(
                 measurement.poseEstimate.pose,

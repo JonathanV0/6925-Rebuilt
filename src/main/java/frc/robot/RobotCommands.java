@@ -116,7 +116,7 @@ public final class RobotCommands {
     public static Command autoWindUpCloser() {
         return Commands.runOnce(() -> {
             shooterSubsys.setVelocityRPM(kFixedShotRPM);
-            hoodSubsys.setPosition(kCloserHoodPosition);
+            hoodSubsys.setPosition(kHoodAt47in);
         }, shooterSubsys, hoodSubsys)
         .andThen(Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0));
     }
@@ -199,6 +199,24 @@ public final class RobotCommands {
         );
     }
 
+    /** Manual wind-up: reads "Manual Distance (in)" from SmartDashboard and sets RPM/hood
+     *  from the interpolation table. Use to test specific distance points without vision. */
+    public static Command manualWindUp() {
+        SmartDashboard.putNumber("Manual Distance (in)", 75.0);
+        return Commands.runEnd(
+            () -> {
+                final Distance distance = Inches.of(SmartDashboard.getNumber("Manual Distance (in)", 75.0));
+                final Shot shot = distanceToShotMap.get(distance);
+                shooterSubsys.setVelocityRPM(shot.shooterRPM);
+                hoodSubsys.setPosition(shot.hoodPosition);
+                SmartDashboard.putNumber("Manual Shot RPM", shot.shooterRPM);
+                SmartDashboard.putNumber("Manual Shot Hood", shot.hoodPosition);
+            },
+            () -> shooterSubsys.stopShooter(),
+            shooterSubsys, hoodSubsys
+        );
+    }
+
     /** Wind up + feed: spins flywheels AND runs both feeders while held, stops everything on release */
     public static Command windUpAndShoot() {
         return Commands.runEnd(
@@ -224,7 +242,6 @@ public final class RobotCommands {
         return Commands.runEnd(
             () -> {
                 feederSubsys.setSpeed(FeederSpeed.FEED_FAST);
-                intakeSubsys.setSpeed(IntakeSpeed.INTAKE_MID);
                 if (Double.isNaN(state[0])) {
                     state[0] = intakeSubsys.getRotatorPosition();
                     state[1] = Timer.getFPGATimestamp();
@@ -245,27 +262,13 @@ public final class RobotCommands {
         );
     }
 
-    /** Smoothly drives the intake back to its deployed position over 3 seconds.
+    /** Instantly commands the intake back to its deployed position.
      *  Bind with operator.button(1).onFalse() to run automatically after Shoot() ends. */
     public static Command redeployAfterShoot() {
-        final double redeployDuration = 0.5;
-        final double[] state = {Double.NaN, 0}; // [startPos, startTime]
-        return Commands.runEnd(
-            () -> {
-                if (Double.isNaN(state[0])) {
-                    state[0] = intakeSubsys.getRotatorPosition();
-                    state[1] = Timer.getFPGATimestamp();
-                }
-                double elapsed = Timer.getFPGATimestamp() - state[1];
-                double progress = Math.min(elapsed / redeployDuration, 1.0);
-                intakeSubsys.setRotatorGentle(state[0] + progress * (lastDeployedPosition - state[0]));
-            },
-            () -> {
-                intakeSubsys.setRotatorTarget(lastDeployedPosition);
-                state[0] = Double.NaN;
-            },
+        return Commands.runOnce(
+            () -> intakeSubsys.setRotatorTarget(lastDeployedPosition),
             intakeSubsys
-        ).withTimeout(redeployDuration);
+        );
     }
 
     /** Timed auto shoot: raises intake + feeds for the given duration, then stops and redeploys intake. */
@@ -381,6 +384,11 @@ public final class RobotCommands {
                 SmartDashboard.putNumber("Corrected TX (deg)", tx);
                 SmartDashboard.putNumber("Aim Rotation Rate", tx * kAimP);
                 SmartDashboard.putNumber("Flight Time", flightTime);
+                SmartDashboard.putNumber("Robot X (in)", robotPos.getX() / 0.0254);
+                SmartDashboard.putNumber("Robot Y (in)", robotPos.getY() / 0.0254);
+                SmartDashboard.putNumber("Robot Heading (deg)", Math.toDegrees(headingRad));
+                SmartDashboard.putNumber("Target X (in)", hubCenter.getX() / 0.0254);
+                SmartDashboard.putNumber("Target Y (in)", hubCenter.getY() / 0.0254);
             },
             () -> shooterSubsys.stopShooter(),
             drivetrain, shooterSubsys, hoodSubsys)

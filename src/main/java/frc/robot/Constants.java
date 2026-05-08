@@ -20,7 +20,7 @@ public final class Constants {
   public static class ShooterConstants {
     // Fixed-shot flywheel RPM (used by basic windUp variants)
     public static final double kFixedShotRPM = 3350;
-    public static final double kPassShotRPM = 5450;
+    public static final double kPassShotRPM = 5650;
 
     // Hood positions for fixed-shot commands
     public static final double kDefaultHoodPosition = 0.5;
