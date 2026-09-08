@@ -19,6 +19,9 @@ public class Robot extends TimedRobot {
         m_robotContainer = new RobotContainer();
     }
 
+//comand instence checks all the triggers, 
+// (starts comands, ends commands, etc) and runs the periodic methods of all subsystems
+
     @Override
     public void robotPeriodic() {
         CommandScheduler.getInstance().run();

@@ -86,6 +86,9 @@ public final class RobotCommands {
 
     // ========== Fixed Shot Commands ==========
 
+    // all comands for collection of robot actions, reverse shooters, auto aim, passive aim, exsposher tuneing, ect
+   // a command can be ran once, timed out, could sequence multiple actions for example automatically aiming needs the drivetrain
+
     /** Sets RPM/hood once and finishes — for use in auto sequences */
     public static Command windUpOnce() {
         return Commands.runOnce(() -> {

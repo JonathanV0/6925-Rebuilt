@@ -112,6 +112,9 @@ package frc.robot;
  * =========================================================================
  */
 
+// creats the substsems and wires them all together, 
+// (specifically it makes the Drive Train, Shooter, Intake, Feeder, The Hood, and Line Light)
+
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -215,6 +218,10 @@ public class RobotContainer {
         SmartDashboard.putData("Auto Chooser", autoChooser);
     }
 
+    // were all the buttons on the controller are maped to comands
+    // typically the behavior for each binding is from Robot Commands.Java
+    // we have subsystems that are used in the commands, and the commands are used in the bindings 
+
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
@@ -258,6 +265,13 @@ public class RobotContainer {
         RobotModeTriggers.disabled().whileTrue(
             drivetrain.applyRequest(() -> idle).ignoringDisable(true)
         );
+
+        // where joystick values are measured/////////////////
+        // FeildCenterDriveing means that you need to move forward on the feild
+        // the robot uses its giro heading to rotate the drivers inputs into the robots cuwardinents system
+        // the driver will have a much eaiser time because they are driveing relative to the feild\
+        // code applies to deadband: small noise in the joystock is ignored
+        
 
         joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
         // Toggle full speed with B button (default is 75%)

@@ -21,6 +21,10 @@ public class HoodSubsys extends SubsystemBase {
     private static final int kLeftServoPWM = 0;
     private static final int kRightServoPWM = 1;
 
+    // HoodSubsys manages two servo motors that 
+    // adjust the hood's angle smoothly and reliably, 
+    // with position tracking and tolerance-based waiting.
+
     private static final Distance kServoLength = Millimeters.of(100);
     private static final LinearVelocity kMaxServoSpeed = Millimeters.of(20).per(Second);
     private static final double kMinPosition = 0.01;
@@ -47,6 +51,13 @@ public class HoodSubsys extends SubsystemBase {
         setPosition(currentPosition);
         //SmartDashboard.putData(this);
     }
+
+    //Accepts positions as values between 0.0 (fully closed) and 1.0 
+    // (fully open) Clamps valid range to 0.01–0.77 
+    // (hardware limits) Tracks three position values:
+    // targetPosition: where you want the hood
+    //currentPosition: where the hood actually is (simulated)
+    //smoothedPosition: EMA-filtered target to reduce servo jitter (A filtered target value used before writing to the servos)
 
     /** Expects a position between 0.0 and 1.0. Applies EMA smoothing to reduce jitter. */
     public void setPosition(double position) {
