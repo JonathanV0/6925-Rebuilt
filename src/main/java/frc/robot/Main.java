@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 public final class Main {
   private Main() {}
 
+  //Starts the robot. the robot base is a class in wapi lib, it helps to start a new robot based object
   public static void main(String... args) {
     RobotBase.startRobot(Robot::new);
   }

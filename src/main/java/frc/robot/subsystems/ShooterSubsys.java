@@ -2,6 +2,15 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
+//This code is only for the 3 motors on the robot setting the leading moters RPM
+//  and the other 2 motors will follow the leading motor. The code also has a idle mode that will keep the motors spinning at a low RPM 
+// when not in use. The code also has a method to check if the motors are at the target RPM within a certain tolerance. 
+// The code also has a method to stop the motors. The code also has a method to set the RPM of the leading motor only. The code also has a method to toggle the idle mode on and off. The code also has a method to get the current RPM of the leading motor. 
+// The code also has a method to get the current RPM of the other 2 motors.
+// The code also has a method to get the target RPM of the leading motor. The code also has a method to check if the motors are at speed within a certain tolerance. 
+// The code also has a periodic method that updates the SmartDashboard with the current status of the shooter subsystem.
+
+
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.controls.VelocityVoltage;
