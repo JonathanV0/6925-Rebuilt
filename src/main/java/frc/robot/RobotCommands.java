@@ -14,6 +14,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.interpolation.Interpolator;
 import edu.wpi.first.math.interpolation.InverseInterpolator;
@@ -42,7 +43,26 @@ public final class RobotCommands {
     private static double lastDeployedPosition = 0.0;
 
     private static final double kAimOffsetDegrees = 0.0;
-    private static final double BALL_VELOCITY_MS = 8.0;
+
+    // Ball time-of-flight vs. distance to hub (key: meters, value: seconds). A real ball
+    // slows down in the air, so a lookup beats the old constant-velocity guess.
+    // TODO: measure on field with slow-mo video — these are placeholders
+    private static final InterpolatingDoubleTreeMap distanceToFlightTimeSec = new InterpolatingDoubleTreeMap();
+    private static final double kFlightTableMinMeters = 1.5;
+    private static final double kFlightTableMaxMeters = 4.5;
+    static {
+        distanceToFlightTimeSec.put(1.5, 0.6);
+        distanceToFlightTimeSec.put(3.0, 0.9);
+        distanceToFlightTimeSec.put(4.5, 1.2);
+    }
+
+    /** Flight time from the table, or kLookAheadSeconds if we're outside the measured range. */
+    private static double flightTimeSeconds(double distanceMeters) {
+        if (distanceMeters < kFlightTableMinMeters || distanceMeters > kFlightTableMaxMeters) {
+            return kLookAheadSeconds;
+        }
+        return distanceToFlightTimeSec.get(distanceMeters);
+    }
 
     // Distance-to-shot lookup table (team should calibrate these values)
     private static final InterpolatingTreeMap<Distance, Shot> distanceToShotMap = new InterpolatingTreeMap<>(
@@ -398,7 +418,7 @@ public final class RobotCommands {
                 // Shoot-on-the-move velocity compensation
                 final ChassisSpeeds fieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
                     drivetrain.getState().Speeds, robotPose.getRotation());
-                final double flightTime = distMeters / BALL_VELOCITY_MS;
+                final double flightTime = flightTimeSeconds(distMeters);
                 // Virtual target = hub center minus robot velocity * flight time
                 final Translation2d virtualTarget = hubCenter.minus(
                     new Translation2d(
@@ -487,9 +507,6 @@ public final class RobotCommands {
 
     // ========== Range-Adjusted Shot Commands ==========
 
-    // How far ahead (seconds) to predict robot position for shot calculations.
-    // Accounts for shooter spinup + ball flight time.
-
     private static Distance getDistanceToTarget() {
         final Translation2d robotPosition = drivetrain.getState().Pose.getTranslation();
         final Translation2d targetPosition = Landmarks.targetPosition();
@@ -497,22 +514,25 @@ public final class RobotCommands {
     }
 
     /**
-     * Predicts where the robot will be in kLookAheadSeconds based on current velocity,
-     * then returns the distance from that future position to the target.
+     * Predicts where the robot will be one ball-flight-time from now based on current
+     * velocity, then returns the distance from that future position to the target.
      * More accurate than current-position distance when shooting while moving.
      */
     private static Distance getPredictedDistanceToTarget() {
         final Pose2d currentPose = drivetrain.getState().Pose;
         final ChassisSpeeds fieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
             drivetrain.getState().Speeds, currentPose.getRotation());
+        final Translation2d targetPosition = Landmarks.targetPosition();
+        // Look ahead by the flight time at our CURRENT distance — one pass is close
+        // enough; iterating to convergence isn't worth the complexity yet.
+        final double lookAhead = flightTimeSeconds(currentPose.getTranslation().getDistance(targetPosition));
         // Predict future position: current + velocity * time
         final Translation2d futurePosition = currentPose.getTranslation().plus(
             new Translation2d(
-                fieldSpeeds.vxMetersPerSecond * kLookAheadSeconds,
-                fieldSpeeds.vyMetersPerSecond * kLookAheadSeconds
+                fieldSpeeds.vxMetersPerSecond * lookAhead,
+                fieldSpeeds.vyMetersPerSecond * lookAhead
             )
         );
-        final Translation2d targetPosition = Landmarks.targetPosition();
         return Meters.of(futurePosition.getDistance(targetPosition));
     }
 

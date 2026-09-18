@@ -122,7 +122,9 @@ package frc.robot;
  *   - No-ops kept for old autos: intakeBounce, jolt, ClimbUp, ClimbDown,
  *     climbDown, StopClimber, hopperDeploy, VisionUpdate
  *   - Vision fusion is paused during autonomous (Robot.robotPeriodic)
- *   - Shoot-while-moving uses predicted position (kLookAheadSeconds = 0.25 s)
+ *   - Shoot-while-moving and aimAndWindUp lead the target by the ball flight time
+ *     from RobotCommands.distanceToFlightTimeSec (1.5–4.5 m table, placeholder
+ *     values); outside that range they fall back to kLookAheadSeconds = 0.25 s
  *   - Team note: robot is too tall for the trench — cross via the bump ramps
  *
  * MOTOR CAN IDs (all on the "CANivore" bus)

@@ -56,7 +56,8 @@ public final class Constants {
     public static final double kAimP = 0.1;
     public static final double kAimD = 0.01;
 
-    // How far ahead (seconds) to predict robot position for shot calculations
+    // Fallback look-ahead (seconds) when the distance is outside the measured
+    // flight-time table in RobotCommands (distanceToFlightTimeSec)
     public static final double kLookAheadSeconds = 0.25;
 
     // Horizontal offset from tag face to hub center (inches)
