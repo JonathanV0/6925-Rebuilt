@@ -49,8 +49,8 @@ public final class RobotCommands {
                 .inverseInterpolate(startValue.in(Meters), endValue.in(Meters), q.in(Meters)),
         (startValue, endValue, t) ->
             new Shot(
-                Interpolator.forDouble().interpolate(startValue.shooterRPM, endValue.shooterRPM, t),
-                Interpolator.forDouble().interpolate(startValue.hoodPosition, endValue.hoodPosition, t)
+                Interpolator.forDouble().interpolate(startValue.shooterRPM(), endValue.shooterRPM(), t),
+                Interpolator.forDouble().interpolate(startValue.hoodPosition(), endValue.hoodPosition(), t)
             )
     );
 
@@ -207,10 +207,10 @@ public final class RobotCommands {
             () -> {
                 final Distance distance = Inches.of(SmartDashboard.getNumber("Manual Distance (in)", 75.0));
                 final Shot shot = distanceToShotMap.get(distance);
-                shooterSubsys.setVelocityRPM(shot.shooterRPM);
-                hoodSubsys.setPosition(shot.hoodPosition);
-                SmartDashboard.putNumber("Manual Shot RPM", shot.shooterRPM);
-                SmartDashboard.putNumber("Manual Shot Hood", shot.hoodPosition);
+                shooterSubsys.setVelocityRPM(shot.shooterRPM());
+                hoodSubsys.setPosition(shot.hoodPosition());
+                SmartDashboard.putNumber("Manual Shot RPM", shot.shooterRPM());
+                SmartDashboard.putNumber("Manual Shot Hood", shot.hoodPosition());
             },
             () -> shooterSubsys.stopShooter(),
             shooterSubsys, hoodSubsys
@@ -378,8 +378,8 @@ public final class RobotCommands {
                     .withRotationalRate(tx * kAimP));
 
                 final Shot shot = distanceToShotMap.get(distance);
-                shooterSubsys.setVelocityRPM(shot.shooterRPM);
-                hoodSubsys.setPosition(shot.hoodPosition);
+                shooterSubsys.setVelocityRPM(shot.shooterRPM());
+                hoodSubsys.setPosition(shot.hoodPosition());
                 SmartDashboard.putNumber("Auto Distance (inches)", distance.in(Inches));
                 SmartDashboard.putNumber("Corrected TX (deg)", tx);
                 SmartDashboard.putNumber("Aim Rotation Rate", tx * kAimP);
@@ -476,11 +476,11 @@ public final class RobotCommands {
         return Commands.run(() -> {
             final Distance distance = getPredictedDistanceToTarget();
             final Shot shot = distanceToShotMap.get(distance);
-            shooterSubsys.setVelocityRPM(shot.shooterRPM);
-            hoodSubsys.setPosition(shot.hoodPosition);
+            shooterSubsys.setVelocityRPM(shot.shooterRPM());
+            hoodSubsys.setPosition(shot.hoodPosition());
             SmartDashboard.putNumber("Distance to Target (inches)", distance.in(Inches));
-            SmartDashboard.putNumber("Target RPM", shot.shooterRPM);
-            SmartDashboard.putNumber("Target Hood Position", shot.hoodPosition);
+            SmartDashboard.putNumber("Target RPM", shot.shooterRPM());
+            SmartDashboard.putNumber("Target Hood Position", shot.hoodPosition());
         }, shooterSubsys, hoodSubsys);
     }
 
@@ -499,8 +499,8 @@ public final class RobotCommands {
             Commands.run(() -> {
                 final Distance distance = getPredictedDistanceToTarget();
                 final Shot shot = distanceToShotMap.get(distance);
-                shooterSubsys.setVelocityRPM(shot.shooterRPM);
-                hoodSubsys.setPosition(shot.hoodPosition);
+                shooterSubsys.setVelocityRPM(shot.shooterRPM());
+                hoodSubsys.setPosition(shot.hoodPosition());
             }, shooterSubsys, hoodSubsys)
             .until(shooterSubsys::isVelocityWithinTolerance)
             .withTimeout(2.0),
@@ -508,8 +508,8 @@ public final class RobotCommands {
             Commands.run(() -> {
                 final Distance distance = getPredictedDistanceToTarget();
                 final Shot shot = distanceToShotMap.get(distance);
-                shooterSubsys.setVelocityRPM(shot.shooterRPM);
-                hoodSubsys.setPosition(shot.hoodPosition);
+                shooterSubsys.setVelocityRPM(shot.shooterRPM());
+                hoodSubsys.setPosition(shot.hoodPosition());
                 feederSubsys.setSpeed(FeederSpeed.FEED_FAST);
             }, shooterSubsys, hoodSubsys, feederSubsys)
         );
@@ -525,8 +525,8 @@ public final class RobotCommands {
         return Commands.runOnce(() -> {
             final Distance distance = getDistanceToTarget();
             final Shot shot = distanceToShotMap.get(distance);
-            shooterSubsys.setVelocityRPM(shot.shooterRPM);
-            hoodSubsys.setPosition(shot.hoodPosition);
+            shooterSubsys.setVelocityRPM(shot.shooterRPM());
+            hoodSubsys.setPosition(shot.hoodPosition());
         }, shooterSubsys, hoodSubsys)
         .andThen(Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance).withTimeout(2.0));
     }
@@ -572,8 +572,8 @@ public final class RobotCommands {
 
                 // Set RPM and hood from distance table
                 final Shot shot = distanceToShotMap.get(distance);
-                shooterSubsys.setVelocityRPM(shot.shooterRPM);
-                hoodSubsys.setPosition(shot.hoodPosition);
+                shooterSubsys.setVelocityRPM(shot.shooterRPM());
+                hoodSubsys.setPosition(shot.hoodPosition());
 
                 SmartDashboard.putNumber("Auto Aim TX (deg)", txRef[0]);
                 SmartDashboard.putNumber("Auto Aim Distance (in)", distance.in(Inches));
@@ -630,13 +630,10 @@ public final class RobotCommands {
 
     // ========== Shot Data ==========
 
-    public static class Shot {
-        public final double shooterRPM;
-        public final double hoodPosition;
-
-        public Shot(double shooterRPM, double hoodPosition) {
-            this.shooterRPM = shooterRPM;
-            this.hoodPosition = hoodPosition;
-        }
-    }
+    /**
+     * A record is a compact immutable data class: Java writes the constructor, the
+     * accessors shooterRPM()/hoodPosition(), equals/hashCode and toString for us.
+     * Shots never change after creation, so a record is the right fit.
+     */
+    public record Shot(double shooterRPM, double hoodPosition) {}
 }
