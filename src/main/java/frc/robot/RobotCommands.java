@@ -10,6 +10,7 @@ import java.util.function.DoubleSupplier;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -43,6 +44,10 @@ public final class RobotCommands {
     private static OperatorDashboard operatorDashboard;
 
     private static double lastDeployedPosition = 0.0;
+
+    // kRising: "ready" must hold for 50 ms before we believe it, but drops instantly.
+    // One noisy RPM frame shouldn't be enough to fire the feeder.
+    private static final Debouncer readyDebouncer = new Debouncer(0.05, Debouncer.DebounceType.kRising);
 
     private static final double kAimOffsetDegrees = 0.0;
 
@@ -143,7 +148,8 @@ public final class RobotCommands {
         final boolean atHeading  = drivetrain.isAtHeading(Math.toRadians(kScoringHeadingToleranceDeg));
         final boolean slowEnough = speedMps < kScoringSpeedToleranceMps;
         final boolean farEnough  = distanceMeters >= kMinimumShotDistanceMeters;
-        final boolean all = atSpeed && hoodAtPos && atHeading && slowEnough && farEnough;
+        final boolean all = readyDebouncer.calculate(
+            atSpeed && hoodAtPos && atHeading && slowEnough && farEnough);
 
         SmartDashboard.putBoolean("Ready/AtSpeed", atSpeed);
         SmartDashboard.putBoolean("Ready/HoodAtPos", hoodAtPos);

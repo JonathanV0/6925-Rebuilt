@@ -95,6 +95,8 @@ package frc.robot;
  *     distance to hub >= kMinimumShotDistanceMeters (1.5 m)
  *   - Each gate is shown on SmartDashboard as Ready/AtSpeed, Ready/HoodAtPos,
  *     Ready/Heading, Ready/Speed, Ready/Distance, and Ready/ALL
+ *   - Ready/ALL and "Shooter At Speed" are rising-edge debounced 0.05 s so one
+ *     noisy sensor frame can't start the feeder
  *   - "Ignore Shot Gates" (SmartDashboard boolean) bypasses the gate entirely
  *
  * OPERATOR CONTROLS (X3D Joystick, port 1)

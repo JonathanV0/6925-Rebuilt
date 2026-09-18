@@ -9,6 +9,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 
 import frc.robot.CTREConfigs;
 import frc.robot.util.TunableNumber;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -102,10 +103,14 @@ public class ShooterSubsys extends SubsystemBase {
   public boolean isMotor9AtSpeed()  { return isMotorAtSpeed(getMotor9RPM()); }
   public boolean isMotor10AtSpeed() { return isMotorAtSpeed(getMotor10RPM()); }
 
+  // kRising: all three motors must read at-speed for 50 ms straight before we say yes,
+  // so a single glitchy velocity sample can't start a feed. Drops to false instantly.
+  private final Debouncer atSpeedDebouncer = new Debouncer(0.05, Debouncer.DebounceType.kRising);
+
   public boolean isVelocityWithinTolerance() {
     // Each motor runs its own velocity PID, so one can lag while motor 8 reads "at speed".
     // A ball touching a slow wheel gets a bad shot, so all three must be ready.
-    return isMotor8AtSpeed() && isMotor9AtSpeed() && isMotor10AtSpeed();
+    return atSpeedDebouncer.calculate(isMotor8AtSpeed() && isMotor9AtSpeed() && isMotor10AtSpeed());
   }
 
   @Override
