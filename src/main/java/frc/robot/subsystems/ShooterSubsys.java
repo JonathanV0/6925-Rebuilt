@@ -8,6 +8,7 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import frc.robot.CTREConfigs;
+import frc.robot.util.TunableNumber;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -73,7 +74,10 @@ public class ShooterSubsys extends SubsystemBase {
     return Commands.runOnce(() -> setVelocityRPM(rpm), this);
   }
 
-  private static final double kVelocityToleranceRPM = 300.0;
+  private static final TunableNumber kVelocityToleranceRPM = new TunableNumber("Shooter/VelocityToleranceRPM", 300.0);
+  // Cached copy refreshed in periodic(); the at-speed check runs several times per loop
+  // and shouldn't hit NetworkTables each time.
+  private double velocityToleranceRPM = kVelocityToleranceRPM.get();
 
   private double targetRPM = 0;
 
@@ -91,7 +95,7 @@ public class ShooterSubsys extends SubsystemBase {
 
   private boolean isMotorAtSpeed(double motorRPM) {
     // Require a positive target — prevents false-positive when shooter is idle (0 RPM = "at speed")
-    return targetRPM > 0 && Math.abs(motorRPM - targetRPM) < kVelocityToleranceRPM;
+    return targetRPM > 0 && Math.abs(motorRPM - targetRPM) < velocityToleranceRPM;
   }
 
   public boolean isMotor8AtSpeed()  { return isMotorAtSpeed(getVelocityRPM()); }
@@ -106,6 +110,8 @@ public class ShooterSubsys extends SubsystemBase {
 
   @Override
   public void periodic() {
+    TunableNumber.ifChanged(hashCode(), values -> velocityToleranceRPM = values[0], kVelocityToleranceRPM);
+
     SmartDashboard.putBoolean("Shooter At Speed", isVelocityWithinTolerance());
     SmartDashboard.putBoolean("Shooter At Speed Motor 8", isMotor8AtSpeed());
     SmartDashboard.putBoolean("Shooter At Speed Motor 9", isMotor9AtSpeed());

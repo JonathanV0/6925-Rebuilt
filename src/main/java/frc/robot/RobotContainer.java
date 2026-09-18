@@ -132,6 +132,11 @@ package frc.robot;
  *     values); outside that range they fall back to kLookAheadSeconds = 0.25 s
  *   - Team note: robot is too tall for the trench — cross via the bump ramps
  *
+ * LIVE TUNING (frc.robot.util.TunableNumber)
+ *   - Constants.kTuningMode = true exposes "/Tuning/Aim/kAimP" and
+ *     "/Tuning/Shooter/VelocityToleranceRPM" on NetworkTables for live edits.
+ *     With it false (competition default) they are plain constants.
+ *
  * MOTOR CAN IDs (all on the "CANivore" bus)
  *   8  = Shooter right
  *   9  = Shooter middle

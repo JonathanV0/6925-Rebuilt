@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import frc.robot.util.TunableNumber;
+
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
  * constants. This class should not be used for any other purpose. All constants should be declared
@@ -13,6 +15,10 @@ package frc.robot;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
+  // When true, TunableNumbers read live from the "/Tuning" NetworkTable. Leave false for
+  // competition so a leftover dashboard value can't silently change robot behavior.
+  public static final boolean kTuningMode = false;
+
   public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;
   }
@@ -52,8 +58,9 @@ public final class Constants {
     public static final double kRPMAt140in = 3500;
     public static final double kHoodAt140in = 0.4;
 
-    // Limelight aim PD gains (radians/sec per degree of tx error / change)
-    public static final double kAimP = 0.1;
+    // Aim heading gain, radians/sec per DEGREE of heading error (the drivetrain rescales
+    // it to per-radian for the heading PID). Tunable live when kTuningMode is on.
+    public static final TunableNumber kAimP = new TunableNumber("Aim/kAimP", 0.1);
     public static final double kAimD = 0.01;
 
     // Fallback look-ahead (seconds) when the distance is outside the measured

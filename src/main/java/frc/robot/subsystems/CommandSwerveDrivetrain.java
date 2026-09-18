@@ -33,6 +33,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
+import frc.robot.util.TunableNumber;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -220,12 +221,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     private void configureHeadingController() {
-        // kAimP was tuned as rad/s per DEGREE of error. The heading controller works in
-        // radians, so multiply by (180/pi) to keep the same effective gain.
-        final double kHeadingP = ShooterConstants.kAimP * (180.0 / Math.PI);
-        m_facingAngleRequest.HeadingController.setPID(kHeadingP, 0.0, 0.0);
+        applyHeadingP(ShooterConstants.kAimP.get());
         // Without this, an error of +350° would spin the long way instead of -10°.
         m_facingAngleRequest.HeadingController.enableContinuousInput(-Math.PI, Math.PI);
+    }
+
+    private void applyHeadingP(double aimPPerDegree) {
+        // kAimP was tuned as rad/s per DEGREE of error. The heading controller works in
+        // radians, so multiply by (180/pi) to keep the same effective gain.
+        m_facingAngleRequest.HeadingController.setPID(aimPPerDegree * (180.0 / Math.PI), 0.0, 0.0);
     }
 
     @Override
@@ -331,6 +335,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     @Override
     public void periodic() {
+        // Re-push the heading gain only when someone edits it on the dashboard (tuning mode)
+        TunableNumber.ifChanged(hashCode(), values -> applyHeadingP(values[0]), ShooterConstants.kAimP);
+
         /*
          * Periodically try to apply the operator perspective.
          * If we haven't applied the operator perspective before, then we should apply it regardless of DS state.
