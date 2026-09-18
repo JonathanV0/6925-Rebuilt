@@ -25,6 +25,10 @@ public class HoodSubsys extends SubsystemBase {
     private static final LinearVelocity kMaxServoSpeed = Millimeters.of(20).per(Second);
     private static final double kMinPosition = 0.01;
     private static final double kMaxPosition = 0.77;
+    // TODO(tune): hood tolerance (0-1 servo units). This now gates shots ("Ready/HoodAtPos").
+    //   Note the "current position" is a MODEL (kMaxServoSpeed over kServoLength), not a
+    //   sensor — the servos have no feedback. If real hood moves are slower than the model,
+    //   raise kMaxServoSpeed's travel time or this tolerance so we don't fire early.
     private static final double kPositionTolerance = 0.01;
 
     private final Servo leftServo;

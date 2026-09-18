@@ -43,6 +43,10 @@ public class Landmarks {
     }
 
     // How far from the trench tag (toward the hub) the robot bumper sits when shooting there
+    // TODO(tune): kTrenchSpotOffsetMeters. Should be the distance from the tag's wall to the
+    //   robot CENTER when parked in the trench spot: ~ half the robot length + bumper +
+    //   any gap. Measure with a tape once, on the practice field. Also confirm the tag
+    //   positions in KnownSpot below match the real field (welded vs. AndyMark layout).
     private static final double kTrenchSpotOffsetMeters = 0.5;
 
     /**

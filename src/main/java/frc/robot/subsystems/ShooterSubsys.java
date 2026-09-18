@@ -75,6 +75,11 @@ public class ShooterSubsys extends SubsystemBase {
     return Commands.runOnce(() -> setVelocityRPM(rpm), this);
   }
 
+  // TODO(tune): velocity tolerance (RPM). How close each flywheel must be to target before
+  //   we call it "at speed". Too loose = balls fired while still spinning up (short shots);
+  //   too tight = feeder waits forever because RPM never settles that precisely.
+  //   How: spin up, watch "Shooter RPM" vs "Shooter Target RPM" once settled — the wobble
+  //   you see (+/-) is the floor. Set this ~1.5x that. 300 is generous; 100-150 is typical.
   private static final TunableNumber kVelocityToleranceRPM = new TunableNumber("Shooter/VelocityToleranceRPM", 300.0);
   // Cached copy refreshed in periodic(); the at-speed check runs several times per loop
   // and shouldn't hit NetworkTables each time.
@@ -105,6 +110,8 @@ public class ShooterSubsys extends SubsystemBase {
 
   // kRising: all three motors must read at-speed for 50 ms straight before we say yes,
   // so a single glitchy velocity sample can't start a feed. Drops to false instantly.
+  // TODO(tune): at-speed debounce (seconds). Same idea as the ready debounce in
+  //   RobotCommands. Raise to 0.1 if "Shooter At Speed" flickers at a steady RPM.
   private final Debouncer atSpeedDebouncer = new Debouncer(0.05, Debouncer.DebounceType.kRising);
 
   public boolean isVelocityWithinTolerance() {

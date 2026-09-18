@@ -47,13 +47,26 @@ public final class RobotCommands {
 
     // kRising: "ready" must hold for 50 ms before we believe it, but drops instantly.
     // One noisy RPM frame shouldn't be enough to fire the feeder.
+    // TODO(tune): ready debounce time (seconds). Longer = fewer false starts from a single
+    //   good frame, but adds that much delay to every shot. 0.05 s = 2-3 loops. Raise to
+    //   0.1 if "Ready/ALL" flickers green/red while otherwise settled; don't go past ~0.2.
     private static final Debouncer readyDebouncer = new Debouncer(0.05, Debouncer.DebounceType.kRising);
 
+    // TODO(tune): kAimOffsetDegrees. A constant aim bias added to every hub shot. Use it if
+    //   the robot reliably misses to the same side when "Aim Heading Error (deg)" reads 0
+    //   (shooter not centered on the robot, wheels spinning the ball sideways, etc.).
+    //   Positive = rotate counter-clockwise (left). Try +/-1 deg steps.
     private static final double kAimOffsetDegrees = 0.0;
 
     // Ball time-of-flight vs. distance to hub (key: meters, value: seconds). A real ball
     // slows down in the air, so a lookup beats the old constant-velocity guess.
-    // TODO: measure on field with slow-mo video — these are placeholders
+    // TODO(tune): flight-time table — these are PLACEHOLDERS, not measurements.
+    //   What it is: how long the ball is in the air from leaving the wheels to entering the
+    //   hub, at each distance. It sets how far ahead of the hub we aim while moving.
+    //   How: put the robot at a known distance (read "Auto Distance (inches)"), film a shot
+    //   with a phone in slow-mo (240 fps), count frames from ball-exit to hub-entry, divide
+    //   by the frame rate. Repeat at ~1.5, 2.5, 3.5, 4.5 m and replace the points below.
+    //   If unmeasured, expect the moving-shot lead to be wrong; stationary shots are unaffected.
     private static final InterpolatingDoubleTreeMap distanceToFlightTimeSec = new InterpolatingDoubleTreeMap();
     private static final double kFlightTableMinMeters = 1.5;
     private static final double kFlightTableMaxMeters = 4.5;
@@ -639,6 +652,8 @@ public final class RobotCommands {
      * Follow this with the "shoot" named command to fire.
      */
     public static Command autoAimAndWindUp() {
+        // TODO(tune): auto aim tolerance (degrees). Tighter than teleop's 4 deg because auto
+        //   has time to settle. If autos time out here (3 s) before firing, loosen to 3-4.
         final double kHeadingToleranceRad = Math.toRadians(2.0);
 
         return Commands.run(() -> {

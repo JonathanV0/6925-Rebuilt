@@ -60,11 +60,20 @@ public final class Constants {
 
     // Aim heading gain, radians/sec per DEGREE of heading error (the drivetrain rescales
     // it to per-radian for the heading PID). Tunable live when kTuningMode is on.
+    // TODO(tune): kAimP. What it is: how hard the robot turns per degree of aim error.
+    //   Too low  -> slow to swing onto the hub, "Ready/Heading" takes forever to go green.
+    //   Too high -> overshoots and wobbles back and forth around the target.
+    //   How: hold right bumper standing still, watch "Aim Heading Error (deg)"; raise until
+    //   it snaps to ~0 with one small overshoot, then back off ~20%. 0.1 deg-based = 5.7/rad;
+    //   2910 runs P=5.0 with D=0.15 (rad-based) — add D in applyHeadingP() if it oscillates.
     public static final TunableNumber kAimP = new TunableNumber("Aim/kAimP", 0.1);
     public static final double kAimD = 0.01;
 
     // Fallback look-ahead (seconds) when the distance is outside the measured
     // flight-time table in RobotCommands (distanceToFlightTimeSec)
+    // TODO(tune): kLookAheadSeconds. Only used when closer than 1.5 m or farther than 4.5 m
+    //   from the hub. Should roughly equal the ball's flight time at those extremes; once
+    //   the flight-time table is measured, set this to the table's nearest end value.
     public static final double kLookAheadSeconds = 0.25;
 
     // Horizontal offset from tag face to hub center (inches)
@@ -75,9 +84,22 @@ public final class Constants {
 
     // Shot-readiness gates (see RobotCommands.isReadyToShoot). Modeled on 2910's
     // isReadyToScore: a ball fed while any of these is false is a likely miss.
+    // 2910's 2026 values are identical (4 deg, 0.15 m/s, 1.5 m) — a sane starting point.
+    //
+    // TODO(tune): kScoringHeadingToleranceDeg. How far off-target (degrees) we still fire.
+    //   The hub opening is wide, so this is forgiving up close and strict far away. Start
+    //   at 4; if far shots clip the rim left/right, lower it; if the feeder hesitates while
+    //   the robot is visibly on target, raise it. Watch "Ready/Heading" on the dashboard.
     public static final double kScoringHeadingToleranceDeg = 4.0;
+    // TODO(tune): kScoringSpeedToleranceMps. Max robot speed (m/s) at which we fire.
+    //   The distance table was calibrated standing still, so movement adds error the table
+    //   doesn't know about. 0.15 m/s is "basically stopped". Raise it only if you've shot
+    //   while creeping and the balls still go in; "Ready/Speed" shows this gate.
     public static final double kScoringSpeedToleranceMps = 0.15;
     // Closer than this the hood geometry can't loft the ball into the hub
+    // TODO(tune): kMinimumShotDistanceMeters. Park at the closest spot that still scores
+    //   (bumper to hub wall) and read "Auto Distance (inches)"; set this a bit below that.
+    //   1.5 m = 59 in; the table's closest point is 47 in, so 1.2 m may be right for us.
     public static final double kMinimumShotDistanceMeters = 1.5;
   }
 }
