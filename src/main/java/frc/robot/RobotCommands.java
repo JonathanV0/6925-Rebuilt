@@ -10,6 +10,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
@@ -339,11 +340,7 @@ public final class RobotCommands {
      * Hold this, then pull the trigger (Shoot) when "Shooter At Speed" is green.
      * The robot is already aimed and spun up — zero wait time on the shot.
      */
-    public static Command aimAndWindUp(DoubleSupplier velocityX, DoubleSupplier velocityY, double maxSpeed) {
-        final SwerveRequest.FieldCentric aimDrive = new SwerveRequest.FieldCentric()
-            .withDeadband(maxSpeed * 0.1)
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
-
+    public static Command aimAndWindUp(DoubleSupplier velocityX, DoubleSupplier velocityY) {
         return Commands.runEnd(() -> {
                 // Get robot pose from MT2-fused odometry
                 final Pose2d robotPose = drivetrain.getState().Pose;
@@ -364,29 +361,24 @@ public final class RobotCommands {
                         fieldSpeeds.vxMetersPerSecond * flightTime,
                         fieldSpeeds.vyMetersPerSecond * flightTime));
                 final Translation2d robotToVirtual = virtualTarget.minus(robotPos);
-                final double virtualFieldAngle = Math.atan2(robotToVirtual.getY(), robotToVirtual.getX());
+                // getAngle() is atan2(y, x) wrapped in a Rotation2d, so no manual normalizing
+                final Rotation2d virtualFieldAngle = robotToVirtual.getAngle()
+                    .plus(Rotation2d.fromDegrees(kAimOffsetDegrees));
 
-                // tx = heading error in robot-relative degrees
-                final double headingRad = robotPose.getRotation().getRadians();
-                double tx = Math.toDegrees(virtualFieldAngle - headingRad) + kAimOffsetDegrees;
-                // Normalize to [-180, 180]
-                tx = Math.IEEEremainder(tx, 360.0);
-
-                drivetrain.setControl(aimDrive
+                // The drivetrain's heading PID closes the loop; we only hand it the goal.
+                drivetrain.setControl(drivetrain.facingFieldAngle(virtualFieldAngle)
                     .withVelocityX(velocityX.getAsDouble())
-                    .withVelocityY(velocityY.getAsDouble())
-                    .withRotationalRate(tx * kAimP));
+                    .withVelocityY(velocityY.getAsDouble()));
 
                 final Shot shot = distanceToShotMap.get(distance);
                 shooterSubsys.setVelocityRPM(shot.shooterRPM());
                 hoodSubsys.setPosition(shot.hoodPosition());
                 SmartDashboard.putNumber("Auto Distance (inches)", distance.in(Inches));
-                SmartDashboard.putNumber("Corrected TX (deg)", tx);
-                SmartDashboard.putNumber("Aim Rotation Rate", tx * kAimP);
+                SmartDashboard.putNumber("Aim Heading Error (deg)", Math.toDegrees(drivetrain.getHeadingErrorRadians()));
                 SmartDashboard.putNumber("Flight Time", flightTime);
                 SmartDashboard.putNumber("Robot X (in)", robotPos.getX() / 0.0254);
                 SmartDashboard.putNumber("Robot Y (in)", robotPos.getY() / 0.0254);
-                SmartDashboard.putNumber("Robot Heading (deg)", Math.toDegrees(headingRad));
+                SmartDashboard.putNumber("Robot Heading (deg)", robotPose.getRotation().getDegrees());
                 SmartDashboard.putNumber("Target X (in)", hubCenter.getX() / 0.0254);
                 SmartDashboard.putNumber("Target Y (in)", hubCenter.getY() / 0.0254);
             },
@@ -418,7 +410,6 @@ public final class RobotCommands {
                 final int tagID = (int) LimelightHelpers.getFiducialID("limelight");
                 final boolean isTrenchTag = tagID == 7 || tagID == 12 || tagID == 23 || tagID == 28;
 
-                double rotationRate = 0.0;
                 if (LimelightHelpers.getTV("limelight") && isTrenchTag) {
                     final double rawTx = LimelightHelpers.getTX("limelight");
                     // Tags 12, 28 → offset left (-15°); Tags 7, 23 → offset right (+15°)
@@ -426,13 +417,22 @@ public final class RobotCommands {
                         ? -kPassAimOffsetDegrees
                         :  kPassAimOffsetDegrees;
                     final double correctedTx = rawTx + offset;
-                    rotationRate = -correctedTx * kAimP;
+                    // Limelight tx is positive when the tag is to the RIGHT of the crosshair, and a
+                    // right turn is a NEGATIVE (clockwise) heading change in WPILib, so subtract.
+                    // Re-evaluated every loop so the goal tracks the live tx like the old P loop did.
+                    final Rotation2d targetHeading = drivetrain.getState().Pose.getRotation()
+                        .minus(Rotation2d.fromDegrees(correctedTx));
+                    drivetrain.setControl(drivetrain.facingFieldAngle(targetHeading)
+                        .withVelocityX(velocityX.getAsDouble())
+                        .withVelocityY(velocityY.getAsDouble()));
+                    SmartDashboard.putNumber("Pass Corrected TX (deg)", correctedTx);
+                } else {
+                    // No trench tag: same as before — translate freely, no rotation command
+                    drivetrain.setControl(passDrive
+                        .withVelocityX(velocityX.getAsDouble())
+                        .withVelocityY(velocityY.getAsDouble())
+                        .withRotationalRate(0.0));
                 }
-
-                drivetrain.setControl(passDrive
-                    .withVelocityX(velocityX.getAsDouble())
-                    .withVelocityY(velocityY.getAsDouble())
-                    .withRotationalRate(rotationRate));
             },
             () -> shooterSubsys.stopShooter(),
             // drivetrain must be a requirement: this command calls setControl() every loop, and
@@ -543,10 +543,7 @@ public final class RobotCommands {
      * Follow this with the "shoot" named command to fire.
      */
     public static Command autoAimAndWindUp() {
-        final double kHeadingToleranceDeg = 2.0;
-        final double[] txRef = {Double.MAX_VALUE}; // shared heading error (degrees)
-        final SwerveRequest.FieldCentric aimRequest = new SwerveRequest.FieldCentric()
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+        final double kHeadingToleranceRad = Math.toRadians(2.0);
 
         return Commands.run(() -> {
                 final Pose2d robotPose = drivetrain.getState().Pose;
@@ -557,28 +554,25 @@ public final class RobotCommands {
                 final double distMeters = robotPos.getDistance(hubCenter);
                 final Distance distance = Meters.of(distMeters);
 
-                // Heading error: angle from robot to hub minus robot's current heading
-                final Translation2d robotToHub = hubCenter.minus(robotPos);
-                final double targetFieldAngle = Math.atan2(robotToHub.getY(), robotToHub.getX());
-                final double headingRad = robotPose.getRotation().getRadians();
-                txRef[0] = Math.IEEEremainder(
-                    Math.toDegrees(targetFieldAngle - headingRad) + kAimOffsetDegrees, 360.0);
+                // Field angle from robot to hub; the drivetrain's heading PID does the rest
+                final Rotation2d targetFieldAngle = hubCenter.minus(robotPos).getAngle()
+                    .plus(Rotation2d.fromDegrees(kAimOffsetDegrees));
 
                 // Rotate toward target, no translation (robot holds position while aiming)
-                drivetrain.setControl(aimRequest
+                drivetrain.setControl(drivetrain.facingFieldAngle(targetFieldAngle)
                     .withVelocityX(0)
-                    .withVelocityY(0)
-                    .withRotationalRate(txRef[0] * kAimP));
+                    .withVelocityY(0));
 
                 // Set RPM and hood from distance table
                 final Shot shot = distanceToShotMap.get(distance);
                 shooterSubsys.setVelocityRPM(shot.shooterRPM());
                 hoodSubsys.setPosition(shot.hoodPosition());
 
-                SmartDashboard.putNumber("Auto Aim TX (deg)", txRef[0]);
+                SmartDashboard.putNumber("Auto Aim Heading Error (deg)", Math.toDegrees(drivetrain.getHeadingErrorRadians()));
                 SmartDashboard.putNumber("Auto Aim Distance (in)", distance.in(Inches));
             }, drivetrain, shooterSubsys, hoodSubsys)
-            .until(() -> Math.abs(txRef[0]) < kHeadingToleranceDeg
+            // isAtHeading() reads the error the heading PID computed on its last run
+            .until(() -> drivetrain.isAtHeading(kHeadingToleranceRad)
                       && shooterSubsys.isVelocityWithinTolerance())
             .withTimeout(3.0);
     }

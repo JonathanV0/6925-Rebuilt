@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -29,6 +30,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Constants.ShooterConstants;
+import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
 /**
@@ -120,6 +123,20 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     /* Swerve request for PathPlanner to apply robot-relative speeds */
     private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
 
+    /*
+     * One shared "drive while facing an angle" request. Phoenix runs the heading PID
+     * inside this request on the 250 Hz odometry thread, which is tighter than our
+     * old 50 Hz tx * kAimP loop. Sharing one instance means one set of gains and one
+     * place to read the heading error from.
+     */
+    private final SwerveRequest.FieldCentricFacingAngle m_facingAngleRequest = new SwerveRequest.FieldCentricFacingAngle()
+        .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
+        // Same translation deadband the aim commands used before (10% of top speed)
+        .withDeadband(TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.1);
+
+    /* Whatever setControl() was last given — lets us know if the heading error is live. */
+    private SwerveRequest m_activeRequest = null;
+
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
      * <p>
@@ -138,6 +155,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
+        configureHeadingController();
         configureAutoBuilder();
     }
 
@@ -163,6 +181,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
+        configureHeadingController();
         configureAutoBuilder();
     }
 
@@ -196,7 +215,57 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
+        configureHeadingController();
         configureAutoBuilder();
+    }
+
+    private void configureHeadingController() {
+        // kAimP was tuned as rad/s per DEGREE of error. The heading controller works in
+        // radians, so multiply by (180/pi) to keep the same effective gain.
+        final double kHeadingP = ShooterConstants.kAimP * (180.0 / Math.PI);
+        m_facingAngleRequest.HeadingController.setPID(kHeadingP, 0.0, 0.0);
+        // Without this, an error of +350° would spin the long way instead of -10°.
+        m_facingAngleRequest.HeadingController.enableContinuousInput(-Math.PI, Math.PI);
+    }
+
+    @Override
+    public void setControl(SwerveRequest request) {
+        m_activeRequest = request;
+        super.setControl(request);
+    }
+
+    /** The shared facing-angle request (already configured). Prefer {@link #facingFieldAngle}. */
+    public SwerveRequest.FieldCentricFacingAngle getFacingAngleRequest() {
+        return m_facingAngleRequest;
+    }
+
+    /**
+     * Returns the shared facing-angle request pointed at a BLUE-ORIGIN field angle
+     * (the frame our Pose2d and Landmarks use). Phoenix interprets TargetDirection in the
+     * operator's perspective, which is rotated 180° on red, so we undo that here once
+     * instead of in every command.
+     */
+    public SwerveRequest.FieldCentricFacingAngle facingFieldAngle(Rotation2d fieldAngle) {
+        return m_facingAngleRequest.withTargetDirection(fieldAngle.minus(getOperatorForwardDirection()));
+    }
+
+    /** True only while the facing-angle request is the one driving the robot. */
+    public boolean isFacingAngleActive() {
+        return m_activeRequest == m_facingAngleRequest;
+    }
+
+    /** Heading error (radians) from the last time the facing-angle request ran. */
+    public double getHeadingErrorRadians() {
+        return m_facingAngleRequest.HeadingController.getPositionError();
+    }
+
+    /**
+     * True when the facing-angle request is active AND its error is inside tolerance.
+     * The "active" check matters: the PID keeps its last error after a command ends,
+     * so without it a stale small error could look like "aimed" while nothing is aiming.
+     */
+    public boolean isAtHeading(double toleranceRad) {
+        return isFacingAngleActive() && Math.abs(getHeadingErrorRadians()) < toleranceRad;
     }
 
     private void configureAutoBuilder() {

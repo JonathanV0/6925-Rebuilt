@@ -301,8 +301,7 @@ public class RobotContainer {
         joystick.rightBumper().whileTrue(
             RobotCommands.aimAndWindUp(
                 () -> -joystick.getLeftY() * MaxSpeed,
-                () -> -joystick.getLeftX() * MaxSpeed,
-                MaxSpeed
+                () -> -joystick.getLeftX() * MaxSpeed
             )
         );
 
