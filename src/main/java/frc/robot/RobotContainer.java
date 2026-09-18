@@ -43,6 +43,8 @@ package frc.robot;
  *   - Fixed shots: kFixedShotRPM = 3350;  Pass: kPassShotRPM = 5650
  *   - Distance-adjusted shots use the 47"–140" interpolation table in
  *     RobotCommands (Constants.ShooterConstants kRPMAtXXin / kHoodAtXXin, +150 RPM)
+ *   - Table RPMs are scaled by the "RPM Percent Adder" slider on the Shuffleboard
+ *     "Operator" tab (-10..+50 %, default 0). Fixed and pass shots are NOT scaled.
  *   - "Shooter At Speed" = ALL THREE motors within kVelocityToleranceRPM (300)
  *     of target; per-motor booleans are also on SmartDashboard
  *
@@ -165,6 +167,7 @@ import frc.robot.subsystems.HoodSubsys;
 import frc.robot.subsystems.LimelightSubsys;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import frc.robot.subsystems.ShooterSubsys;
+import frc.robot.util.OperatorDashboard;
 
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -196,9 +199,12 @@ public class RobotContainer {
     private final FeederSubsys feeder = new FeederSubsys();
     private final HoodSubsys hood = new HoodSubsys();
     private final LimelightSubsys limelight = new LimelightSubsys("limelight", () -> drivetrain.getState().Pose);
+    private final OperatorDashboard operatorDashboard = new OperatorDashboard();
 
     public RobotContainer() {
-        RobotCommands.init(shooter, feeder, hood, intake, drivetrain, limelight);
+        // Dependency injection: RobotCommands gets its collaborators handed in rather than
+        // creating them, so there's exactly one instance of each and no hidden globals.
+        RobotCommands.init(shooter, feeder, hood, intake, drivetrain, limelight, operatorDashboard);
         SmartDashboard.putBoolean("Vision Enabled", true);
         configureBindings();
         // Register named commands for PathPlanner event markers

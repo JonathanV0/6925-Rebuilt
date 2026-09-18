@@ -31,6 +31,7 @@ import frc.robot.subsystems.IntakeSubsys;
 import frc.robot.subsystems.IntakeSubsys.IntakeSpeed;
 import frc.robot.subsystems.LimelightSubsys;
 import frc.robot.subsystems.ShooterSubsys;
+import frc.robot.util.OperatorDashboard;
 
 public final class RobotCommands {
     private static ShooterSubsys shooterSubsys;
@@ -39,6 +40,7 @@ public final class RobotCommands {
     private static IntakeSubsys intakeSubsys;
     private static CommandSwerveDrivetrain drivetrain;
     private static LimelightSubsys limelightSubsys;
+    private static OperatorDashboard operatorDashboard;
 
     private static double lastDeployedPosition = 0.0;
 
@@ -54,6 +56,16 @@ public final class RobotCommands {
         distanceToFlightTimeSec.put(1.5, 0.6);
         distanceToFlightTimeSec.put(3.0, 0.9);
         distanceToFlightTimeSec.put(4.5, 1.2);
+    }
+
+    /**
+     * Distance-table lookup with the operator's live RPM % trim applied. Every table-based
+     * shot goes through here so the trim can't be forgotten at one call site. Fixed shots
+     * (kFixedShotRPM) and pass shots deliberately bypass it.
+     */
+    private static Shot lookupShot(Distance distance) {
+        final Shot raw = distanceToShotMap.get(distance);
+        return new Shot(raw.shooterRPM() * operatorDashboard.getRPMMultiplier(), raw.hoodPosition());
     }
 
     /** Flight time from the table, or kLookAheadSeconds if we're outside the measured range. */
@@ -96,7 +108,8 @@ public final class RobotCommands {
         HoodSubsys hood,
         IntakeSubsys intake,
         CommandSwerveDrivetrain drive,
-        LimelightSubsys limelight
+        LimelightSubsys limelight,
+        OperatorDashboard dashboard
     ) {
         RobotCommands.shooterSubsys = shooter;
         RobotCommands.feederSubsys = feeder;
@@ -104,6 +117,7 @@ public final class RobotCommands {
         RobotCommands.intakeSubsys = intake;
         RobotCommands.drivetrain = drive;
         RobotCommands.limelightSubsys = limelight;
+        RobotCommands.operatorDashboard = dashboard;
         // Published here so the toggle exists on the dashboard before anyone needs it
         SmartDashboard.putBoolean("Ignore Shot Gates", false);
     }
@@ -252,7 +266,7 @@ public final class RobotCommands {
         return Commands.runEnd(
             () -> {
                 final Distance distance = Inches.of(SmartDashboard.getNumber("Manual Distance (in)", 75.0));
-                final Shot shot = distanceToShotMap.get(distance);
+                final Shot shot = lookupShot(distance);
                 shooterSubsys.setVelocityRPM(shot.shooterRPM());
                 hoodSubsys.setPosition(shot.hoodPosition());
                 SmartDashboard.putNumber("Manual Shot RPM", shot.shooterRPM());
@@ -434,7 +448,7 @@ public final class RobotCommands {
                     .withVelocityX(velocityX.getAsDouble())
                     .withVelocityY(velocityY.getAsDouble()));
 
-                final Shot shot = distanceToShotMap.get(distance);
+                final Shot shot = lookupShot(distance);
                 shooterSubsys.setVelocityRPM(shot.shooterRPM());
                 hoodSubsys.setPosition(shot.hoodPosition());
                 SmartDashboard.putNumber("Auto Distance (inches)", distance.in(Inches));
@@ -539,7 +553,7 @@ public final class RobotCommands {
     public static Command adjustedWindUp() {
         return Commands.run(() -> {
             final Distance distance = getPredictedDistanceToTarget();
-            final Shot shot = distanceToShotMap.get(distance);
+            final Shot shot = lookupShot(distance);
             shooterSubsys.setVelocityRPM(shot.shooterRPM());
             hoodSubsys.setPosition(shot.hoodPosition());
             SmartDashboard.putNumber("Distance to Target (inches)", distance.in(Inches));
@@ -562,7 +576,7 @@ public final class RobotCommands {
             // Phase 1: spin up to predicted-distance RPM, wait until at speed (max 2s to prevent deadlock)
             Commands.run(() -> {
                 final Distance distance = getPredictedDistanceToTarget();
-                final Shot shot = distanceToShotMap.get(distance);
+                final Shot shot = lookupShot(distance);
                 shooterSubsys.setVelocityRPM(shot.shooterRPM());
                 hoodSubsys.setPosition(shot.hoodPosition());
             }, shooterSubsys, hoodSubsys)
@@ -571,7 +585,7 @@ public final class RobotCommands {
             // Phase 2: maintain RPM/hood AND run both feeders to shoot while still moving
             Commands.run(() -> {
                 final Distance distance = getPredictedDistanceToTarget();
-                final Shot shot = distanceToShotMap.get(distance);
+                final Shot shot = lookupShot(distance);
                 shooterSubsys.setVelocityRPM(shot.shooterRPM());
                 hoodSubsys.setPosition(shot.hoodPosition());
                 feederSubsys.setSpeed(FeederSpeed.FEED_FAST);
@@ -588,7 +602,7 @@ public final class RobotCommands {
     public static Command adjustedWindUpOnce() {
         return Commands.runOnce(() -> {
             final Distance distance = getDistanceToTarget();
-            final Shot shot = distanceToShotMap.get(distance);
+            final Shot shot = lookupShot(distance);
             shooterSubsys.setVelocityRPM(shot.shooterRPM());
             hoodSubsys.setPosition(shot.hoodPosition());
         }, shooterSubsys, hoodSubsys)
@@ -628,7 +642,7 @@ public final class RobotCommands {
                     .withVelocityY(0));
 
                 // Set RPM and hood from distance table
-                final Shot shot = distanceToShotMap.get(distance);
+                final Shot shot = lookupShot(distance);
                 shooterSubsys.setVelocityRPM(shot.shooterRPM());
                 hoodSubsys.setPosition(shot.hoodPosition());
 
