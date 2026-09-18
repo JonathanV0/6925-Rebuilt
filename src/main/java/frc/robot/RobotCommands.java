@@ -467,10 +467,15 @@ public final class RobotCommands {
                     .withVelocityX(velocityX.getAsDouble())
                     .withVelocityY(velocityY.getAsDouble()));
 
-                final Shot shot = lookupShot(distance);
+                // RPM/hood come from the distance to the VIRTUAL target: that's the path the
+                // ball actually flies while we're moving. Standing still the virtual target
+                // is the hub itself, so this is identical to the old lookup.
+                final Distance aimDistance = Meters.of(robotToVirtual.getNorm());
+                final Shot shot = lookupShot(aimDistance);
                 shooterSubsys.setVelocityRPM(shot.shooterRPM());
                 hoodSubsys.setPosition(shot.hoodPosition());
                 SmartDashboard.putNumber("Auto Distance (inches)", distance.in(Inches));
+                SmartDashboard.putNumber("Aim Distance (inches)", aimDistance.in(Inches));
                 SmartDashboard.putNumber("Aim Heading Error (deg)", Math.toDegrees(drivetrain.getHeadingErrorRadians()));
                 SmartDashboard.putNumber("Flight Time", flightTime);
                 SmartDashboard.putNumber("Robot X (in)", robotPos.getX() / 0.0254);
