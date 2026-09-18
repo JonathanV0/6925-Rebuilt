@@ -86,9 +86,18 @@ package frc.robot;
  *   - Camera: 1.46" behind center, 25.39" high, 20.37° above horizontal
  *   - "Vision Enabled" SmartDashboard boolean turns fusion off for testing
  *
+ * SHOT READINESS GATE (RobotCommands.isReadyToShoot)
+ *   - Button 1 only feeds while ALL of: shooter at speed (3 motors), hood at
+ *     position, heading error < kScoringHeadingToleranceDeg (4°) while an aim
+ *     command is active, robot speed < kScoringSpeedToleranceMps (0.15 m/s),
+ *     distance to hub >= kMinimumShotDistanceMeters (1.5 m)
+ *   - Each gate is shown on SmartDashboard as Ready/AtSpeed, Ready/HoodAtPos,
+ *     Ready/Heading, Ready/Speed, Ready/Distance, and Ready/ALL
+ *   - "Ignore Shot Gates" (SmartDashboard boolean) bypasses the gate entirely
+ *
  * OPERATOR CONTROLS (X3D Joystick, port 1)
- *   Button 1  = Shoot (feeder FEED_FAST + intake bounce — hold) + 1/5 drive speed
- *               On release: intake redeploys to its last deployed position
+ *   Button 1  = Gated Shoot (feeder FEED_FAST only while ready + intake bounce — hold)
+ *               + 1/5 drive speed. On release: intake redeploys to last deployed position
  *   Button 2  = Intake with Oscillate (TURBO — hold) + 37.5% drive speed
  *   Button 3  = Toggle shooter idle on/off (press)
  *   Button 4  = Retract Intake (slow to -0.144 rot, 0.2 duty — press)
@@ -98,7 +107,8 @@ package frc.robot;
  *   Button 8  = Wind Up Pass (5650 RPM, hood 0.7 — hold)
  *   Button 9  = Wind Up Close (3350 RPM, hood 0.3 — hold)
  *   Button 10 = Snap Wheels to 0° (hold)
- *   Button 11 = Wind Up Test (3350 RPM, hood 0.45 — hold)
+ *   Button 11 = Manual Shoot (ungated override — feeds immediately, same intake
+ *               bounce / redeploy / 1/5 drive speed as button 1)
  *   Button 12 = Retract with Oscillate (FAST — hold)
  *   Hat Down  = Reverse All (eject jammed ball — intake + feeder backward)
  *   Hat Left  = Auto-tune Limelight exposure (press)
@@ -315,10 +325,14 @@ public class RobotContainer {
         );
 
         // ===== Operator X3D Joystick =====
-        operator.button(1).whileTrue(RobotCommands.Shoot());
+        // Button 1 = gated shoot: feeder only runs while RobotCommands.isReadyToShoot()
+        operator.button(1).whileTrue(RobotCommands.gatedShoot());
         operator.button(1).onFalse(RobotCommands.redeployAfterShoot());
-       // operator.button(15).whileTrue(RobotCommands.windUp());
-        operator.button(11).whileTrue(RobotCommands.windUpTest());
+        // Button 11 = manual (ungated) shoot — the override if a gate sensor is lying.
+        // Mirrors button 1's redeploy + slow-drive side effects so it feels identical.
+        operator.button(11).whileTrue(RobotCommands.Shoot());
+        operator.button(11).onFalse(RobotCommands.redeployAfterShoot());
+        operator.button(11).whileTrue(drivetrain.holdSpeedMulti(1.0 / 5.0));
         operator.button(5).whileTrue(RobotCommands.manualWindUp());
         operator.button(9).whileTrue(RobotCommands.windUpClose()); // Close-range shot
         operator.button(2).whileTrue(intake.intakeWithOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_TURBO));

@@ -25,7 +25,6 @@ public final class Constants {
     // Hood positions for fixed-shot commands
     public static final double kDefaultHoodPosition = 0.5;
     public static final double kCloseHoodPosition = 0.3;
-    public static final double kTestHoodPosition = 0.45;
     public static final double kCloserHoodPosition = 0.0;
     public static final double kPassHoodPosition = 0.7;
 
@@ -65,5 +64,12 @@ public final class Constants {
 
     // Pass aim offset: degrees inward from trench AprilTag toward field center
     public static final double kPassAimOffsetDegrees = 15.0;
+
+    // Shot-readiness gates (see RobotCommands.isReadyToShoot). Modeled on 2910's
+    // isReadyToScore: a ball fed while any of these is false is a likely miss.
+    public static final double kScoringHeadingToleranceDeg = 4.0;
+    public static final double kScoringSpeedToleranceMps = 0.15;
+    // Closer than this the hood geometry can't loft the ball into the hub
+    public static final double kMinimumShotDistanceMeters = 1.5;
   }
 }

@@ -31,6 +31,10 @@ public class Robot extends TimedRobot {
 
         final ChassisSpeeds speeds = m_robotContainer.drivetrain.getState().Speeds;
         SmartDashboard.putNumber("Robot Speed (m/s)", Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond));
+
+        // Evaluated every loop (not just while shooting) so the operator can watch the
+        // Ready/* lights and know the shot will go the moment they pull the trigger.
+        RobotCommands.isReadyToShoot();
     }
 
     @Override

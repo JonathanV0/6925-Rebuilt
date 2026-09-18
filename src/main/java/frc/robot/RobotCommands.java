@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static frc.robot.Constants.ShooterConstants.*;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -83,6 +84,41 @@ public final class RobotCommands {
         RobotCommands.intakeSubsys = intake;
         RobotCommands.drivetrain = drive;
         RobotCommands.limelightSubsys = limelight;
+        // Published here so the toggle exists on the dashboard before anyone needs it
+        SmartDashboard.putBoolean("Ignore Shot Gates", false);
+    }
+
+    // ========== Shot Readiness Gate ==========
+
+    /**
+     * True only when every condition for a good shot holds (modeled on 2910's
+     * isReadyToScore). Also publishes each sub-condition so the operator can see WHICH
+     * gate is blocking. Call every loop; gatedShoot() feeds only while this is true.
+     * The "Ignore Shot Gates" dashboard toggle bypasses everything for when a sensor
+     * is lying mid-match and the operator would rather trust their eyes.
+     */
+    public static boolean isReadyToShoot() {
+        final Pose2d pose = drivetrain.getState().Pose;
+        final ChassisSpeeds speeds = drivetrain.getState().Speeds;
+        // Speed magnitude is the same in the robot or field frame, so no conversion needed
+        final double speedMps = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+        final double distanceMeters = pose.getTranslation().getDistance(Landmarks.targetPosition());
+
+        final boolean atSpeed    = shooterSubsys.isVelocityWithinTolerance();
+        final boolean hoodAtPos  = hoodSubsys.isPositionWithinTolerance();
+        final boolean atHeading  = drivetrain.isAtHeading(Math.toRadians(kScoringHeadingToleranceDeg));
+        final boolean slowEnough = speedMps < kScoringSpeedToleranceMps;
+        final boolean farEnough  = distanceMeters >= kMinimumShotDistanceMeters;
+        final boolean all = atSpeed && hoodAtPos && atHeading && slowEnough && farEnough;
+
+        SmartDashboard.putBoolean("Ready/AtSpeed", atSpeed);
+        SmartDashboard.putBoolean("Ready/HoodAtPos", hoodAtPos);
+        SmartDashboard.putBoolean("Ready/Heading", atHeading);
+        SmartDashboard.putBoolean("Ready/Speed", slowEnough);
+        SmartDashboard.putBoolean("Ready/Distance", farEnough);
+        SmartDashboard.putBoolean("Ready/ALL", all);
+
+        return all || SmartDashboard.getBoolean("Ignore Shot Gates", false);
     }
 
     // ========== Fixed Shot Commands ==========
@@ -189,17 +225,6 @@ public final class RobotCommands {
         );
     }
 
-    public static Command windUpTest() {
-        return Commands.runEnd(
-            () -> {
-                shooterSubsys.setVelocityRPM(kFixedShotRPM);
-                hoodSubsys.setPosition(kTestHoodPosition);
-            },
-            () -> shooterSubsys.stopShooter(),
-            shooterSubsys, hoodSubsys
-        );
-    }
-
     /** Manual wind-up: reads "Manual Distance (in)" from SmartDashboard and sets RPM/hood
      *  from the interpolation table. Use to test specific distance points without vision. */
     public static Command manualWindUp() {
@@ -234,7 +259,26 @@ public final class RobotCommands {
         );
     }
 
+    /** Manual shoot: feeds immediately while held, no readiness checks. Operator override. */
     public static Command Shoot() {
+        return shootWithFeedGate(() -> true);
+    }
+
+    /**
+     * Gated shoot: identical to Shoot() (feeder + intake bounce while held) except the
+     * feeder only runs while isReadyToShoot() is true. Lets the operator hold the trigger
+     * early and have the ball leave the instant the robot is actually ready.
+     */
+    public static Command gatedShoot() {
+        return shootWithFeedGate(RobotCommands::isReadyToShoot);
+    }
+
+    /**
+     * Shared body for Shoot()/gatedShoot(). feedNow is a BooleanSupplier: a tiny function
+     * we call every loop to ask "should the feeder run right now?". That keeps one copy of
+     * the intake-bounce logic instead of two that could drift apart.
+     */
+    private static Command shootWithFeedGate(BooleanSupplier feedNow) {
         final double retractedPosition = 0.0; // fully retracted motor position (rotations)
         final double raiseDuration = 5.0;     // seconds to fully retract from deployed
         final double shakeAmount = (30.0 / 360.0) * 8.0;
@@ -242,7 +286,7 @@ public final class RobotCommands {
         final double[] state = {Double.NaN, 0}; // [deployedPosition, startTime]
         return Commands.runEnd(
             () -> {
-                feederSubsys.setSpeed(FeederSpeed.FEED_FAST);
+                feederSubsys.setSpeed(feedNow.getAsBoolean() ? FeederSpeed.FEED_FAST : FeederSpeed.OFF);
                 if (Double.isNaN(state[0])) {
                     state[0] = intakeSubsys.getRotatorPosition();
                     state[1] = Timer.getFPGATimestamp();
