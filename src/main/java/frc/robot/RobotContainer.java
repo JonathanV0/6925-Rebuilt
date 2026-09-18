@@ -114,6 +114,9 @@ package frc.robot;
  *   Button 12 = Retract with Oscillate (FAST — hold)
  *   Hat Down  = Reverse All (eject jammed ball — intake + feeder backward)
  *   Hat Left  = Auto-tune Limelight exposure (press)
+ *   Hat Up    = Shoot from RIGHT_TRENCH known spot (re-seeds odometry X/Y — hold)
+ *   Hat Right = Shoot from LEFT_TRENCH known spot (re-seeds odometry X/Y — hold)
+ *               (Landmarks.KnownSpot: trench tag + 0.5 m toward hub, driver's L/R)
  *
  * AUTONOMOUS
  *   - Uses PathPlanner with NamedCommands for event markers; default auto "M-S"
@@ -357,6 +360,9 @@ public class RobotContainer {
             point.withModuleDirection(new Rotation2d(0)))); // Snap wheels forward
         operator.pov(180).whileTrue(RobotCommands.reverseAll()); // Hat down = eject jammed ball
         operator.pov(270).onTrue(RobotCommands.autoTuneExposure()); // Hat left = auto-tune LL exposure
+        // Hat up/right = known-spot shots: re-seed odometry to a trench spot, then table wind-up
+        operator.pov(0).whileTrue(RobotCommands.shootFromKnownSpot(Landmarks.KnownSpot.RIGHT_TRENCH));
+        operator.pov(90).whileTrue(RobotCommands.shootFromKnownSpot(Landmarks.KnownSpot.LEFT_TRENCH));
         operator.button(8).whileTrue(RobotCommands.windUpPass());
     }
 

@@ -563,6 +563,18 @@ public final class RobotCommands {
     }
 
 
+    /**
+     * Fallback shot when vision can't see: the operator parks the robot at a spot they
+     * know by feel, this snaps odometry's X/Y to that spot (heading is kept — the gyro
+     * is still trusted), then runs the normal distance-table wind-up from there.
+     * The pose reset is a runOnce with no drivetrain requirement so it doesn't interrupt
+     * an aim command the driver may be holding at the same time.
+     */
+    public static Command shootFromKnownSpot(Landmarks.KnownSpot spot) {
+        return Commands.runOnce(() -> drivetrain.resetTranslation(spot.translation()))
+            .andThen(adjustedWindUp());
+    }
+
     // ========== Moving Shot Commands (for backing-up auto) ==========
 
     /**

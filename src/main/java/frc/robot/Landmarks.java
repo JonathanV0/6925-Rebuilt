@@ -25,9 +25,14 @@ public class Landmarks {
         SmartDashboard.putNumber("Hub/Red Y (in)",  kRedHubY);
     }
 
-    public static Translation2d targetPosition() {
+    /** Single place for the alliance decision so every landmark flips the same way. Unknown = red. */
+    private static boolean isBlueAlliance() {
         final Optional<Alliance> alliance = DriverStation.getAlliance();
-        if (alliance.isPresent() && alliance.get() == Alliance.Blue) {
+        return alliance.isPresent() && alliance.get() == Alliance.Blue;
+    }
+
+    public static Translation2d targetPosition() {
+        if (isBlueAlliance()) {
             return new Translation2d(
                 Inches.of(SmartDashboard.getNumber("Hub/Blue X (in)", kBlueHubX)),
                 Inches.of(SmartDashboard.getNumber("Hub/Blue Y (in)", kBlueHubY)));
@@ -35,5 +40,38 @@ public class Landmarks {
         return new Translation2d(
             Inches.of(SmartDashboard.getNumber("Hub/Red X (in)", kRedHubX)),
             Inches.of(SmartDashboard.getNumber("Hub/Red Y (in)", kRedHubY)));
+    }
+
+    // How far from the trench tag (toward the hub) the robot bumper sits when shooting there
+    private static final double kTrenchSpotOffsetMeters = 0.5;
+
+    /**
+     * Field spots the robot can be parked at by feel, used to re-seed odometry when
+     * vision is unavailable (2910's "scoring from known translation"). LEFT/RIGHT are
+     * from the DRIVER's point of view, which is why the blue and red tags swap sides.
+     * Each enum entry carries its own data (an enum with fields), so adding a spot is one line.
+     */
+    public enum KnownSpot {
+        // TODO: verify on practice field. Tag positions from WPILib's 2026-rebuilt-welded layout.
+        LEFT_TRENCH (new Translation2d(4.5882, 7.4248),   // blue tag 23 (driver's left, +y wall)
+                     new Translation2d(11.9529, 0.6445)), // red  tag 7  (driver's left, -y wall)
+        RIGHT_TRENCH(new Translation2d(4.5882, 0.6445),   // blue tag 28
+                     new Translation2d(11.9529, 7.4248)); // red  tag 12
+
+        private final Translation2d blueTag;
+        private final Translation2d redTag;
+
+        KnownSpot(Translation2d blueTag, Translation2d redTag) {
+            this.blueTag = blueTag;
+            this.redTag = redTag;
+        }
+
+        /** Where the robot is when parked at this spot: the tag, nudged toward the hub. */
+        public Translation2d translation() {
+            final Translation2d tag = isBlueAlliance() ? blueTag : redTag;
+            final Translation2d hub = targetPosition();
+            // interpolate(end, t) walks t of the way from tag to hub; t = 0.5 m / total distance
+            return tag.interpolate(hub, kTrenchSpotOffsetMeters / tag.getDistance(hub));
+        }
     }
 }
