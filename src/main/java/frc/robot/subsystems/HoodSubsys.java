@@ -32,12 +32,7 @@ public class HoodSubsys extends SubsystemBase {
 
     private double currentPosition = 0.0;
     private double targetPosition = 0.0;
-    private double smoothedPosition = 0.0;
     private Time lastUpdateTime = Seconds.of(0);
-
-    // EMA smoothing factor: 0.0 = no change, 1.0 = no smoothing
-    // 0.15 blends ~15% new value per cycle — smooth but still responsive
-    private static final double kSmoothingAlpha = 1.0;
 
     public HoodSubsys() {
         leftServo = new Servo(kLeftServoPWM);
@@ -48,13 +43,13 @@ public class HoodSubsys extends SubsystemBase {
         //SmartDashboard.putData(this);
     }
 
-    /** Expects a position between 0.0 and 1.0. Applies EMA smoothing to reduce jitter. */
+    /** Expects a position between 0.0 and 1.0. Clamped to the servo's safe mechanical range. */
     public void setPosition(double position) {
-        final double clampedPosition = MathUtil.clamp(position, kMinPosition, kMaxPosition);
-        smoothedPosition += kSmoothingAlpha * (clampedPosition - smoothedPosition);
-        leftServo.set(smoothedPosition);
-        rightServo.set(smoothedPosition);
-        targetPosition = smoothedPosition;
+        // The old EMA smoothing was removed: with alpha = 1.0 it did nothing, and any lower
+        // alpha would have made the "target" lag behind the real command, breaking the ready check.
+        targetPosition = MathUtil.clamp(position, kMinPosition, kMaxPosition);
+        leftServo.set(targetPosition);
+        rightServo.set(targetPosition);
     }
 
     /** Expects a position between 0.0 and 1.0 */

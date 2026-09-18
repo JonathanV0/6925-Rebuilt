@@ -81,20 +81,39 @@ public class ShooterSubsys extends SubsystemBase {
     return fuelShoot.getVelocity().getValueAsDouble() * 60.0;
   }
 
-  public boolean isVelocityWithinTolerance() {
-    // Require a positive target — prevents false-positive when shooter is idle (0 RPM = "at speed")
-    return targetRPM > 0 && Math.abs(getVelocityRPM() - targetRPM) < kVelocityToleranceRPM;
+  public double getMotor9RPM() {
+    return fuelShoot0.getVelocity().getValueAsDouble() * 60.0;
   }
 
-  // ========== END AI GENERATED CODE ==========
+  public double getMotor10RPM() {
+    return fuelShoot1.getVelocity().getValueAsDouble() * 60.0;
+  }
+
+  private boolean isMotorAtSpeed(double motorRPM) {
+    // Require a positive target — prevents false-positive when shooter is idle (0 RPM = "at speed")
+    return targetRPM > 0 && Math.abs(motorRPM - targetRPM) < kVelocityToleranceRPM;
+  }
+
+  public boolean isMotor8AtSpeed()  { return isMotorAtSpeed(getVelocityRPM()); }
+  public boolean isMotor9AtSpeed()  { return isMotorAtSpeed(getMotor9RPM()); }
+  public boolean isMotor10AtSpeed() { return isMotorAtSpeed(getMotor10RPM()); }
+
+  public boolean isVelocityWithinTolerance() {
+    // Each motor runs its own velocity PID, so one can lag while motor 8 reads "at speed".
+    // A ball touching a slow wheel gets a bad shot, so all three must be ready.
+    return isMotor8AtSpeed() && isMotor9AtSpeed() && isMotor10AtSpeed();
+  }
 
   @Override
   public void periodic() {
     SmartDashboard.putBoolean("Shooter At Speed", isVelocityWithinTolerance());
+    SmartDashboard.putBoolean("Shooter At Speed Motor 8", isMotor8AtSpeed());
+    SmartDashboard.putBoolean("Shooter At Speed Motor 9", isMotor9AtSpeed());
+    SmartDashboard.putBoolean("Shooter At Speed Motor 10", isMotor10AtSpeed());
     SmartDashboard.putBoolean("Shooter Idle On", idleEnabled);
     SmartDashboard.putNumber("Shooter RPM", getVelocityRPM());
-    SmartDashboard.putNumber("Shooter RPM Motor 9", fuelShoot0.getVelocity().getValueAsDouble() * 60.0);
-    SmartDashboard.putNumber("Shooter RPM Motor 10", fuelShoot1.getVelocity().getValueAsDouble() * 60.0);
+    SmartDashboard.putNumber("Shooter RPM Motor 9", getMotor9RPM());
+    SmartDashboard.putNumber("Shooter RPM Motor 10", getMotor10RPM());
     SmartDashboard.putNumber("Shooter Target RPM", targetRPM);
   }
 

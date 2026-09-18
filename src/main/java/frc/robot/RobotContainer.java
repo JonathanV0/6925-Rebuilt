@@ -8,106 +8,122 @@ package frc.robot;
  * =========================================================================
  *                     FRC TEAM 6925 - ROBOT OVERVIEW
  * =========================================================================
+ * Keep this block in sync with the code below it. If you change a binding,
+ * a constant, or a subsystem, update the matching line here.
  *
  * DRIVETRAIN (CommandSwerveDrivetrain)
- *   - Swerve drive using CTRE TunerX-generated constants
+ *   - Swerve drive using CTRE Tuner X-generated constants (TunerConstants)
  *   - Field-centric control via Xbox controller (port 0)
- *   - Left trigger toggles half-speed mode (0.5x multiplier)
- *   - Left bumper reseeds field-centric heading (gyro reset)
- *   - Right bumper = auto-aim at target + distance-based shooter wind-up
+ *   - Left stick = translation (squared input + 1.5/s slew accel, instant decel)
+ *   - Right stick X = rotation (x^1.5 curve), max 1.5 rot/s
+ *   - Default speed multiplier is 75% (kDefaultSpeedMulti)
  *
- * SHOOTER (ShooterSubsys) — 3 TalonFX motors
- *   - CAN 8  = leader motor (inverted — Clockwise_Positive)
- *   - CAN 9  = follower (opposed to leader)
- *   - CAN 10 = follower (opposed to leader)
- *   - Uses VelocityVoltage PID control (kP=0.5, kI=2.0, kV=0.12)
- *   - Current limits: 120A stator / 70A supply
+ * DRIVER CONTROLS (Xbox, port 0)
+ *   Left trigger  = Snap wheels to 0° for 0.5 s (press)
+ *   Right trigger = Toggle 1/5 speed (press)
+ *   Left bumper   = Reseed field-centric heading (gyro reset)
+ *   Right bumper  = aimAndWindUp: face the hub (shoot-on-the-move virtual
+ *                   target) + distance-table RPM/hood, driver keeps translation
+ *   A             = Brake (X-lock wheels) while held
+ *   B             = Toggle full speed (100%)
+ *   Y             = aimAndPass: face 15° inward from a trench tag + pass RPM/hood
+ *   POV up        = windUp75 (75" table point — hold)
+ *   POV down      = Intake slow rotate (hold)
+ *   POV left/right= Intake creep rotate ±1 (hold)
+ *   Back/Start + X/Y = SysId dynamic/quasistatic routines
+ *
+ * SHOOTER (ShooterSubsys) — 3 TalonFX motors on CANivore
+ *   - CAN 8  = right motor (Clockwise_Positive)
+ *   - CAN 9  = middle motor (CounterClockwise_Positive)
+ *   - CAN 10 = left motor (CounterClockwise_Positive)
+ *   - Each motor runs its OWN VelocityVoltage PID (kP=0.59, kI=0.5, kV=0.1)
+ *   - Current limits: 90A stator / 70A supply (all three)
  *   - Neutral mode: Coast (flywheel spins down naturally)
- *   - Default RPM: 3350 for fixed shots
- *   - Distance-adjusted RPM uses interpolation table in RobotCommands:
- *       47"   → 3350 RPM,  hood 0.1
- *       84"   → 3350 RPM,  hood 0.37
- *       120"  → 3350 RPM,  hood 0.45
- *       165"  → 3650 RPM,  hood 0.48  (WCP CC extended range)
- *   - "Shooter At Speed" = within 100 RPM of target
+ *   - Idle: default command holds kIdleRPM (3000) when idle is on (button 3 toggles)
+ *   - Fixed shots: kFixedShotRPM = 3350;  Pass: kPassShotRPM = 5650
+ *   - Distance-adjusted shots use the 47"–140" interpolation table in
+ *     RobotCommands (Constants.ShooterConstants kRPMAtXXin / kHoodAtXXin, +150 RPM)
+ *   - "Shooter At Speed" = ALL THREE motors within kVelocityToleranceRPM (300)
+ *     of target; per-motor booleans are also on SmartDashboard
  *
  * HOOD (HoodSubsys) — 2 servos
  *   - PWM 0 = left servo,  PWM 1 = right servo
- *   - Position range: 0.01 (low) to 0.77 (high)
- *   - Adjusts shot angle; paired with shooter RPM via distance table
+ *   - Position range: 0.01 (low) to 0.77 (high), tolerance 0.01
+ *   - "Hood At Position" models servo travel at 20 mm/s over a 100 mm stroke
+ *   - Adjusts shot angle; paired with shooter RPM via the distance table
  *
- * FEEDER (FeederSubsys) — 2 TalonFX motors
- *   - CAN 51 = main feeder motor (feeds balls into shooter)
- *   - CAN 11 = fuel feed motor (on the shooter, pushes balls to flywheels)
- *   - Both controlled together via FeederSpeed enum:
- *       OFF        → 0.0  / 0.0
- *       FEED_SLOW  → -0.3 / 0.1
- *       FEED_FAST  → -0.5 / 0.5
- *       REVERSE    → 0.3  / -0.1
- *   - Current limits: 50A stator / 40A supply (both motors)
+ * FEEDER (FeederSubsys) — 2 TalonFX motors on CANivore
+ *   - CAN 51 = main feeder motor (feeds balls into shooter) — 40A/40A
+ *   - CAN 11 = fuel feed motor (on the shooter, pushes balls to flywheels) — 50A/40A
+ *   - Both controlled together via FeederSpeed enum (feeder / fuelFeed):
+ *       OFF        →  0.0 /  0.0
+ *       FEED_SLOW  → -0.3 /  0.1
+ *       FEED_FAST  → -0.8 /  0.8
+ *       FEED_TURBO → -1.0 /  1.0
+ *       REVERSE    →  0.5 / -0.4
  *   - Neutral mode: Coast
- *   - IMPORTANT: Feeder is a SEPARATE subsystem from shooter so both
- *     can run simultaneously (button 1 = feed, button 2 = flywheels)
+ *   - Feeder is a SEPARATE subsystem from shooter so both run at once
  *
- * INTAKE (IntakeSubsys) — 2 TalonFX motors
- *   - CAN 45 = intake roller (picks up balls from ground)
- *   - CAN 50 = intake rotator (pivots intake arm up/down)
- *   - Roller and rotator are controlled INDEPENDENTLY:
- *       Button 11 = intake with oscillate (fast)
- *       Button 12 = retract with oscillate (fast)
- *       Rotator uses PositionVoltage PID (kP=10) for angle control
- *   - Roller: 60A/60A, Coast mode
- *   - Rotator: 60A/60A, Brake mode (holds position when idle)
- *   - IntakeSpeed values are NEGATIVE (motor spins inward to grab balls)
+ * INTAKE (IntakeSubsys) — 2 TalonFX motors on CANivore
+ *   - CAN 45 = intake roller (80A/80A, Coast)
+ *   - CAN 50 = intake rotator (80A/80A, Brake — holds position when idle)
+ *   - Rotator uses PositionVoltage PID with three gain slots:
+ *       Slot0 gentle (kP=1.0, kV ff), Slot1 snappy (kP=2, kD=0.5),
+ *       Slot2 medium (kP=1.5, kD=0.25, kV ff)
+ *   - Default command holds the last target position
+ *   - IntakeSpeed values are NEGATIVE (motor spins inward to grab balls):
+ *       SLOW -0.1, MID -0.25, FAST -0.7, TURBO -1.0, REVERSE +0.25
  *
- * CLIMBER (ClimberSubsys) — 1 TalonFX motor
- *   - CAN 12 = climber motor
- *   - CLIMB_UP = 0.5 duty cycle, CLIMB_DOWN = -0.5
- *   - Current limits: 60A/60A, Brake mode
- *   - Used in auto L1 climb sequences and the "jolt" intake deploy
+ * CLIMBER — REMOVED
+ *   - No climber motor on the robot. Climber-related PathPlanner named
+ *     commands are registered as Commands.none() so old autos still load.
  *
  * LIMELIGHT (LimelightSubsys) — ENABLED
- *   - Limelight 3 camera for AprilTag vision
- *   - Uses MegaTag2 pose estimation with alliance-based tag filtering
- *   - Feeds pose estimates into drivetrain's Kalman filter
- *   - Camera: 1.46" behind center, 25.39" high, 20° above horizontal
+ *   - MegaTag2 pose estimation with alliance-based tag ID filtering
+ *   - Pose + per-frame standard deviations fused into the drivetrain's
+ *     Kalman filter every loop outside autonomous (RobotContainer.updateVision)
+ *   - While disabled, seeds the pose from vision, rejecting jumps > 1 m
+ *   - Camera: 1.46" behind center, 25.39" high, 20.37° above horizontal
+ *   - "Vision Enabled" SmartDashboard boolean turns fusion off for testing
  *
  * OPERATOR CONTROLS (X3D Joystick, port 1)
- *   Button 1  = Shoot (runs feeder motors — hold to feed balls)
- *   Button 2  = Intake with Oscillate (fast — hold)
- *   Button 3  = Climber Down (hold)
- *   Button 4  = Retract Intake (rotate to 580°)
- *   Button 5  = Climber Up (hold)
- *   Button 6  = Deploy Intake (rotate to -585°)
- *   Button 7  = Wind Up Closer (3350 RPM, hood 0.0 — hold)
- *   Button 8  = Hopper Release (climber up/down sequence — press once)
+ *   Button 1  = Shoot (feeder FEED_FAST + intake bounce — hold) + 1/5 drive speed
+ *               On release: intake redeploys to its last deployed position
+ *   Button 2  = Intake with Oscillate (TURBO — hold) + 37.5% drive speed
+ *   Button 3  = Toggle shooter idle on/off (press)
+ *   Button 4  = Retract Intake (slow to -0.144 rot, 0.2 duty — press)
+ *   Button 5  = Manual Wind Up from "Manual Distance (in)" on SmartDashboard (hold)
+ *   Button 6  = Deploy Intake (slow to -14.0 rot, 0.3 duty — press)
+ *   Button 7  = Wind Up Closer (3350 RPM, hood 0.0 — hold, in front of hub)
+ *   Button 8  = Wind Up Pass (5650 RPM, hood 0.7 — hold)
  *   Button 9  = Wind Up Close (3350 RPM, hood 0.3 — hold)
  *   Button 10 = Snap Wheels to 0° (hold)
  *   Button 11 = Wind Up Test (3350 RPM, hood 0.45 — hold)
- *   Button 12 = Retract with Oscillate (fast — hold)
+ *   Button 12 = Retract with Oscillate (FAST — hold)
  *   Hat Down  = Reverse All (eject jammed ball — intake + feeder backward)
+ *   Hat Left  = Auto-tune Limelight exposure (press)
  *
  * AUTONOMOUS
- *   - Uses PathPlanner with NamedCommands for event markers
- *   - Key named commands: shoot, StopFeed, windUp, windUpOnce,
- *     AdjustedWindUp, AdjustedShootWhileMoving, AdjustedWindUpOnce,
- *     IntakeMid, IntakeFast, StopIntake, ClimbUp, ClimbDown,
- *     StopClimber, jolt
- *   - "jolt" = raises climber, drives forward, brakes hard to deploy
- *     intake mechanically, then lowers climber back down
- *   - Robot is TOO TALL for trench — must use bump ramps to cross field
- *   - Shoot-while-moving uses predicted position (0.25s lookahead)
+ *   - Uses PathPlanner with NamedCommands for event markers; default auto "M-S"
+ *   - Shooting: shoot, autoShoot, StopFeed, windUp, windUpOnce,
+ *     autoWindUpClose, autoWindUpCloser, AdjustedWindUp,
+ *     AdjustedShootWhileMoving, AdjustedWindUpOnce, autoAimAndWindUp, hoodReset
+ *   - Intake: IntakeMid, IntakeFast, StopIntake, intakeDeploy, waitForDeploy
+ *   - No-ops kept for old autos: intakeBounce, jolt, ClimbUp, ClimbDown,
+ *     climbDown, StopClimber, hopperDeploy, VisionUpdate
+ *   - Vision fusion is paused during autonomous (Robot.robotPeriodic)
+ *   - Shoot-while-moving uses predicted position (kLookAheadSeconds = 0.25 s)
+ *   - Team note: robot is too tall for the trench — cross via the bump ramps
  *
- * MOTOR CAN IDs
- *   8  = Shooter leader (inverted)
- *   9  = Shooter follower
- *   10 = Shooter follower
+ * MOTOR CAN IDs (all on the "CANivore" bus)
+ *   8  = Shooter right
+ *   9  = Shooter middle
+ *   10 = Shooter left
  *   11 = Fuel feed (on shooter, controlled by FeederSubsys)
- *   12 = Climber
  *   45 = Intake roller
  *   50 = Intake rotator
  *   51 = Feeder
- *   (Swerve drive motors are defined in TunerConstants)
+ *   (Swerve drive/steer motors and CANcoders are defined in TunerConstants)
  *
  * =========================================================================
  */

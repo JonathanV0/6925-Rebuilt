@@ -435,7 +435,9 @@ public final class RobotCommands {
                     .withRotationalRate(rotationRate));
             },
             () -> shooterSubsys.stopShooter(),
-            shooterSubsys, hoodSubsys
+            // drivetrain must be a requirement: this command calls setControl() every loop, and
+            // without it the default drive command keeps running and fights over the swerve.
+            drivetrain, shooterSubsys, hoodSubsys
         );
     }
 
@@ -515,7 +517,7 @@ public final class RobotCommands {
 
     /**
      * Snaps RPM and hood to distance-table values once from current robot position,
-     * then blocks until the shooter reaches target RPM (±100 RPM).
+     * then blocks until all three shooter motors reach target RPM (within ShooterSubsys.kVelocityToleranceRPM).
      * Times out after 2 seconds to prevent auto deadlock on CAN dropout or brownout.
      * Use in sequential autos before calling shoot().
      */
