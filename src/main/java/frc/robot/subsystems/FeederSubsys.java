@@ -39,13 +39,7 @@ public class FeederSubsys extends SubsystemBase {
     FEED_SLOW(-0.3, 0.1),
     FEED_FAST(-0.8, 0.8),
     FEED_TURBO(-1.0, 1.0),
-    REVERSE(0.5, -0.4),
-    // Pre-shot back-off (from 1678): while the flywheel spins up, gently pull the ball at the
-    // wheel away from it so it doesn't drag RPM down or get flicked out short. Only the
-    // fuel-feed roller reverses; the main feeder stays off so balls don't retreat to the hopper.
-    // TODO(tune): bench-check the ball backs off ~1 cm and STAYS in the feeder. If it falls
-    //   back out, reduce toward -0.1; if the flywheel still rubs the ball, raise toward -0.3.
-    PRESHOT_REVERSE(0.0, -0.2);
+    REVERSE(0.5, -0.4);
 
     public final double value;
     public final double fuelFeedValue;

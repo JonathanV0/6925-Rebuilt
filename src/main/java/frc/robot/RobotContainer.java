@@ -63,7 +63,6 @@ package frc.robot;
  *       FEED_FAST  → -0.8 /  0.8
  *       FEED_TURBO → -1.0 /  1.0
  *       REVERSE    →  0.5 / -0.4
- *       PRESHOT_REVERSE → 0.0 / -0.2  (fuel feed backs ball off flywheel while not ready)
  *   - Neutral mode: Coast
  *   - Feeder is a SEPARATE subsystem from shooter so both run at once
  *
@@ -102,9 +101,8 @@ package frc.robot;
  *   - "Ignore Shot Gates" (SmartDashboard boolean) bypasses the gate entirely
  *
  * OPERATOR CONTROLS (X3D Joystick, port 1)
- *   Button 1  = Gated Shoot (feeder FEED_FAST only while ready, PRESHOT_REVERSE while
- *               not ready, + intake bounce — hold) + 1/5 drive speed.
- *               On release: intake redeploys to last deployed position
+ *   Button 1  = Gated Shoot (feeder FEED_FAST only while ready + intake bounce — hold)
+ *               + 1/5 drive speed. On release: intake redeploys to last deployed position
  *   Button 2  = Intake with Oscillate (TURBO — hold) + 37.5% drive speed
  *   Button 3  = Toggle shooter idle on/off (press)
  *   Button 4  = Retract Intake (slow to -0.144 rot, 0.2 duty — press)

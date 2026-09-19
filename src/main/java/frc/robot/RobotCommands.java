@@ -377,8 +377,6 @@ public final class RobotCommands {
      * Shared body for Shoot()/gatedShoot(). feedNow is a BooleanSupplier: a tiny function
      * we call every loop to ask "should the feeder run right now?". That keeps one copy of
      * the intake-bounce logic instead of two that could drift apart.
-     * While NOT ready the fuel-feed roller backs the ball off the flywheel (PRESHOT_REVERSE)
-     * instead of sitting idle — Shoot() is always "ready", so it never sees that branch.
      */
     private static Command shootWithFeedGate(BooleanSupplier feedNow) {
         final double retractedPosition = 0.0; // fully retracted motor position (rotations)
@@ -388,7 +386,7 @@ public final class RobotCommands {
         final double[] state = {Double.NaN, 0}; // [deployedPosition, startTime]
         return Commands.runEnd(
             () -> {
-                feederSubsys.setSpeed(feedNow.getAsBoolean() ? FeederSpeed.FEED_FAST : FeederSpeed.PRESHOT_REVERSE);
+                feederSubsys.setSpeed(feedNow.getAsBoolean() ? FeederSpeed.FEED_FAST : FeederSpeed.OFF);
                 if (Double.isNaN(state[0])) {
                     state[0] = intakeSubsys.getRotatorPosition();
                     state[1] = Timer.getFPGATimestamp();
