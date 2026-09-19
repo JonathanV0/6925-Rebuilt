@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -16,6 +17,10 @@ public class Robot extends TimedRobot {
     private final RobotContainer m_robotContainer;
 
     public Robot() {
+        // roboRIO 2 default brownout is 6.75 V. A 3-motor flywheel spin-up plus swerve accel
+        // can dip the battery below that for a moment; 6.1 V (WCP-CC's value) lets the RIO
+        // ride it out instead of cutting all motor outputs mid-shot.
+        RobotController.setBrownoutVoltage(6.1);
         m_robotContainer = new RobotContainer();
     }
 
