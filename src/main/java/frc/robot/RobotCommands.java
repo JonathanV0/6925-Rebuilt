@@ -10,6 +10,7 @@ import java.util.function.DoubleSupplier;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -92,6 +93,48 @@ public final class RobotCommands {
             return kLookAheadSeconds;
         }
         return distanceToFlightTimeSec.get(distanceMeters);
+    }
+
+    // ---- Look-ahead guard (from 1678's MotionCompensatedShootingPlanner.updateRejectLookAhead) ----
+    // TODO(tune): reject-lookahead thresholds. While the robot is still whipping around to
+    //   acquire the hub, its velocity is mostly rotation noise, and leading the target off
+    //   that makes the aim wander. So the lead is dropped when spinning fast AND far off
+    //   target, or when basically stationary (nothing to lead). 1678's values; raise the
+    //   yaw-rate number if "Aim/Reject LookAhead" flickers while driving straight at speed.
+    private static final double kRejectLookAheadYawRateRadPerSec = Math.toRadians(300.0);
+    private static final double kRejectLookAheadHeadingErrorRad = Math.toRadians(50.0);
+    private static final double kStaticShotSpeedMps = 0.09;
+
+    /**
+     * Where the robot will be one ball-flight-time from now (heading ignored). Both the aim
+     * angle and the RPM/hood distance are measured from THIS point, so the one look-ahead
+     * rule lives here instead of being duplicated per command. Moving the robot forward by
+     * v*t is the same vector math as moving the target back by v*t (the old "virtual target").
+     * Standing still it returns the current position, so stationary shots are unchanged.
+     */
+    private static Translation2d predictedTranslation() {
+        final Pose2d pose = drivetrain.getState().Pose;
+        final Translation2d robotPos = pose.getTranslation();
+        final Translation2d hub = Landmarks.targetPosition();
+        final ChassisSpeeds fieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
+            drivetrain.getState().Speeds, pose.getRotation());
+
+        final double speedMps = Math.hypot(fieldSpeeds.vxMetersPerSecond, fieldSpeeds.vyMetersPerSecond);
+        // Geometric heading error (not the PID's) so this works even when no aim command is active
+        final double headingErrorRad = Math.abs(MathUtil.angleModulus(
+            hub.minus(robotPos).getAngle().getRadians() - pose.getRotation().getRadians()));
+        final boolean yawUnstable = Math.abs(fieldSpeeds.omegaRadiansPerSecond) >= kRejectLookAheadYawRateRadPerSec;
+        final boolean rejectLookAhead =
+            (yawUnstable && headingErrorRad > kRejectLookAheadHeadingErrorRad) || speedMps < kStaticShotSpeedMps;
+        SmartDashboard.putBoolean("Aim/Reject LookAhead", rejectLookAhead);
+        if (rejectLookAhead) {
+            return robotPos;
+        }
+
+        final double flightTime = flightTimeSeconds(robotPos.getDistance(hub));
+        return robotPos.plus(new Translation2d(
+            fieldSpeeds.vxMetersPerSecond * flightTime,
+            fieldSpeeds.vyMetersPerSecond * flightTime));
     }
 
     // Distance-to-shot lookup table (team should calibrate these values)
@@ -448,36 +491,28 @@ public final class RobotCommands {
                 final double distMeters = robotPos.getDistance(hubCenter);
                 final Distance distance = Meters.of(distMeters);
 
-                // Shoot-on-the-move velocity compensation
-                final ChassisSpeeds fieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
-                    drivetrain.getState().Speeds, robotPose.getRotation());
-                final double flightTime = flightTimeSeconds(distMeters);
-                // Virtual target = hub center minus robot velocity * flight time
-                final Translation2d virtualTarget = hubCenter.minus(
-                    new Translation2d(
-                        fieldSpeeds.vxMetersPerSecond * flightTime,
-                        fieldSpeeds.vyMetersPerSecond * flightTime));
-                final Translation2d robotToVirtual = virtualTarget.minus(robotPos);
+                // Shoot-on-the-move: aim and range from where we'll be when the ball lands.
+                // predictedTranslation() applies the flight-time lead and the reject guard.
+                final Translation2d predictedToHub = hubCenter.minus(predictedTranslation());
                 // getAngle() is atan2(y, x) wrapped in a Rotation2d, so no manual normalizing
-                final Rotation2d virtualFieldAngle = robotToVirtual.getAngle()
+                final Rotation2d aimFieldAngle = predictedToHub.getAngle()
                     .plus(Rotation2d.fromDegrees(kAimOffsetDegrees));
 
                 // The drivetrain's heading PID closes the loop; we only hand it the goal.
-                drivetrain.setControl(drivetrain.facingFieldAngle(virtualFieldAngle)
+                drivetrain.setControl(drivetrain.facingFieldAngle(aimFieldAngle)
                     .withVelocityX(velocityX.getAsDouble())
                     .withVelocityY(velocityY.getAsDouble()));
 
-                // RPM/hood come from the distance to the VIRTUAL target: that's the path the
-                // ball actually flies while we're moving. Standing still the virtual target
-                // is the hub itself, so this is identical to the old lookup.
-                final Distance aimDistance = Meters.of(robotToVirtual.getNorm());
+                // RPM/hood come from the predicted distance: that's the path the ball actually
+                // flies while moving. Standing still it equals the plain hub distance.
+                final Distance aimDistance = Meters.of(predictedToHub.getNorm());
                 final Shot shot = lookupShot(aimDistance);
                 shooterSubsys.setVelocityRPM(shot.shooterRPM());
                 hoodSubsys.setPosition(shot.hoodPosition());
                 SmartDashboard.putNumber("Auto Distance (inches)", distance.in(Inches));
                 SmartDashboard.putNumber("Aim Distance (inches)", aimDistance.in(Inches));
                 SmartDashboard.putNumber("Aim Heading Error (deg)", Math.toDegrees(drivetrain.getHeadingErrorRadians()));
-                SmartDashboard.putNumber("Flight Time", flightTime);
+                SmartDashboard.putNumber("Flight Time", flightTimeSeconds(distMeters));
                 SmartDashboard.putNumber("Robot X (in)", robotPos.getX() / 0.0254);
                 SmartDashboard.putNumber("Robot Y (in)", robotPos.getY() / 0.0254);
                 SmartDashboard.putNumber("Robot Heading (deg)", robotPose.getRotation().getDegrees());
@@ -557,21 +592,7 @@ public final class RobotCommands {
      * More accurate than current-position distance when shooting while moving.
      */
     private static Distance getPredictedDistanceToTarget() {
-        final Pose2d currentPose = drivetrain.getState().Pose;
-        final ChassisSpeeds fieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
-            drivetrain.getState().Speeds, currentPose.getRotation());
-        final Translation2d targetPosition = Landmarks.targetPosition();
-        // Look ahead by the flight time at our CURRENT distance — one pass is close
-        // enough; iterating to convergence isn't worth the complexity yet.
-        final double lookAhead = flightTimeSeconds(currentPose.getTranslation().getDistance(targetPosition));
-        // Predict future position: current + velocity * time
-        final Translation2d futurePosition = currentPose.getTranslation().plus(
-            new Translation2d(
-                fieldSpeeds.vxMetersPerSecond * lookAhead,
-                fieldSpeeds.vyMetersPerSecond * lookAhead
-            )
-        );
-        return Meters.of(futurePosition.getDistance(targetPosition));
+        return Meters.of(predictedTranslation().getDistance(Landmarks.targetPosition()));
     }
 
     public static Command adjustedWindUp() {
