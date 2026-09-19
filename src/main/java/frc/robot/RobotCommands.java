@@ -204,15 +204,19 @@ public final class RobotCommands {
         final boolean atHeading  = drivetrain.isAtHeading(Math.toRadians(kScoringHeadingToleranceDeg));
         final boolean slowEnough = speedMps < kScoringSpeedToleranceMps;
         final boolean farEnough  = distanceMeters >= kMinimumShotDistanceMeters;
+        final boolean level      = drivetrain.isLevel(kMaxShotTiltDeg);
         final boolean all = readyDebouncer.calculate(
-            atSpeed && hoodAtPos && atHeading && slowEnough && farEnough);
+            atSpeed && hoodAtPos && atHeading && slowEnough && farEnough && level);
 
         SmartDashboard.putBoolean("Ready/AtSpeed", atSpeed);
         SmartDashboard.putBoolean("Ready/HoodAtPos", hoodAtPos);
         SmartDashboard.putBoolean("Ready/Heading", atHeading);
         SmartDashboard.putBoolean("Ready/Speed", slowEnough);
         SmartDashboard.putBoolean("Ready/Distance", farEnough);
+        SmartDashboard.putBoolean("Ready/Level", level);
         SmartDashboard.putBoolean("Ready/ALL", all);
+        SmartDashboard.putNumber("Robot Pitch (deg)", drivetrain.getPitchDegrees());
+        SmartDashboard.putNumber("Robot Roll (deg)", drivetrain.getRollDegrees());
 
         return all || SmartDashboard.getBoolean("Ignore Shot Gates", false);
     }

@@ -93,9 +93,10 @@ package frc.robot;
  *   - Button 1 only feeds while ALL of: shooter at speed (3 motors), hood at
  *     position, heading error < kScoringHeadingToleranceDeg (4°) while an aim
  *     command is active, robot speed < kScoringSpeedToleranceMps (0.15 m/s),
- *     distance to hub >= kMinimumShotDistanceMeters (1.5 m)
+ *     distance to hub >= kMinimumShotDistanceMeters (1.5 m), and robot level
+ *     (Pigeon pitch/roll within kMaxShotTiltDeg = 5° — blocks shots on a ramp)
  *   - Each gate is shown on SmartDashboard as Ready/AtSpeed, Ready/HoodAtPos,
- *     Ready/Heading, Ready/Speed, Ready/Distance, and Ready/ALL
+ *     Ready/Heading, Ready/Speed, Ready/Distance, Ready/Level, and Ready/ALL
  *   - Ready/ALL and "Shooter At Speed" are rising-edge debounced 0.05 s so one
  *     noisy sensor frame can't start the feeder
  *   - "Ignore Shot Gates" (SmartDashboard boolean) bypasses the gate entirely

@@ -157,6 +157,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             startSimThread();
         }
         configureHeadingController();
+        configureTiltSignals();
         configureAutoBuilder();
     }
 
@@ -183,6 +184,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             startSimThread();
         }
         configureHeadingController();
+        configureTiltSignals();
         configureAutoBuilder();
     }
 
@@ -217,6 +219,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             startSimThread();
         }
         configureHeadingController();
+        configureTiltSignals();
         configureAutoBuilder();
     }
 
@@ -236,6 +239,37 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public void setControl(SwerveRequest request) {
         m_activeRequest = request;
         super.setControl(request);
+    }
+
+    private void configureTiltSignals() {
+        // Pigeon pitch/roll default to a slow update rate; 50 Hz so the tilt gate reacts
+        // within a loop or two of hitting a ramp instead of a quarter second later.
+        getPigeon2().getPitch().setUpdateFrequency(50);
+        getPigeon2().getRoll().setUpdateFrequency(50);
+    }
+
+    public double getPitchDegrees() {
+        return getPigeon2().getPitch().getValueAsDouble();
+    }
+
+    public double getRollDegrees() {
+        return getPigeon2().getRoll().getValueAsDouble();
+    }
+
+    /**
+     * True when pitch and roll are both within maxTiltDeg of level. A disconnected gyro or
+     * a NaN reading counts as level — a dead sensor shouldn't lock the shooter out.
+     */
+    public boolean isLevel(double maxTiltDeg) {
+        if (!getPigeon2().isConnected()) {
+            return true;
+        }
+        final double pitch = getPitchDegrees();
+        final double roll = getRollDegrees();
+        if (!Double.isFinite(pitch) || !Double.isFinite(roll)) {
+            return true;
+        }
+        return Math.abs(pitch) <= maxTiltDeg && Math.abs(roll) <= maxTiltDeg;
     }
 
     /** The shared facing-angle request (already configured). Prefer {@link #facingFieldAngle}. */

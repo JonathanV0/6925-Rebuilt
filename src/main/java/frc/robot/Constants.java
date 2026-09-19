@@ -101,5 +101,11 @@ public final class Constants {
     //   (bumper to hub wall) and read "Auto Distance (inches)"; set this a bit below that.
     //   1.5 m = 59 in; the table's closest point is 47 in, so 1.2 m may be right for us.
     public static final double kMinimumShotDistanceMeters = 1.5;
+    // Max pitch/roll (degrees) at which we still fire (1678's ShotVerifier.isTilted). On a
+    // bump ramp the hood angle relative to the field is wrong, so the shot would be too.
+    // TODO(tune): kMaxShotTiltDeg. First check the Pigeon's pitch/roll read ~0 on flat
+    //   carpet ("Robot Pitch (deg)" / "Robot Roll (deg)"); if not, mount-calibrate it in
+    //   Tuner X. Then confirm 5 deg blocks shots on the ramp but not on field seams.
+    public static final double kMaxShotTiltDeg = 5.0;
   }
 }
