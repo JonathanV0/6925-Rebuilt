@@ -92,10 +92,13 @@ package frc.robot;
  *   - Button 1 only feeds while ALL of: shooter at speed (3 motors), hood at
  *     position, heading error < kScoringHeadingToleranceDeg (4°) while an aim
  *     command is active, robot speed < kScoringSpeedToleranceMps (0.15 m/s),
- *     distance to hub >= kMinimumShotDistanceMeters (1.5 m), and robot level
+ *     distance to hub >= kMinimumShotDistanceMeters (1.5 m), distance <= the shot
+ *     table's last point (140 in / 3.56 m — past it RPM/hood would be a guess),
+ *     and robot level
  *     (Pigeon pitch/roll within kMaxShotTiltDeg = 5° — blocks shots on a ramp)
  *   - Each gate is shown on SmartDashboard as Ready/AtSpeed, Ready/HoodAtPos,
- *     Ready/Heading, Ready/Speed, Ready/Distance, Ready/Level, and Ready/ALL
+ *     Ready/Heading, Ready/Speed, Ready/Distance (too close), Ready/InRange
+ *     (past the table), Ready/Level, and Ready/ALL
  *   - Ready/ALL and "Shooter At Speed" are rising-edge debounced 0.05 s so one
  *     noisy sensor frame can't start the feeder
  *   - "Ignore Shot Gates" (SmartDashboard boolean) bypasses the gate entirely
@@ -130,6 +133,9 @@ package frc.robot;
  *   - No-ops kept for old autos: intakeBounce, jolt, ClimbUp, ClimbDown,
  *     climbDown, StopClimber, hopperDeploy, VisionUpdate
  *   - Vision fusion is paused during autonomous (Robot.robotPeriodic)
+ *   - The moving-shot lead is shrunk for drag (kLeadDragPerSec): a ball does not
+ *     carry the robot's full velocity for its whole flight, so leading by the raw
+ *     flight time over-aims by ~20%
  *   - Shoot-while-moving and aimAndWindUp lead the target by the ball flight time
  *     from RobotCommands.distanceToFlightTimeSec (1.5–4.5 m table, placeholder
  *     values); outside that range they fall back to kLookAheadSeconds = 0.25 s

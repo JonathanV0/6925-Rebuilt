@@ -61,21 +61,32 @@ public final class RobotCommands {
 
     // Ball time-of-flight vs. distance to hub (key: meters, value: seconds). A real ball
     // slows down in the air, so a lookup beats the old constant-velocity guess.
-    // TODO(tune): flight-time table — these are PLACEHOLDERS, not measurements.
-    //   What it is: how long the ball is in the air from leaving the wheels to entering the
-    //   hub, at each distance. It sets how far ahead of the hub we aim while moving.
-    //   How: put the robot at a known distance (read "Auto Distance (inches)"), film a shot
-    //   with a phone in slow-mo (240 fps), count frames from ball-exit to hub-entry, divide
-    //   by the frame rate. Repeat at ~1.5, 2.5, 3.5, 4.5 m and replace the points below.
-    //   If unmeasured, expect the moving-shot lead to be wrong; stationary shots are unaffected.
+    // TODO(tune): flight-time table — still PLACEHOLDERS, but now grounded in two
+    //   independently MEASURED tables instead of a guess: 1678 measured ~1.05 s at 2.0 m,
+    //   and 6328 measured 1.017 s at 1.63 m rising to 1.25 s at 4.875 m. The original
+    //   guesses here (0.6 s at 1.5 m) were ~40% too short. Different shooter, so still
+    //   measure ours: park at a known distance (read "Auto Distance (inches)"), film a shot
+    //   in slow-mo (240 fps), count frames from ball-exit to hub-entry, divide by the frame
+    //   rate. Repeat at ~1.5, 2.5, 3.5 m and replace the points below.
+    //   Stationary shots do not use this table at all.
     private static final InterpolatingDoubleTreeMap distanceToFlightTimeSec = new InterpolatingDoubleTreeMap();
     private static final double kFlightTableMinMeters = 1.5;
     private static final double kFlightTableMaxMeters = 4.5;
     static {
-        distanceToFlightTimeSec.put(1.5, 0.6);
-        distanceToFlightTimeSec.put(3.0, 0.9);
-        distanceToFlightTimeSec.put(4.5, 1.2);
+        distanceToFlightTimeSec.put(1.5, 1.00);
+        distanceToFlightTimeSec.put(3.0, 1.12);
+        distanceToFlightTimeSec.put(4.5, 1.22);
     }
+
+    // Furthest point the distance-to-shot table has data for. Past it the interpolator
+    // silently clamps to the last entry, so a shot from further out would use a guessed
+    // RPM/hood while every readiness light still read green. The gate refuses it instead.
+    // TODO(tune): kShotTableMaxInches. This is the furthest distance we have DATA for, NOT
+    //   the robot's real maximum range — 6925 has never measured that. To extend: shoot from
+    //   progressively further out, record the RPM/hood that scores, add entries to the table
+    //   above, then raise this. 6328 bounds their shots to 0.6-6.0 m for the same reason.
+    private static final double kShotTableMaxInches = 140.0;
+    private static final double kShotTableMaxMeters = Inches.of(kShotTableMaxInches).in(Meters);
 
     /**
      * Distance-table lookup with the operator's live RPM % trim applied. Every table-based
@@ -85,6 +96,21 @@ public final class RobotCommands {
     private static Shot lookupShot(Distance distance) {
         final Shot raw = distanceToShotMap.get(distance);
         return new Shot(raw.shooterRPM() * operatorDashboard.getRPMMultiplier(), raw.hoodPosition());
+    }
+
+    // TODO(tune): kLeadDragPerSec. The ball does NOT carry the robot's full velocity for its
+    //   whole flight — drag bleeds it off — so leading by the entire flight time aims too far
+    //   ahead. This decays the lead: a 1.0 s flight leads as 0.83 s, a 1.2 s flight as 0.97 s
+    //   (~20% less than the naive lead). 0.375 is 6328's value for their ball; set it to 0 to
+    //   turn the decay off and lead by the full flight time.
+    private static final double kLeadDragPerSec = 0.375;
+
+    /** Flight time shrunk for drag, since the ball stops carrying our velocity as it slows. */
+    private static double effectiveLeadSeconds(double flightTimeSec) {
+        if (kLeadDragPerSec <= 0.0) {
+            return flightTimeSec;
+        }
+        return (1.0 - Math.exp(-flightTimeSec * kLeadDragPerSec)) / kLeadDragPerSec;
     }
 
     /** Flight time from the table, or kLookAheadSeconds if we're outside the measured range. */
@@ -131,10 +157,17 @@ public final class RobotCommands {
             return robotPos;
         }
 
-        final double flightTime = flightTimeSeconds(robotPos.getDistance(hub));
-        return robotPos.plus(new Translation2d(
-            fieldSpeeds.vxMetersPerSecond * flightTime,
-            fieldSpeeds.vyMetersPerSecond * flightTime));
+        // Iterate: leading changes our predicted distance, which changes the flight time,
+        // which changes the lead. Three passes is well past convergence at our speeds
+        // (6328 runs 20; the extra passes move the answer by less than a millimetre).
+        Translation2d predicted = robotPos;
+        for (int i = 0; i < 3; i++) {
+            final double lead = effectiveLeadSeconds(flightTimeSeconds(predicted.getDistance(hub)));
+            predicted = robotPos.plus(new Translation2d(
+                fieldSpeeds.vxMetersPerSecond * lead,
+                fieldSpeeds.vyMetersPerSecond * lead));
+        }
+        return predicted;
     }
 
     // Distance-to-shot lookup table (team should calibrate these values)
@@ -160,7 +193,7 @@ public final class RobotCommands {
         distanceToShotMap.put(Inches.of(110.0), new Shot(kRPMAt110in + 150, kHoodAt110in));
         distanceToShotMap.put(Inches.of(120.0), new Shot(kRPMAt120in + 150, kHoodAt120in));
         distanceToShotMap.put(Inches.of(130.0), new Shot(kRPMAt130in + 150, kHoodAt130in));
-        distanceToShotMap.put(Inches.of(140.0), new Shot(kRPMAt140in + 150, kHoodAt140in));
+        distanceToShotMap.put(Inches.of(kShotTableMaxInches), new Shot(kRPMAt140in + 150, kHoodAt140in));
     }
 
     public static void init(
@@ -204,15 +237,18 @@ public final class RobotCommands {
         final boolean atHeading  = drivetrain.isAtHeading(Math.toRadians(kScoringHeadingToleranceDeg));
         final boolean slowEnough = speedMps < kScoringSpeedToleranceMps;
         final boolean farEnough  = distanceMeters >= kMinimumShotDistanceMeters;
+        // Beyond the table's last point the RPM/hood would be a clamped guess, not a shot
+        final boolean inTableRange = distanceMeters <= kShotTableMaxMeters;
         final boolean level      = drivetrain.isLevel(kMaxShotTiltDeg);
         final boolean all = readyDebouncer.calculate(
-            atSpeed && hoodAtPos && atHeading && slowEnough && farEnough && level);
+            atSpeed && hoodAtPos && atHeading && slowEnough && farEnough && inTableRange && level);
 
         SmartDashboard.putBoolean("Ready/AtSpeed", atSpeed);
         SmartDashboard.putBoolean("Ready/HoodAtPos", hoodAtPos);
         SmartDashboard.putBoolean("Ready/Heading", atHeading);
         SmartDashboard.putBoolean("Ready/Speed", slowEnough);
         SmartDashboard.putBoolean("Ready/Distance", farEnough);
+        SmartDashboard.putBoolean("Ready/InRange", inTableRange);
         SmartDashboard.putBoolean("Ready/Level", level);
         SmartDashboard.putBoolean("Ready/ALL", all);
         SmartDashboard.putNumber("Robot Pitch (deg)", drivetrain.getPitchDegrees());
