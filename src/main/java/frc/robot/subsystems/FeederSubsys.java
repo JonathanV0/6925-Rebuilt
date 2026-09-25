@@ -33,11 +33,11 @@ public class FeederSubsys extends SubsystemBase {
   public void periodic() {
     
   }
-
+  //TODO: tune FEED_FAST, first number is floor, second is shooter feeder
   public enum FeederSpeed {
     OFF(0.0, 0.0),
     FEED_SLOW(-0.3, 0.1),
-    FEED_FAST(-0.8, 0.8),
+    FEED_FAST(-0.4, 0.8),
     FEED_TURBO(-1.0, 1.0),
     REVERSE(0.5, -0.4);
 
