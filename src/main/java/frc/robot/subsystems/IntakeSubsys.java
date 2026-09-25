@@ -196,6 +196,26 @@ public class IntakeSubsys extends SubsystemBase {
     );
   }
 
+  /** Rotates the rotator at a constant speed (motor rotations per second) while held; holds position on release.
+   *  Sign sets direction (negative = toward deploy). Works like creepRotateCommand: it moves the PID target a
+   *  little every loop instead of setting raw motor power, so speed stays steady even as gravity load changes. */
+  public Command rotateAtSpeedCommand(double rotationsPerSecond) {
+    // Robot code runs every 0.02s (50Hz), so each loop moves the target rps * 0.02 rotations
+    final double stepPerCycle = rotationsPerSecond * 0.02;
+    return Commands.runEnd(
+      () -> {
+        rotatorTargetPosition += stepPerCycle;
+        intakeRotator.setControl(rotatorPositionRequest.withPosition(rotatorTargetPosition));
+      },
+      () -> {
+        // Hold wherever the motor actually ended up so it doesn't snap to a target it never reached
+        rotatorTargetPosition = intakeRotator.getPosition().getValueAsDouble();
+        intakeRotator.setControl(rotatorPositionRequest.withPosition(rotatorTargetPosition));
+      },
+      this
+    );
+  }
+
   /** Rotates the intake rotator CCW by the given degrees from its current position. */
   public Command rotateRotatorCommand(double degrees) {
     return Commands.runOnce(() -> {

@@ -135,20 +135,15 @@ import frc.robot.subsystems.FeederSubsys;
 import frc.robot.subsystems.IntakeSubsys;
 import frc.robot.subsystems.HoodSubsys;
 import frc.robot.subsystems.LimelightSubsys;
-import edu.wpi.first.math.filter.SlewRateLimiter;
 import frc.robot.subsystems.ShooterSubsys;
 
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(1.5).in(RadiansPerSecond); // 1.5 rotations per second max angular velocity
 
-    // Slew rate limiters: 1.5/sec accel, 100/sec decel (instant stop)
-    private final SlewRateLimiter xLimiter = new SlewRateLimiter(1.5, -100, 0);
-    private final SlewRateLimiter yLimiter = new SlewRateLimiter(1.5, -100, 0);
-
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.05).withRotationalDeadband(MaxAngularRate * 0.075) // 30% translation, 15% rotation deadband
+            .withDeadband(MaxSpeed * 0.05).withRotationalDeadband(MaxAngularRate * 0.075) // 5% translation, 7.5% rotation deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
@@ -197,8 +192,9 @@ public class RobotContainer {
         NamedCommands.registerCommand("IntakeMid", RobotCommands.intakeMid());
         NamedCommands.registerCommand("IntakeFast", RobotCommands.intakeFast());
         NamedCommands.registerCommand("StopIntake", RobotCommands.stopIntake());
-        NamedCommands.registerCommand("intakeDeploy", intake.goToPositionCommand(-14.5));
+        NamedCommands.registerCommand("intakeDeploy", intake.goToPositionSlowCommand(-14.0, 0.3));
         NamedCommands.registerCommand("waitForDeploy", intake.waitForDeployCommand());
+        NamedCommands.registerCommand("intakeRetract", intake.goToPositionSlowCommand(-0.14423828125, 0.2));
         NamedCommands.registerCommand("intakeBounce", Commands.none()); // bounce is now built into autoShoot
         // Vision updates now run automatically in robotPeriodic() — no named command needed
         // ── Climber commands (motor removed — register as no-ops so PathPlanner autos don't error)
@@ -214,44 +210,34 @@ public class RobotContainer {
         autoChooser = AutoBuilder.buildAutoChooser("M-S");
         SmartDashboard.putData("Auto Chooser", autoChooser);
     }
-
+     // ===== Driver Xbox Controller (joystick) =====
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
-            drivetrain.applyRequest(() -> {
-                // Squared input + slew rate limiting for smooth, precise control
-                double leftY = joystick.getLeftY();
-                double leftX = joystick.getLeftX();
-                double rightX = joystick.getRightX();
-
-                // If translation joystick is within deadband, stop instantly (no slew ramp-down)
-                boolean translationDead = Math.abs(leftY) < 0.05 && Math.abs(leftX) < 0.05;
-                boolean rotationDead = Math.abs(rightX) < 0.075;
-
-                if (translationDead) {
-                    xLimiter.reset(0);
-                    yLimiter.reset(0);
-                }
-
-                double squaredY = translationDead ? 0 : -Math.copySign(leftY * leftY, leftY);
-                double squaredX = translationDead ? 0 : -Math.copySign(leftX * leftX, leftX);
-                double sqrtRot = -Math.copySign(Math.pow(Math.abs(rightX), 1.5), rightX); // x^1.5 curve for rotation
-                double slewedY = translationDead ? 0 : xLimiter.calculate(squaredY);
-                double slewedX = translationDead ? 0 : yLimiter.calculate(squaredX);
-                return drive.withVelocityX(slewedY * MaxSpeed * drivetrain.getCurrentSpeedMulti())
-                    .withVelocityY(slewedX * MaxSpeed * drivetrain.getCurrentSpeedMulti())
-                    .withRotationalRate(sqrtRot * MaxAngularRate);
-            })
+            drivetrain.applyRequest(() ->
+                // Linear control: robot speed is directly proportional to stick position.
+                // Sticks are negated because pushing forward/left on an Xbox stick reads negative,
+                // but WPILib wants +X = forward and +Y = left.
+                // Deadband is handled by the `drive` request itself (.withDeadband / .withRotationalDeadband).
+                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed * drivetrain.getCurrentSpeedMulti())
+                    .withVelocityY(-joystick.getLeftX() * MaxSpeed * drivetrain.getCurrentSpeedMulti())
+                    .withRotationalRate(-joystick.getRightX() * MaxAngularRate)
+            )
         );
 
         // Snap wheels to 0 for 0.5s then resume driving (steer motors hold in Brake mode)
-        joystick.leftTrigger().onTrue(
+        /*joystick.leftTrigger().onTrue(
             drivetrain.applyRequest(() -> point.withModuleDirection(new Rotation2d(0)))
-                .withTimeout(0.5));
+                .withTimeout(0.5));*/
         // Toggle 1/5th speed with right trigger (press once to toggle)
-        joystick.rightTrigger().onTrue(drivetrain.toggleSpeedMulti(1.0 / 5.0));
+        //joystick.rightTrigger().onTrue(drivetrain.toggleSpeedMulti(1.0 / 5.0));
+
+        joystick.rightTrigger().whileTrue(RobotCommands.Shoot());
+        joystick.rightTrigger().onFalse(RobotCommands.redeployAfterShoot());
+
+        joystick.leftTrigger().whileTrue(intake.intakeWithOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_TURBO));
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
         final var idle = new SwerveRequest.Idle();
@@ -262,23 +248,18 @@ public class RobotContainer {
         joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
         // Toggle full speed with B button (default is 75%)
         joystick.b().onTrue(drivetrain.toggleSpeedMulti(1.0));
-
-        // Run SysId routines when holding back/start and X/Y.
-        // Note that each routine should be run exactly once in a single log.
-        joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        
+        joystick.x().onTrue(RobotCommands.toggleShooterIdle());
 
         // Reset the field-centric heading on left bumper press.
         joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         // D-pad up/down = manual intake up/down
-        joystick.povUp().whileTrue(RobotCommands.windUp75()); // 75.125" wind up
-        joystick.povDown().whileTrue(intake.slowRotateCommand(.025));
-        // D-pad left/right = precise intake rotation at 1 RPM motor
-        joystick.povLeft().whileTrue(intake.creepRotateCommand(-1));
-        joystick.povRight().whileTrue(intake.creepRotateCommand(1));
+        joystick.povDown().onTrue(intake.goToPositionSlowCommand(-14.0, 0.3)); // intake deploy
+        joystick.povUp().onTrue(intake.goToPositionSlowCommand(-0.14423828125, 0.2)); //intake retract
+        // D-pad left = slow intake rotation, D-pad right = reverse everything (eject)
+        joystick.povLeft().whileTrue(intake.rotateAtSpeedCommand(-0.3125)); // 0.3125 motor rot/s toward deploy while held
+        joystick.povRight().whileTrue(RobotCommands.reverseAll());
 
         // Hold right bumper to auto-aim at target + spin up shooter (distance-based RPM)
         // When "Shooter At Speed" turns green, operator pulls trigger to fire instantly
