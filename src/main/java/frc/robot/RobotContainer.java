@@ -14,7 +14,8 @@ package frc.robot;
  *   - Field-centric control via Xbox controller (port 0)
  *   - Left trigger toggles half-speed mode (0.5x multiplier)
  *   - Left bumper reseeds field-centric heading (gyro reset)
- *   - Right bumper = auto-aim at target + distance-based shooter wind-up
+ *   - Right bumper = auto-aim at target + distance-based shooter wind-up (no feeding)
+ *   - Right trigger = same aim + wind-up, then feeds automatically once aimed and at speed
  *
  * SHOOTER (ShooterSubsys) — 3 TalonFX motors
  *   - CAN 8  = leader motor (inverted — Clockwise_Positive)
@@ -234,7 +235,8 @@ public class RobotContainer {
         // Toggle 1/5th speed with right trigger (press once to toggle)
         //joystick.rightTrigger().onTrue(drivetrain.toggleSpeedMulti(1.0 / 5.0));
 
-        joystick.rightTrigger().whileTrue(RobotCommands.Shoot());
+        // One-button shot: aims + winds up like right bumper, then feeds by itself once ready. Operator button 1 is still plain Shoot() as the no-aim fallback.
+        joystick.rightTrigger().whileTrue(RobotCommands.aimWindUpAndShoot(() -> -joystick.getLeftY() * MaxSpeed, () -> -joystick.getLeftX() * MaxSpeed, MaxSpeed));
         joystick.rightTrigger().onFalse(RobotCommands.redeployAfterShoot());
 
         joystick.leftTrigger().whileTrue(intake.intakeWithOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_TURBO));

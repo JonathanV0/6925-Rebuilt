@@ -39,7 +39,14 @@ public final class RobotCommands {
 
     private static double lastDeployedPosition = 0.0;
 
+    // Latest heading error from aimAndWindUp(), kept here so aimWindUpAndShoot() can tell
+    // when the robot is actually pointed at the hub. Starts huge so it never reads as "aimed"
+    // before the first aim loop has run.
+    private static double lastAimErrorDeg = Double.MAX_VALUE;
+
     private static final double kAimOffsetDegrees = 0.0;
+    // Same 2 degree window autoAimAndWindUp() uses, so teleop and auto agree on "aimed"
+    private static final double kAimToleranceDeg = 2.0;
     private static final double BALL_VELOCITY_MS = 8.0;
 
     // Distance-to-shot lookup table (team should calibrate these values)
@@ -371,6 +378,8 @@ public final class RobotCommands {
                 double tx = Math.toDegrees(virtualFieldAngle - headingRad) + kAimOffsetDegrees;
                 // Normalize to [-180, 180]
                 tx = Math.IEEEremainder(tx, 360.0);
+                // Publish the error so aimWindUpAndShoot() can hold the feeder until we're on target
+                lastAimErrorDeg = tx;
 
                 drivetrain.setControl(aimDrive
                     .withVelocityX(velocityX.getAsDouble())
@@ -393,6 +402,25 @@ public final class RobotCommands {
             () -> shooterSubsys.stopShooter(),
             drivetrain, shooterSubsys, hoodSubsys)
         ;
+    }
+
+    /**
+     * One-button teleop shot: does everything aimAndWindUp() does, and starts Shoot()
+     * by itself once the robot is aimed and the flywheels are at speed.
+     * Hold to shoot; release stops the feeder and returns the shooter to idle.
+     */
+    public static Command aimWindUpAndShoot(DoubleSupplier velocityX, DoubleSupplier velocityY, double maxSpeed) {
+        return Commands.parallel(
+            // Listed first on purpose: a parallel group runs its commands in order each loop,
+            // so this refreshes the target RPM and aim error before the wait below checks them.
+            // Reversed, the first check would see the idle RPM target and feed too early.
+            aimAndWindUp(velocityX, velocityY, maxSpeed),
+            Commands.waitUntil(() -> Math.abs(lastAimErrorDeg) < kAimToleranceDeg
+                                  && shooterSubsys.isVelocityWithinTolerance())
+                // Feed anyway after 2s so a CAN dropout or brownout can't leave the trigger dead
+                .withTimeout(2.0)
+                .andThen(Shoot())
+        );
     }
 
     // ========== Auto-Aim Full-Field Pass ==========
