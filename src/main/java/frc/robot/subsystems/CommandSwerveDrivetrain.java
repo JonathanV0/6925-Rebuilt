@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
@@ -62,7 +63,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
             null,        // Use default timeout (10 s)
             // Log state with SignalLogger class
-            state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())
+            state -> {
+                SignalLogger.writeString("SysIdTranslation_State", state.toString());
+                // Also show it live on Elastic so you can see which test is running
+                SmartDashboard.putString("SysId State", "translation " + state);
+            }
         ),
         new SysIdRoutine.Mechanism(
             output -> setControl(m_translationCharacterization.withVolts(output)),
@@ -78,7 +83,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             Volts.of(7), // Use dynamic voltage of 7 V
             null,        // Use default timeout (10 s)
             // Log state with SignalLogger class
-            state -> SignalLogger.writeString("SysIdSteer_State", state.toString())
+            state -> {
+                SignalLogger.writeString("SysIdSteer_State", state.toString());
+                SmartDashboard.putString("SysId State", "steer " + state);
+            }
         ),
         new SysIdRoutine.Mechanism(
             volts -> setControl(m_steerCharacterization.withVolts(volts)),
@@ -100,7 +108,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             Volts.of(Math.PI),
             null, // Use default timeout (10 s)
             // Log state with SignalLogger class
-            state -> SignalLogger.writeString("SysIdRotation_State", state.toString())
+            state -> {
+                SignalLogger.writeString("SysIdRotation_State", state.toString());
+                SmartDashboard.putString("SysId State", "rotation " + state);
+            }
         ),
         new SysIdRoutine.Mechanism(
             output -> {
@@ -258,6 +269,27 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      */
     public Command sysIdDynamic(SysIdRoutine.Direction direction) {
         return m_sysIdRoutineToApply.dynamic(direction);
+    }
+
+    /** Which part of the drivetrain a SysId test characterizes. */
+    public enum SysIdMechanism { TRANSLATION, STEER, ROTATION }
+
+    /**
+     * Builds one SysId test for any of the three routines, so RobotContainer can pick
+     * the routine from a dashboard chooser instead of it being fixed in m_sysIdRoutineToApply.
+     *
+     * @param mechanism Which routine: drive motors, steer motors, or whole-robot rotation
+     * @param dynamic   true = sudden voltage step (measures kA), false = slow ramp (measures kS/kV)
+     * @param direction Forward or reverse
+     * @return Command that runs the test while scheduled and sends 0 output when it ends
+     */
+    public Command sysIdTest(SysIdMechanism mechanism, boolean dynamic, SysIdRoutine.Direction direction) {
+        final SysIdRoutine routine = switch (mechanism) {
+            case TRANSLATION -> m_sysIdRoutineTranslation;
+            case STEER -> m_sysIdRoutineSteer;
+            case ROTATION -> m_sysIdRoutineRotation;
+        };
+        return dynamic ? routine.dynamic(direction) : routine.quasistatic(direction);
     }
 
     @Override

@@ -34,6 +34,11 @@ public class LimelightSubsys extends SubsystemBase {
     // LL3 has better resolution — can reliably see tags from further away
     private static final double kMinTagAreaPercent = 0.1;
 
+    // MegaTag1 heading is only used when the tags are closer than this (farther = noisier)
+    private static final double kMaxHeadingTagDistMeters = 4.0;
+    // How much to trust MegaTag1 heading (radians). Smaller = faster but jumpier correction.
+    private static final double kMt1HeadingStdDevRad = 0.5;
+
     private final String name;
     private final Supplier<Pose2d> poseSupplier;
     private final NetworkTable telemetryTable;
@@ -90,10 +95,26 @@ public class LimelightSubsys extends SubsystemBase {
         final double distance = poseEstimate.avgTagDist;
         final Matrix<N3, N1> standardDeviations;
 
+        // MegaTag2's heading is just the gyro heading we sent it in SetRobotOrientation(), so it
+        // can never correct heading. Heading std dev starts at 9999 ("ignore") in both cases below.
         if (poseEstimate.tagCount >= 2) {
-            // Multi-tag MegaTag2: very high confidence — tight XY, trust heading
+            // Multi-tag MegaTag2: very high confidence — tight XY
             final double xyStdDev = 0.02 * distance;
-            standardDeviations = VecBuilder.fill(xyStdDev, xyStdDev, 0.1);
+            double headingStdDev = 9999.0;
+
+            // MegaTag1 works out heading from the tags alone, so it CAN fix heading.
+            // Only trusted with 2+ close tags: with one tag it can flip between two possible poses.
+            if (distance < kMaxHeadingTagDistMeters) {
+                final PoseEstimate mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue(name);
+                if (mt1 != null && mt1.tagCount >= 2) {
+                    // Keep MT2's position (more accurate), take MT1's heading
+                    poseEstimate.pose = new Pose2d(poseEstimate.pose.getTranslation(), mt1.pose.getRotation());
+                    // 0.5 rad = weak trust: each frame moves heading ~17% of the way toward MT1,
+                    // so it corrects gradually instead of snapping on one noisy frame
+                    headingStdDev = kMt1HeadingStdDevRad;
+                }
+            }
+            standardDeviations = VecBuilder.fill(xyStdDev, xyStdDev, headingStdDev);
         } else {
             // Single tag: trust XY with quadratic distance falloff, ignore heading
             final double xyStdDev = 0.05 * distance * distance;

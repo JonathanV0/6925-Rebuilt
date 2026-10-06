@@ -22,6 +22,10 @@ public class Robot extends TimedRobot {
     @Override
     public void robotPeriodic() {
         CommandScheduler.getInstance().run();
+        // Off in auto until the new vision checks (tilt/spin/jump rejection, MegaTag1 heading)
+        // are tested on the robot. Once they pass, remove the if to run vision in auto too.
+        // (The DCMP bump-auto runaway was a path ending at 2 m/s into a command that never
+        // finished, not vision.)
         if (!isAutonomous()) {
             m_robotContainer.updateVision();
         }

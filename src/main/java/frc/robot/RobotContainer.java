@@ -16,6 +16,7 @@ package frc.robot;
  *   - Left bumper reseeds field-centric heading (gyro reset)
  *   - Right bumper = auto-aim at target + distance-based shooter wind-up (no feeding)
  *   - Right trigger = same aim + wind-up, then feeds automatically once aimed and at speed
+ *   - Start (hold) = run the SysId test picked in the "SysId Test" chooser (temporary, "Off" by default)
  *
  * SHOOTER (ShooterSubsys) — 3 TalonFX motors
  *   - CAN 8  = leader motor (inverted — Clockwise_Positive)
@@ -115,11 +116,17 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.Set;
+import java.util.function.Supplier;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -132,6 +139,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.lib.util.CommandX3DController;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.CommandSwerveDrivetrain.SysIdMechanism;
 import frc.robot.subsystems.FeederSubsys;
 import frc.robot.subsystems.IntakeSubsys;
 import frc.robot.subsystems.HoodSubsys;
@@ -193,7 +201,8 @@ public class RobotContainer {
         NamedCommands.registerCommand("IntakeMid", RobotCommands.intakeMid());
         NamedCommands.registerCommand("IntakeFast", RobotCommands.intakeFast());
         NamedCommands.registerCommand("StopIntake", RobotCommands.stopIntake());
-        NamedCommands.registerCommand("intakeDeploy", intake.goToPositionSlowCommand(-14.0, 0.3));
+        // Timeout so an intake that never reaches -14 can't hang the whole auto
+        NamedCommands.registerCommand("intakeDeploy", intake.goToPositionSlowCommand(-14.0, 0.3).withTimeout(1.5));
         NamedCommands.registerCommand("waitForDeploy", intake.waitForDeployCommand());
         NamedCommands.registerCommand("intakeRetract", intake.goToPositionSlowCommand(-0.14423828125, 0.2));
         NamedCommands.registerCommand("intakeBounce", Commands.none()); // bounce is now built into autoShoot
@@ -304,7 +313,37 @@ public class RobotContainer {
         operator.pov(180).whileTrue(RobotCommands.reverseAll()); // Hat down = eject jammed ball
         operator.pov(270).onTrue(RobotCommands.autoTuneExposure()); // Hat left = auto-tune LL exposure
         operator.button(8).whileTrue(RobotCommands.windUpPass());
+
+        configureSysId();
     }
+
+    // ===== SysId (temporary — delete after tuning) =====
+    // Pick a test in the "SysId Test" chooser on Elastic, then HOLD Xbox Start to run it.
+    // Releasing Start stops the test (sends 0 V). The chooser starts on "Off" every boot,
+    // so Start does nothing in a match unless someone picks a test first.
+    // The chooser holds Suppliers, not Commands: a command can only be inside one
+    // composition, so we build a fresh one every time Start is pressed.
+    private final SendableChooser<Supplier<Command>> sysIdChooser = new SendableChooser<>();
+
+    private void configureSysId() {
+        sysIdChooser.setDefaultOption("Off", Commands::none);
+        for (SysIdMechanism mechanism : SysIdMechanism.values()) {
+            for (boolean dynamic : new boolean[] {false, true}) {
+                for (Direction direction : Direction.values()) {
+                    final String name = mechanism + (dynamic ? " dynamic " : " quasistatic ")
+                        + (direction == Direction.kForward ? "forward" : "reverse");
+                    sysIdChooser.addOption(name, () -> drivetrain.sysIdTest(mechanism, dynamic, direction));
+                }
+            }
+        }
+        SmartDashboard.putData("SysId Test", sysIdChooser);
+        SmartDashboard.putString("SysId State", "none");
+
+        // defer() reads the chooser at the moment Start is pressed, not once at startup
+        joystick.start().whileTrue(
+            Commands.defer(() -> sysIdChooser.getSelected().get(), Set.of(drivetrain)));
+    }
+    // ===== end SysId =====
 
     public Command getAutonomousCommand() {
         return autoChooser.getSelected();
@@ -314,6 +353,15 @@ public class RobotContainer {
     // Prevents a single bad Limelight frame from corrupting the auto start position.
     private static final double kMaxVisionJumpMeters = 1.0;
 
+    // MegaTag2 assumes the robot is flat, so frames taken while tilted (e.g. on the bump) are wrong
+    private static final double kMaxTiltDegrees = 5.0;
+    // MegaTag2 gets unreliable when the robot spins fast. 7 rad/s ≈ 400°/s ≈ 75% of full
+    // right-stick turn rate, so only hard spins are rejected. (Limelight's example uses 720°/s.)
+    private static final double kMaxVisionSpinRadPerSec = 7.0;
+    // Keeps reporting "tilted" for 0.25s after the robot is flat again, since it bounces coming off the bump.
+    // kFalling = true goes false only after being false for the whole 0.25s.
+    private final Debouncer tiltDebouncer = new Debouncer(0.25, DebounceType.kFalling);
+
     /**
      * Runs a single vision update cycle — reads the Limelight, and if a valid
      * measurement is available, feeds it into the drivetrain's Kalman filter.
@@ -322,7 +370,36 @@ public class RobotContainer {
     public void updateVision() {
         if (limelight == null) return;
         if (!SmartDashboard.getBoolean("Vision Enabled", true)) return;
+
+        // Run the debouncer every loop (even with no tag in view) so its timer stays current
+        final double pitch = drivetrain.getPigeon2().getPitch().getValueAsDouble();
+        final double roll = drivetrain.getPigeon2().getRoll().getValueAsDouble();
+        final boolean tilted = tiltDebouncer.calculate(
+            Math.abs(pitch) > kMaxTiltDegrees || Math.abs(roll) > kMaxTiltDegrees);
+        final double spinRate = Math.abs(drivetrain.getState().Speeds.omegaRadiansPerSecond);
+
         limelight.getMeasurement().ifPresent(measurement -> {
+            // Throw out frames we know are bad, and say why so it shows up in the logs
+            if (tilted) {
+                SmartDashboard.putString("Vision Reject Reason", "tilted");
+                return;
+            }
+            if (spinRate > kMaxVisionSpinRadPerSec) {
+                SmartDashboard.putString("Vision Reject Reason", "spinning");
+                return;
+            }
+            // Auto only: during teleop a big collision could put odometry >1m off, and then this
+            // check would reject every frame forever, so vision could never fix it.
+            // (Inactive for now: Robot.robotPeriodic() skips vision in auto until it's tested.)
+            if (DriverStation.isAutonomous()) {
+                final double jump = drivetrain.getState().Pose.getTranslation()
+                    .getDistance(measurement.poseEstimate.pose.getTranslation());
+                if (jump > kMaxVisionJumpMeters) {
+                    SmartDashboard.putString("Vision Reject Reason", "jump");
+                    return;
+                }
+            }
+            SmartDashboard.putString("Vision Reject Reason", "none");
             drivetrain.addVisionMeasurement(
                 measurement.poseEstimate.pose,
                 measurement.poseEstimate.timestampSeconds,
