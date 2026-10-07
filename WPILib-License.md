@@ -1,5 +1,7 @@
-Copyright (c) 2009-2024 FIRST and other WPILib contributors
-All rights reserved.
+This project is licensed under the BSD 3-Clause License. 
+
+Copyright (c) 2009-2026 FIRST and other WPILib contributors. All rights reserved.
+*(For the full legal text of the redistribution terms, conditions, and disclaimers, please refer to the referenced web documents or the official WPILib repository).*
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
