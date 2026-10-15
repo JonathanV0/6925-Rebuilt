@@ -244,9 +244,14 @@ public class RobotContainer {
         // Toggle 1/5th speed with right trigger (press once to toggle)
         //joystick.rightTrigger().onTrue(drivetrain.toggleSpeedMulti(1.0 / 5.0));
 
-        // One-button shot: aims + winds up like right bumper, then feeds by itself once ready. Operator button 1 is still plain Shoot() as the no-aim fallback.
-        joystick.rightTrigger().whileTrue(RobotCommands.aimWindUpAndShoot(() -> -joystick.getLeftY() * MaxSpeed, () -> -joystick.getLeftX() * MaxSpeed, MaxSpeed));
-        joystick.rightTrigger().onFalse(RobotCommands.redeployAfterShoot());
+        // Hold right trigger to auto-aim pass (same as Y): aims 15° inward from trench AprilTag + spins up pass RPM
+        joystick.rightTrigger().whileTrue(
+            RobotCommands.aimAndPass(
+                () -> -joystick.getLeftY() * MaxSpeed,
+                () -> -joystick.getLeftX() * MaxSpeed,
+                MaxSpeed
+            )
+        );
 
         joystick.leftTrigger().whileTrue(intake.intakeWithOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_TURBO));
         // Idle while the robot is disabled. This ensures the configured
@@ -272,15 +277,18 @@ public class RobotContainer {
         joystick.povLeft().whileTrue(intake.rotateAtSpeedCommand(-0.3125)); // 0.3125 motor rot/s toward deploy while held
         joystick.povRight().whileTrue(RobotCommands.reverseAll());
 
-        // Hold right bumper to auto-aim at target + spin up shooter (distance-based RPM)
-        // When "Shooter At Speed" turns green, operator pulls trigger to fire instantly
-        joystick.rightBumper().whileTrue(
+        // Old right bumper: auto-aim at target + spin up shooter only (operator fires). Replaced by the one-button shot below.
+        /*joystick.rightBumper().whileTrue(
             RobotCommands.aimAndWindUp(
                 () -> -joystick.getLeftY() * MaxSpeed,
                 () -> -joystick.getLeftX() * MaxSpeed,
                 MaxSpeed
             )
-        );
+        );*/
+
+        // One-button shot: aims + winds up, then feeds by itself once ready. Operator button 1 is still plain Shoot() as the no-aim fallback.
+        joystick.rightBumper().whileTrue(RobotCommands.aimWindUpAndShoot(() -> -joystick.getLeftY() * MaxSpeed, () -> -joystick.getLeftX() * MaxSpeed, MaxSpeed));
+        joystick.rightBumper().onFalse(intake.goToPositionSlowCommand(-14.0, 0.3));
 
         // Hold Y to auto-aim pass: aims 15° inward from trench AprilTag + spins up pass RPM
         joystick.y().whileTrue(

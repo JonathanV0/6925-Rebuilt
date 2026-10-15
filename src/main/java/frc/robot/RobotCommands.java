@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static frc.robot.Constants.ShooterConstants.*;
 
+import java.util.Set;
 import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -269,12 +270,16 @@ public final class RobotCommands {
         );
     }
 
-    /** Instantly commands the intake back to its deployed position.
+    /** Lowers the intake back to its deployed position at a gentle fixed speed (same as D-pad down).
      *  Bind with operator.button(1).onFalse() to run automatically after Shoot() ends. */
     public static Command redeployAfterShoot() {
-        return Commands.runOnce(
-            () -> intakeSubsys.setRotatorTarget(lastDeployedPosition),
-            intakeSubsys
+        // Jumping the PID target straight to the deployed spot asked for ~14 V and slammed the intake down,
+        // so lower it at 30% power instead and only switch to PID for the last half rotation.
+        // defer() builds the command when the trigger is released, so it uses the newest lastDeployedPosition
+        // instead of the 0.0 it had when the buttons were bound at startup.
+        return Commands.defer(
+            () -> intakeSubsys.goToPositionSlowCommand(lastDeployedPosition, 0.3),
+            Set.of(intakeSubsys)
         );
     }
 
@@ -417,8 +422,8 @@ public final class RobotCommands {
             aimAndWindUp(velocityX, velocityY, maxSpeed),
             Commands.waitUntil(() -> Math.abs(lastAimErrorDeg) < kAimToleranceDeg
                                   && shooterSubsys.isVelocityWithinTolerance())
-                // Feed anyway after 2s so a CAN dropout or brownout can't leave the trigger dead
-                .withTimeout(2.0)
+                // Feed anyway after 1.5s so a CAN dropout or brownout can't leave the trigger dead
+                .withTimeout(1.5)
                 .andThen(Shoot())
         );
     }
