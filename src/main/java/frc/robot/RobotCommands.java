@@ -243,13 +243,14 @@ public final class RobotCommands {
 
     public static Command Shoot() {
         final double retractedPosition = 0.0; // fully retracted motor position (rotations)
-        final double raiseDuration = 5.0;     // seconds to fully retract from deployed
+        final double raiseDuration = 3.5;     // seconds to fully retract from deployed
         final double shakeAmount = (30.0 / 360.0) * 8.0;
         final double shakePeriod = 0.8;
         final double[] state = {Double.NaN, 0}; // [deployedPosition, startTime]
         return Commands.runEnd(
             () -> {
                 feederSubsys.setSpeed(FeederSpeed.FEED_FAST);
+                intakeSubsys.setSpeed(IntakeSpeed.INTAKE_MID);
                 if (Double.isNaN(state[0])) {
                     state[0] = intakeSubsys.getRotatorPosition();
                     state[1] = Timer.getFPGATimestamp();

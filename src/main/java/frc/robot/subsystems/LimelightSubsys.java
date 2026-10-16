@@ -13,6 +13,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.LimelightHelpers;
 import frc.robot.LimelightHelpers.PoseEstimate;
@@ -70,6 +71,14 @@ public class LimelightSubsys extends SubsystemBase {
         // Send gyro heading every cycle so MegaTag2 can always resolve pose ambiguity
         final Pose2d currentPose = poseSupplier.get();
         LimelightHelpers.SetRobotOrientation(name, currentPose.getRotation().getDegrees(), 0, 0, 0, 0, 0);
+
+        // Hardware stats from the Limelight: [fps, cpu temp (C), ram usage, temp (C)]
+        final double[] hw = LimelightHelpers.getLimelightNTDoubleArray(name, "hw");
+        if (hw.length >= 4) {
+            SmartDashboard.putNumber(name + "/FPS", hw[0]);
+            SmartDashboard.putNumber(name + "/CPU Temp (C)", hw[1]);
+            SmartDashboard.putNumber(name + "/Temp (C)", hw[3]);
+        }
 
         // Set tag filter once when alliance is first detected
         /*if (!filterSet) {
