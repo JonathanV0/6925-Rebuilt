@@ -25,7 +25,7 @@
         {
           "type": "named",
           "data": {
-            "name": "autoShoot"
+            "name": "intakeDeploy"
           }
         },
         {
@@ -35,9 +35,22 @@
           }
         },
         {
-          "type": "named",
+          "type": "parallel",
           "data": {
-            "name": "hopperDeploy"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "AdjustedWindUpOnce"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "autoShoot"
+                }
+              }
+            ]
           }
         }
       ]

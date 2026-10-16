@@ -31,7 +31,7 @@
         {
           "type": "named",
           "data": {
-            "name": "autoAimAndWindUp"
+            "name": "AdjustedWindUpOnce"
           }
         },
         {
@@ -41,7 +41,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "autoAimAndWindUp"
+                  "name": "AdjustedWindUpOnce"
                 }
               },
               {
