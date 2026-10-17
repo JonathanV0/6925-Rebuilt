@@ -244,14 +244,12 @@ public class RobotContainer {
         // Toggle 1/5th speed with right trigger (press once to toggle)
         //joystick.rightTrigger().onTrue(drivetrain.toggleSpeedMulti(1.0 / 5.0));
 
-        // Hold right trigger to auto-aim pass (same as Y): aims 15° inward from trench AprilTag + spins up pass RPM
-        joystick.rightTrigger().whileTrue(
-            RobotCommands.aimAndPass(
-                () -> -joystick.getLeftY() * MaxSpeed,
-                () -> -joystick.getLeftX() * MaxSpeed,
-                MaxSpeed
-            )
-        );
+        // Hold right trigger for a visionless one-button pass: spins up to the fixed pass set point,
+        // then feeds by itself once at speed. No auto-aim, the driver points the robot.
+        // Y is still the vision (trench tag) pass as a backup.
+        joystick.rightTrigger().whileTrue(RobotCommands.passAndShoot());
+        // joystick.rightTrigger().onFalse(HoodSubsys.)
+        joystick.rightTrigger().onFalse(intake.goToPositionSlowCommand(-14.0, 0.3));
 
         joystick.leftTrigger().whileTrue(intake.intakeWithOscillateCommand(IntakeSubsys.IntakeSpeed.INTAKE_TURBO));
         // Idle while the robot is disabled. This ensures the configured
@@ -344,12 +342,12 @@ public class RobotContainer {
                 }
             }
         }
-        SmartDashboard.putData("SysId Test", sysIdChooser);
-        SmartDashboard.putString("SysId State", "none");
+        //SmartDashboard.putData("SysId Test", sysIdChooser);
+        //SmartDashboard.putString("SysId State", "none");
 
         // defer() reads the chooser at the moment Start is pressed, not once at startup
-        joystick.start().whileTrue(
-            Commands.defer(() -> sysIdChooser.getSelected().get(), Set.of(drivetrain)));
+        //joystick.start().whileTrue(
+          //  Commands.defer(() -> sysIdChooser.getSelected().get(), Set.of(drivetrain)));
     }
     // ===== end SysId =====
 
@@ -385,8 +383,11 @@ public class RobotContainer {
         final boolean tilted = tiltDebouncer.calculate(
             Math.abs(pitch) > kMaxTiltDegrees || Math.abs(roll) > kMaxTiltDegrees);
         final double spinRate = Math.abs(drivetrain.getState().Speeds.omegaRadiansPerSecond);
+        SmartDashboard.putNumber("Vision/Pitch (deg)", pitch);
+        SmartDashboard.putNumber("Vision/Roll (deg)", roll);
+        SmartDashboard.putNumber("Vision/Spin (rad per s)", spinRate);
 
-        limelight.getMeasurement().ifPresent(measurement -> {
+        limelight.getMeasurement().ifPresentOrElse(measurement -> {
             // Throw out frames we know are bad, and say why so it shows up in the logs
             if (tilted) {
                 SmartDashboard.putString("Vision Reject Reason", "tilted");
@@ -413,7 +414,8 @@ public class RobotContainer {
                 measurement.poseEstimate.timestampSeconds,
                 measurement.standardDeviations
             );
-        });
+        // Without this the reason keeps its last value when no tag is seen, so vision looks fine when it isn't
+        }, () -> SmartDashboard.putString("Vision Reject Reason", "no tag"));
     }
 
     /**

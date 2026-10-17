@@ -28,6 +28,7 @@ public final class Constants {
     public static final double kTestHoodPosition = 0.45;
     public static final double kCloserHoodPosition = 0.0;
     public static final double kPassHoodPosition = 0.7;
+    public static final double kStowHoodPosition = 0.0; // hood fully down, same as at robot startup
 
     // Distance-to-shot interpolation table entries (team-calibrated)
     public static final double kHoodAt47in = 0.00;

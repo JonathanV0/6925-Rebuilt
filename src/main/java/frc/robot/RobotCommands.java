@@ -44,6 +44,8 @@ public final class RobotCommands {
     // when the robot is actually pointed at the hub. Starts huge so it never reads as "aimed"
     // before the first aim loop has run.
     private static double lastAimErrorDeg = Double.MAX_VALUE;
+    // Same idea for aimAndPass() -> aimPassAndShoot(), measured off the trench tag
+    private static double lastPassAimErrorDeg = Double.MAX_VALUE;
 
     private static final double kAimOffsetDegrees = 0.0;
     // Same 2 degree window autoAimAndWindUp() uses, so teleop and auto agree on "aimed"
@@ -169,8 +171,28 @@ public final class RobotCommands {
                 shooterSubsys.setVelocityRPM(kPassShotRPM);
                 hoodSubsys.setPosition(kPassHoodPosition);
             },
-            () -> shooterSubsys.stopShooter(),
+            () -> {
+                shooterSubsys.stopShooter();
+                // Hood has no default command, so without this it stays at the pass position
+                hoodSubsys.setPosition(kStowHoodPosition);
+            },
             shooterSubsys, hoodSubsys
+        );
+    }
+
+    /**
+     * Visionless one-button pass: spins up to the fixed pass set point (kPassShotRPM / kPassHoodPosition)
+     * and starts Shoot() by itself once the flywheels are at speed. No auto-aim, the driver points the robot.
+     * Hold to pass; release stops the feeder and returns the shooter to idle.
+     */
+    public static Command passAndShoot() {
+        return Commands.parallel(
+            // Listed first so the pass RPM target is set before the wait below checks it
+            windUpPass(),
+            Commands.waitUntil(shooterSubsys::isVelocityWithinTolerance)
+                // Feed anyway after 1.5s so a CAN dropout or brownout can't leave the trigger dead
+                .withTimeout(1.5)
+                .andThen(Shoot())
         );
     }
 
@@ -243,7 +265,7 @@ public final class RobotCommands {
 
     public static Command Shoot() {
         final double retractedPosition = 0.0; // fully retracted motor position (rotations)
-        final double raiseDuration = 3.5;     // seconds to fully retract from deployed
+        final double raiseDuration = 2.5;     // seconds to fully retract from deployed
         final double shakeAmount = (30.0 / 360.0) * 8.0;
         final double shakePeriod = 0.8;
         final double[] state = {Double.NaN, 0}; // [deployedPosition, startTime]
@@ -424,7 +446,7 @@ public final class RobotCommands {
             Commands.waitUntil(() -> Math.abs(lastAimErrorDeg) < kAimToleranceDeg
                                   && shooterSubsys.isVelocityWithinTolerance())
                 // Feed anyway after 1.5s so a CAN dropout or brownout can't leave the trigger dead
-                .withTimeout(1.5)
+                .withTimeout(1.0)
                 .andThen(Shoot())
         );
     }
@@ -448,11 +470,14 @@ public final class RobotCommands {
         return Commands.runEnd(() -> {
                 shooterSubsys.setVelocityRPM(kPassShotRPM);
                 hoodSubsys.setPosition(kPassHoodPosition);
+                //feederSubsys.setSpeed(FeederSpeed.FEED_FAST);
 
                 final int tagID = (int) LimelightHelpers.getFiducialID("limelight");
                 final boolean isTrenchTag = tagID == 7 || tagID == 12 || tagID == 23 || tagID == 28;
 
                 double rotationRate = 0.0;
+                // No trench tag means we can't tell where we're pointed, so never read as "aimed"
+                lastPassAimErrorDeg = Double.MAX_VALUE;
                 if (LimelightHelpers.getTV("limelight") && isTrenchTag) {
                     final double rawTx = LimelightHelpers.getTX("limelight");
                     // Tags 12, 28 → offset left (-15°); Tags 7, 23 → offset right (+15°)
@@ -461,6 +486,8 @@ public final class RobotCommands {
                         :  kPassAimOffsetDegrees;
                     final double correctedTx = rawTx + offset;
                     rotationRate = -correctedTx * kAimP;
+                    // Publish the error so aimPassAndShoot() can hold the feeder until we're on target
+                    lastPassAimErrorDeg = correctedTx;
                 }
 
                 drivetrain.setControl(passDrive
@@ -468,8 +495,31 @@ public final class RobotCommands {
                     .withVelocityY(velocityY.getAsDouble())
                     .withRotationalRate(rotationRate));
             },
-            () -> shooterSubsys.stopShooter(),
+            () -> {
+                shooterSubsys.stopShooter();
+                // Hood has no default command, so without this it stays at the pass position
+                hoodSubsys.setPosition(kStowHoodPosition);
+            },
             shooterSubsys, hoodSubsys
+        );
+
+    }
+
+    /**
+     * One-button pass: does everything aimAndPass() does, and starts Shoot()
+     * by itself once the robot is aimed at the pass spot and the flywheels are at speed.
+     * Hold to pass; release stops the feeder and returns the shooter to idle.
+     */
+    public static Command aimPassAndShoot(DoubleSupplier velocityX, DoubleSupplier velocityY, double maxSpeed) {
+        return Commands.parallel(
+            // Listed first on purpose, same as aimWindUpAndShoot(): this sets the pass RPM
+            // and aim error before the wait below checks them.
+            aimAndPass(velocityX, velocityY, maxSpeed),
+            Commands.waitUntil(() -> Math.abs(lastPassAimErrorDeg) < kAimToleranceDeg
+                                  && shooterSubsys.isVelocityWithinTolerance())
+                // Feed anyway after 1.5s so a lost trench tag or CAN dropout can't leave the trigger dead
+                .withTimeout(1.5)
+                .andThen(Shoot())
         );
     }
 

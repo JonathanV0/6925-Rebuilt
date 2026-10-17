@@ -88,6 +88,8 @@ public class HoodSubsys extends SubsystemBase {
     public void periodic() {
         updateCurrentPosition();
         SmartDashboard.putBoolean("Hood At Position", isPositionWithinTolerance());
+        // What the code is asking for. If this changes but the hood doesn't move, it's the servo/mechanism.
+        SmartDashboard.putNumber("Hood/Target", targetPosition);
     }
 
     @Override
